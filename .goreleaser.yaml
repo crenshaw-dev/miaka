@@ -27,12 +27,7 @@ builds:
     binary: miaka
 
 archives:
-  - format: tar.gz
-    # Use zip for Windows
-    format_overrides:
-      - goos: windows
-        format: zip
-    files:
+  - files:
       - README.md
       - LICENSE*
 
