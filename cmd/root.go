@@ -7,6 +7,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version information (can be overridden at build time with -ldflags)
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 var rootCmd = &cobra.Command{
 	Use:   "miaka",
 	Short: "Generate Go types and CRDs from KRM-compliant YAML",
@@ -28,8 +35,18 @@ func Execute() {
 	}
 }
 
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print version information",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("miaka version %s\n", version)
+		fmt.Printf("  commit: %s\n", commit)
+		fmt.Printf("  built:  %s\n", date)
+	},
+}
+
 func init() {
 	// Add subcommands
 	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(versionCmd)
 }
-

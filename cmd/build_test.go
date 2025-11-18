@@ -20,12 +20,12 @@ func TestBuildCommand_Testdata(t *testing.T) {
 		t.Fatalf("Failed to read testdata directory: %v", err)
 	}
 
-	testCases := []struct {
+	var testCases []struct {
 		name     string
 		dir      string
 		skip     bool
 		skipFile string
-	}{}
+	}
 
 	for _, entry := range entries {
 		if !entry.IsDir() {
@@ -274,7 +274,8 @@ func TestBuildCommand_InvalidInput(t *testing.T) {
 	}
 
 	if !strings.Contains(err.Error(), "failed to parse YAML") &&
-		!strings.Contains(err.Error(), "no such file") {
+		!strings.Contains(err.Error(), "no such file") &&
+		!strings.Contains(err.Error(), "input file not found") {
 		t.Errorf("Expected file error, got: %v", err)
 	}
 }

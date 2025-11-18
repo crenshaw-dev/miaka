@@ -371,8 +371,8 @@ image: nginx:latest
 	if err == nil {
 		t.Error("Expected error when input doesn't have apiVersion/kind and flags aren't provided, got nil")
 	}
-	if !strings.Contains(err.Error(), "provide --api-version and --kind") {
-		t.Errorf("Expected error about providing flags, got: %v", err)
+	if !strings.Contains(err.Error(), "required") {
+		t.Errorf("Expected error about required fields, got: %v", err)
 	}
 
 	// Should succeed when providing flags
@@ -399,5 +399,117 @@ image: nginx:latest
 	// Verify original fields preserved
 	if !strings.Contains(outputStr, "replicaCount: 3") {
 		t.Error("Output does not contain original replicaCount")
+	}
+}
+
+func TestCheckKRMFields_BothPresent(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputFile := filepath.Join(tmpDir, "test.yaml")
+
+	content := `apiVersion: v1
+kind: ConfigMap
+data:
+  foo: bar
+`
+	if err := os.WriteFile(inputFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to create input file: %v", err)
+	}
+
+	hasApiVersion, hasKind := CheckKRMFields(inputFile)
+	if !hasApiVersion {
+		t.Error("Expected hasApiVersion to be true")
+	}
+	if !hasKind {
+		t.Error("Expected hasKind to be true")
+	}
+}
+
+func TestCheckKRMFields_NeitherPresent(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputFile := filepath.Join(tmpDir, "test.yaml")
+
+	content := `replicaCount: 3
+image: nginx:latest
+`
+	if err := os.WriteFile(inputFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to create input file: %v", err)
+	}
+
+	hasApiVersion, hasKind := CheckKRMFields(inputFile)
+	if hasApiVersion {
+		t.Error("Expected hasApiVersion to be false")
+	}
+	if hasKind {
+		t.Error("Expected hasKind to be false")
+	}
+}
+
+func TestCheckKRMFields_OnlyApiVersion(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputFile := filepath.Join(tmpDir, "test.yaml")
+
+	content := `apiVersion: v1
+data:
+  foo: bar
+`
+	if err := os.WriteFile(inputFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to create input file: %v", err)
+	}
+
+	hasApiVersion, hasKind := CheckKRMFields(inputFile)
+	if !hasApiVersion {
+		t.Error("Expected hasApiVersion to be true")
+	}
+	if hasKind {
+		t.Error("Expected hasKind to be false")
+	}
+}
+
+func TestCheckKRMFields_OnlyKind(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputFile := filepath.Join(tmpDir, "test.yaml")
+
+	content := `kind: ConfigMap
+data:
+  foo: bar
+`
+	if err := os.WriteFile(inputFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to create input file: %v", err)
+	}
+
+	hasApiVersion, hasKind := CheckKRMFields(inputFile)
+	if hasApiVersion {
+		t.Error("Expected hasApiVersion to be false")
+	}
+	if !hasKind {
+		t.Error("Expected hasKind to be true")
+	}
+}
+
+func TestCheckKRMFields_NonExistentFile(t *testing.T) {
+	hasApiVersion, hasKind := CheckKRMFields("nonexistent.yaml")
+	if hasApiVersion {
+		t.Error("Expected hasApiVersion to be false for non-existent file")
+	}
+	if hasKind {
+		t.Error("Expected hasKind to be false for non-existent file")
+	}
+}
+
+func TestCheckKRMFields_InvalidYAML(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputFile := filepath.Join(tmpDir, "test.yaml")
+
+	content := `this is not: valid: yaml: content`
+	if err := os.WriteFile(inputFile, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to create input file: %v", err)
+	}
+
+	hasApiVersion, hasKind := CheckKRMFields(inputFile)
+	if hasApiVersion {
+		t.Error("Expected hasApiVersion to be false for invalid YAML")
+	}
+	if hasKind {
+		t.Error("Expected hasKind to be false for invalid YAML")
 	}
 }

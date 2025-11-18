@@ -22,10 +22,13 @@ var (
 )
 
 var buildCmd = &cobra.Command{
-	Use:   "build [example.yaml]",
+	Use:   "build [example.values.yaml]",
 	Short: "Generate Go types and/or CRD from example.values.yaml",
 	Long: `Generate Go types and Kubernetes Custom Resource Definitions (CRDs)
 from a KRM-compliant YAML file.
+
+If no input file is specified, the command will look for example.values.yaml 
+in the current directory.
 
 The tool generates:
   - Go type definitions (types.go) with proper struct tags
@@ -33,18 +36,21 @@ The tool generates:
 
 The generated CRD includes field descriptions, validation rules, and all
 kubebuilder markers from your YAML comments.`,
-	Example: `  # Generate CRD (default: crd.yaml)
-  miaka build example.values.yaml
+	Example: `  # Generate CRD from example.values.yaml (default)
+  miaka build
+
+  # Generate from a specific file
+  miaka build myfile.yaml
 
   # Generate CRD with custom path
-  miaka build -c output/my-crd.yaml example.values.yaml
+  miaka build -c output/my-crd.yaml
 
   # Generate CRD and preserve types.go
-  miaka build -t types.go example.values.yaml
+  miaka build -t types.go
 
   # Custom types.go and CRD output locations
-  miaka build -t pkg/apis/v1/types.go -c crds/my-crd.yaml example.values.yaml`,
-	Args:          cobra.ExactArgs(1),
+  miaka build -t pkg/apis/v1/types.go -c crds/my-crd.yaml myfile.yaml`,
+	Args:          cobra.MaximumNArgs(1),
 	RunE:          runBuild,
 	SilenceUsage:  true,
 	SilenceErrors: true,
@@ -59,7 +65,19 @@ func init() {
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
-	inputFile := args[0]
+	// Determine input file: use provided arg, or default to example.values.yaml
+	inputFile := "example.values.yaml"
+	if len(args) > 0 {
+		inputFile = args[0]
+	}
+
+	// Check if input file exists
+	if _, err := os.Stat(inputFile); err != nil {
+		if len(args) == 0 {
+			return fmt.Errorf("example.values.yaml not found in current directory (specify a file or run 'miaka init' first)")
+		}
+		return fmt.Errorf("input file not found: %s", inputFile)
+	}
 
 	// Parse the YAML file
 	p := parser.NewParser()
