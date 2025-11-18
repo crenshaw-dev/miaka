@@ -1,0 +1,6 @@
+Validating against CRD (crd.yaml)...
+✓ CRD validation passed
+
+Validating against JSON Schema (schema.json)...
+✓ JSON Schema validation passed
+

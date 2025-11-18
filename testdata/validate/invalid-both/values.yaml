@@ -1,0 +1,9 @@
+apiVersion: example.com/v1alpha1
+kind: Example
+replicas: 0
+appName: "myapp"
+debug: true
+service:
+  port: "not-a-number"
+  serviceType: "ClusterIP"
+

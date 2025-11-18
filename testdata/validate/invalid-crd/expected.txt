@@ -1,0 +1,3 @@
+Validating against CRD (crd.yaml)...
+✗ CRD validation failed:
+

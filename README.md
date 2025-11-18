@@ -46,7 +46,17 @@ This automatically reads `example.values.yaml` and generates:
 - `crd.yaml` - Kubernetes CRD with OpenAPI v3 schema
 - `values.schema.json` - JSON Schema for Helm validation
 
-### 3. Update with confidence
+### 3. Validate user values (optional)
+
+Test that values files from your users pass the validation rules:
+
+```bash
+miaka validate user-values.yaml
+```
+
+This validates the values file against both your CRD and JSON Schema, helping you catch issues before deployment.
+
+### 4. Update with confidence
 
 Make changes to your values file and rebuild - miaka automatically detects breaking changes:
 
@@ -96,5 +106,6 @@ No magic, just battle-tested tools working together.
 miaka --help
 miaka init --help
 miaka build --help
+miaka validate --help
 ```
 
