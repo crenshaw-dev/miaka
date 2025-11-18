@@ -1,4 +1,4 @@
-package crdgen
+package crd
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package generator
+package gotypes
 
 import (
 	"bytes"
@@ -9,18 +9,18 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/crenshaw-dev/miaka/pkg/types"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"github.com/crenshaw-dev/miaka/pkg/build/schema"
+	runtimeschema "k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // Generator handles Go code generation using AST
 type Generator struct {
-	schema *types.Schema
+	schema *schema.Schema
 	fset   *token.FileSet
 }
 
 // NewGenerator creates a new generator instance
-func NewGenerator(schema *types.Schema) *Generator {
+func NewGenerator(schema *schema.Schema) *Generator {
 	return &Generator{
 		schema: schema,
 		fset:   token.NewFileSet(),
@@ -139,7 +139,7 @@ func (g *Generator) generateMainType() *ast.GenDecl {
 	}
 
 	// Find the main fields struct (same name as Kind)
-	var mainFieldsDef *types.StructDef
+	var mainFieldsDef *schema.StructDef
 	for i := range g.schema.Structs {
 		if g.schema.Structs[i].Name == typeName {
 			mainFieldsDef = &g.schema.Structs[i]
@@ -171,7 +171,7 @@ func (g *Generator) generateMainType() *ast.GenDecl {
 }
 
 // generateStruct generates a struct definition
-func (g *Generator) generateStruct(structDef types.StructDef) *ast.GenDecl {
+func (g *Generator) generateStruct(structDef schema.StructDef) *ast.GenDecl {
 	// Build doc comments
 	var commentLines []string
 	if len(structDef.Comments) > 0 {
@@ -213,7 +213,7 @@ func (g *Generator) generateStruct(structDef types.StructDef) *ast.GenDecl {
 }
 
 // generateField generates a field in a struct
-func (g *Generator) generateField(field types.Field) *ast.Field {
+func (g *Generator) generateField(field schema.Field) *ast.Field {
 	// Create doc comment for the field
 	var doc *ast.CommentGroup
 	if len(field.Comments) > 0 {
@@ -306,7 +306,7 @@ func isUpper(r rune) bool {
 // extractGroup extracts the group from an apiVersion using Kubernetes libraries
 // e.g., "example.com/v1alpha1" -> "example.com"
 func extractGroup(apiVersion string) string {
-	gv, err := schema.ParseGroupVersion(apiVersion)
+	gv, err := runtimeschema.ParseGroupVersion(apiVersion)
 	if err != nil {
 		// Fallback to original string if parsing fails
 		return apiVersion

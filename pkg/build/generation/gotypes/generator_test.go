@@ -1,24 +1,24 @@
-package generator
+package gotypes
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/crenshaw-dev/miaka/pkg/types"
+	"github.com/crenshaw-dev/miaka/pkg/build/schema"
 )
 
 func TestGenerate_SimpleStruct(t *testing.T) {
-	schema := &types.Schema{
+	schema := &schema.Schema{
 		APIVersion: "example.com/v1alpha1",
 		Kind:       "Simple",
 		Package:    "v1alpha1",
-		Structs: []types.StructDef{
+		Structs: []schema.StructDef{
 			{
 				Name: "SimpleSpec",
 				Comments: []string{
 					"Simple specification",
 				},
-				Fields: []types.Field{
+				Fields: []schema.Field{
 					{
 						Name:     "Name",
 						JSONName: "name",
@@ -82,15 +82,15 @@ func TestGenerate_SimpleStruct(t *testing.T) {
 }
 
 func TestGenerate_WithSlice(t *testing.T) {
-	schema := &types.Schema{
+	schema := &schema.Schema{
 		APIVersion: "example.com/v1alpha1",
 		Kind:       "ListExample",
 		Package:    "v1alpha1",
-		Structs: []types.StructDef{
+		Structs: []schema.StructDef{
 			{
 				Name:     "ItemConfig",
 				Comments: []string{"item configuration"},
-				Fields: []types.Field{
+				Fields: []schema.Field{
 					{
 						Name:     "Value",
 						JSONName: "value",
@@ -101,7 +101,7 @@ func TestGenerate_WithSlice(t *testing.T) {
 			},
 			{
 				Name: "ListExampleSpec",
-				Fields: []types.Field{
+				Fields: []schema.Field{
 					{
 						Name:     "Items",
 						JSONName: "items",
@@ -134,14 +134,14 @@ func TestGenerate_WithSlice(t *testing.T) {
 }
 
 func TestGenerate_WithKubebuilderTags(t *testing.T) {
-	schema := &types.Schema{
+	schema := &schema.Schema{
 		APIVersion: "example.com/v1alpha1",
 		Kind:       "Validated",
 		Package:    "v1alpha1",
-		Structs: []types.StructDef{
+		Structs: []schema.StructDef{
 			{
 				Name: "ValidatedSpec",
-				Fields: []types.Field{
+				Fields: []schema.Field{
 					{
 						Name:     "Port",
 						JSONName: "port",
@@ -176,7 +176,7 @@ func TestGenerate_WithKubebuilderTags(t *testing.T) {
 
 func TestGenerateStructDescription(t *testing.T) {
 	g := &Generator{
-		schema: &types.Schema{
+		schema: &schema.Schema{
 			Kind: "Example",
 		},
 	}

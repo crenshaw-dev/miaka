@@ -1,10 +1,8 @@
-package validator
+package schema
 
 import (
 	"fmt"
 	"strings"
-
-	"github.com/crenshaw-dev/miaka/pkg/types"
 )
 
 // InterfaceTypeError represents an error caused by interface{} types in the schema
@@ -75,7 +73,7 @@ func (e *InterfaceTypeError) Error() string {
 }
 
 // ValidateSchema checks for interface{} types in the schema before generation
-func ValidateSchema(schema *types.Schema) error {
+func ValidateSchema(schema *Schema) error {
 	var interfaceFields []InterfaceTypeLocation
 
 	for _, structDef := range schema.Structs {

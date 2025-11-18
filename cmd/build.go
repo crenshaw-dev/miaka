@@ -5,14 +5,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/crenshaw-dev/miaka/pkg/crdgen"
-	"github.com/crenshaw-dev/miaka/pkg/generator"
-	"github.com/crenshaw-dev/miaka/pkg/jsonschema"
-	"github.com/crenshaw-dev/miaka/pkg/parser"
-	"github.com/crenshaw-dev/miaka/pkg/types"
-	"github.com/crenshaw-dev/miaka/pkg/validator"
+	"github.com/crenshaw-dev/miaka/pkg/build/generation/crd"
+	"github.com/crenshaw-dev/miaka/pkg/build/generation/gotypes"
+	"github.com/crenshaw-dev/miaka/pkg/build/generation/jsonschema"
+	"github.com/crenshaw-dev/miaka/pkg/build/parsing"
+	"github.com/crenshaw-dev/miaka/pkg/build/schema"
+	"github.com/crenshaw-dev/miaka/pkg/build/validation"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	runtimeschema "k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var (
@@ -80,7 +80,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse the YAML file
-	p := parser.NewParser()
+	p := parsing.NewParser()
 	s, err := p.ParseFile(inputFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse YAML: %w", err)
@@ -113,7 +113,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	// Generate Go code
 	fmt.Printf("Generating Go types from %s...\n", inputFile)
-	g := generator.NewGenerator(s)
+	g := gotypes.NewGenerator(s)
 	code, err := g.Generate()
 
 	// Write types.go file even if there were formatting errors (for debugging)
@@ -138,7 +138,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	// Validate schema after writing types (so users can inspect the file on failure)
 	fmt.Println("Validating schema...")
-	if err := validator.ValidateSchema(s); err != nil {
+	if err := schema.ValidateSchema(s); err != nil {
 		if buildTypesPath != "" {
 			fmt.Fprintf(os.Stderr, "\nGenerated types with issues written to: %s\n", typesFilePath)
 		}
@@ -192,7 +192,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		tmpOldCRD.Close()
 
 		// Check for breaking changes
-		if err := crdgen.CheckBreakingChanges(tmpOldCRD.Name(), newCRDContent); err != nil {
+		if err := validation.CheckBreakingChanges(tmpOldCRD.Name(), newCRDContent); err != nil {
 			// Restore the old CRD since we're rejecting the breaking change
 			if writeErr := os.WriteFile(buildCRDPath, oldCRDContent, 0644); writeErr != nil {
 				return fmt.Errorf("breaking change detected and failed to restore old CRD: %w (original error: %v)", writeErr, err)
@@ -202,12 +202,12 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	// Add strict validation to CRD (additionalProperties: false)
-	if err := crdgen.AddStrictValidation(buildCRDPath); err != nil {
+	if err := crd.AddStrictValidation(buildCRDPath); err != nil {
 		return fmt.Errorf("failed to add strict validation to CRD: %w", err)
 	}
 
 	// Validate the generated CRD itself
-	if err := crdgen.ValidateCRD(buildCRDPath); err != nil {
+	if err := crd.ValidateCRD(buildCRDPath); err != nil {
 		return fmt.Errorf("generated CRD is invalid: %w", err)
 	}
 
@@ -215,7 +215,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	// Validate the input YAML against the generated CRD
 	fmt.Printf("Validating %s against CRD...\n", inputFile)
-	if err := validator.ValidateAgainstCRD(buildCRDPath, inputFile); err != nil {
+	if err := validation.ValidateAgainstCRD(buildCRDPath, inputFile); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
@@ -230,7 +230,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	// Validate input against JSON Schema
 	fmt.Printf("Validating %s against JSON Schema...\n", inputFile)
-	if err := jsonschema.ValidateYAML(inputFile, buildSchemaPath); err != nil {
+	if err := validation.ValidateYAML(inputFile, buildSchemaPath); err != nil {
 		return fmt.Errorf("JSON Schema validation failed: %w", err)
 	}
 	fmt.Printf("✓ JSON Schema validation passed\n")
@@ -239,15 +239,15 @@ func runBuild(cmd *cobra.Command, args []string) error {
 }
 
 // generateCRD generates a CRD from the schema and types file
-func generateCRD(s *types.Schema, typesFile string, outputDir string, outputFileName string) error {
+func generateCRD(s *schema.Schema, typesFile string, outputDir string, outputFileName string) error {
 	// Parse apiVersion using Kubernetes libraries
-	gv, err := schema.ParseGroupVersion(s.APIVersion)
+	gv, err := runtimeschema.ParseGroupVersion(s.APIVersion)
 	if err != nil {
 		return fmt.Errorf("invalid apiVersion format: %s: %w", s.APIVersion, err)
 	}
 
 	// Create CRD generator options
-	opts := crdgen.Options{
+	opts := crd.Options{
 		Group:          gv.Group,
 		Version:        gv.Version,
 		Kind:           s.Kind,
@@ -255,7 +255,7 @@ func generateCRD(s *types.Schema, typesFile string, outputDir string, outputFile
 	}
 
 	// Create CRD generator
-	gen := crdgen.NewGenerator(opts)
+	gen := crd.NewGenerator(opts)
 
 	// Generate CRD
 	return gen.Generate(typesFile, outputDir)

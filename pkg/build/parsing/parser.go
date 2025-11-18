@@ -1,32 +1,32 @@
-package parser
+package parsing
 
 import (
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/crenshaw-dev/miaka/pkg/types"
+	"github.com/crenshaw-dev/miaka/pkg/build/schema"
 	"gopkg.in/yaml.v3"
 )
 
 // Parser handles YAML parsing with comment preservation
 type Parser struct {
-	schema      *types.Schema
+	schema      *schema.Schema
 	structNames map[string]bool // Track used struct names to avoid collisions
 }
 
 // NewParser creates a new parser instance
 func NewParser() *Parser {
 	return &Parser{
-		schema: &types.Schema{
-			Structs: make([]types.StructDef, 0),
+		schema: &schema.Schema{
+			Structs: make([]schema.StructDef, 0),
 		},
 		structNames: make(map[string]bool),
 	}
 }
 
 // ParseFile parses a YAML file and returns a Schema
-func (p *Parser) ParseFile(filename string) (*types.Schema, error) {
+func (p *Parser) ParseFile(filename string) (*schema.Schema, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
@@ -36,7 +36,7 @@ func (p *Parser) ParseFile(filename string) (*types.Schema, error) {
 }
 
 // Parse parses YAML data and returns a Schema
-func (p *Parser) Parse(data []byte) (*types.Schema, error) {
+func (p *Parser) Parse(data []byte) (*schema.Schema, error) {
 	var node yaml.Node
 	if err := yaml.Unmarshal(data, &node); err != nil {
 		return nil, fmt.Errorf("failed to parse YAML: %w", err)
@@ -72,7 +72,7 @@ func (p *Parser) parseRootNode(node *yaml.Node) error {
 		switch key {
 		case "apiVersion":
 			p.schema.APIVersion = valueNode.Value
-			version, err := types.ParseAPIVersion(valueNode.Value)
+			version, err := schema.ParseAPIVersion(valueNode.Value)
 			if err != nil {
 				return err
 			}
@@ -84,9 +84,9 @@ func (p *Parser) parseRootNode(node *yaml.Node) error {
 
 	// Second pass: parse all top-level fields (except apiVersion, kind, metadata)
 	// These become fields directly on the main type
-	mainFields := &types.StructDef{
+	mainFields := &schema.StructDef{
 		Name:     p.schema.Kind,
-		Fields:   []types.Field{},
+		Fields:   []schema.Field{},
 		Comments: []string{},
 	}
 
@@ -120,15 +120,15 @@ func (p *Parser) parseRootNode(node *yaml.Node) error {
 }
 
 // parseObject parses a mapping node into a struct definition
-func (p *Parser) parseObject(node *yaml.Node, structName string, structComments []string) (*types.StructDef, error) {
+func (p *Parser) parseObject(node *yaml.Node, structName string, structComments []string) (*schema.StructDef, error) {
 	if node.Kind != yaml.MappingNode {
 		return nil, fmt.Errorf("expected mapping node")
 	}
 
-	structDef := &types.StructDef{
+	structDef := &schema.StructDef{
 		Name:     structName,
 		Comments: structComments,
-		Fields:   make([]types.Field, 0),
+		Fields:   make([]schema.Field, 0),
 	}
 
 	for i := 0; i < len(node.Content); i += 2 {
@@ -155,21 +155,21 @@ func (p *Parser) parseObject(node *yaml.Node, structName string, structComments 
 }
 
 // parseField parses a field and returns the field definition and any nested structs
-func (p *Parser) parseField(fieldName string, valueNode *yaml.Node, comments []string) (*types.Field, []types.StructDef, error) {
+func (p *Parser) parseField(fieldName string, valueNode *yaml.Node, comments []string) (*schema.Field, []schema.StructDef, error) {
 	return p.parseFieldWithPath(fieldName, fieldName, valueNode, comments)
 }
 
 // parseFieldWithPath parses a field with YAML path tracking
-func (p *Parser) parseFieldWithPath(fieldName string, yamlPath string, valueNode *yaml.Node, comments []string) (*types.Field, []types.StructDef, error) {
-	field := &types.Field{
-		Name:     types.ToPascalCase(fieldName),
+func (p *Parser) parseFieldWithPath(fieldName string, yamlPath string, valueNode *yaml.Node, comments []string) (*schema.Field, []schema.StructDef, error) {
+	field := &schema.Field{
+		Name:     schema.ToPascalCase(fieldName),
 		JSONName: fieldName,
-		Comments: types.FormatComments(comments),
+		Comments: schema.FormatComments(comments),
 		YAMLPath: yamlPath,
 		Line:     valueNode.Line,
 	}
 
-	nestedStructs := make([]types.StructDef, 0)
+	nestedStructs := make([]schema.StructDef, 0)
 
 	// Check for explicit type hint in comments
 	typeHint := extractTypeHint(comments)
@@ -181,7 +181,7 @@ func (p *Parser) parseFieldWithPath(fieldName string, yamlPath string, valueNode
 		if err := valueNode.Decode(&value); err != nil {
 			return nil, nil, fmt.Errorf("failed to decode scalar: %w", err)
 		}
-		field.Type = types.InferType(value)
+		field.Type = schema.InferType(value)
 
 	case yaml.MappingNode:
 		// This is a nested object
@@ -235,7 +235,7 @@ func (p *Parser) parseFieldWithPath(fieldName string, yamlPath string, valueNode
 				if err := firstElem.Decode(&value); err != nil {
 					return nil, nil, fmt.Errorf("failed to decode list element: %w", err)
 				}
-				elemType := types.InferType(value)
+				elemType := schema.InferType(value)
 				field.ElemType = elemType
 				field.Type = "[]" + elemType
 
@@ -260,7 +260,7 @@ func (p *Parser) parseFieldWithPath(fieldName string, yamlPath string, valueNode
 
 // generateUniqueStructName creates a unique struct name, adding prefixes if there's a collision
 func (p *Parser) generateUniqueStructName(fieldName string, yamlPath string) string {
-	baseName := types.GenerateStructName(fieldName)
+	baseName := schema.GenerateStructName(fieldName)
 
 	// If no collision, use the base name
 	if !p.structNames[baseName] {
@@ -273,7 +273,7 @@ func (p *Parser) generateUniqueStructName(fieldName string, yamlPath string) str
 	pathParts := strings.Split(yamlPath, ".")
 	if len(pathParts) > 1 {
 		// Use the parent field name as prefix
-		parentName := types.ToPascalCase(pathParts[len(pathParts)-2])
+		parentName := schema.ToPascalCase(pathParts[len(pathParts)-2])
 		uniqueName := parentName + baseName
 
 		// If still collision, add more context
@@ -301,8 +301,8 @@ func (p *Parser) generateUniqueStructName(fieldName string, yamlPath string) str
 }
 
 // mergeListItems merges fields from all items in a list to create a single struct
-func (p *Parser) mergeListItems(sequenceNode *yaml.Node, structName string, structComments []string) (*types.StructDef, error) {
-	mergedFields := make(map[string]*types.Field)
+func (p *Parser) mergeListItems(sequenceNode *yaml.Node, structName string, structComments []string) (*schema.StructDef, error) {
+	mergedFields := make(map[string]*schema.Field)
 	var fieldOrder []string
 
 	for _, itemNode := range sequenceNode.Content {
@@ -320,7 +320,7 @@ func (p *Parser) mergeListItems(sequenceNode *yaml.Node, structName string, stru
 			if existingField, exists := mergedFields[fieldName]; exists {
 				// Field already exists, verify comments match
 				existingComments := strings.Join(existingField.Comments, "\n")
-				newComments := strings.Join(types.FormatComments(comments), "\n")
+				newComments := strings.Join(schema.FormatComments(comments), "\n")
 				if existingComments != newComments && len(comments) > 0 {
 					return nil, fmt.Errorf("conflicting comments for field %s in list items", fieldName)
 				}
@@ -341,10 +341,10 @@ func (p *Parser) mergeListItems(sequenceNode *yaml.Node, structName string, stru
 	}
 
 	// Build the struct with fields in order
-	structDef := &types.StructDef{
+	structDef := &schema.StructDef{
 		Name:     structName,
 		Comments: structComments,
-		Fields:   make([]types.Field, 0, len(mergedFields)),
+		Fields:   make([]schema.Field, 0, len(mergedFields)),
 	}
 
 	for _, fieldName := range fieldOrder {
@@ -407,5 +407,5 @@ func extractListItemComments(sequenceNode *yaml.Node) []string {
 		}
 	}
 
-	return types.FormatComments(comments)
+	return schema.FormatComments(comments)
 }
