@@ -1,0 +1,22 @@
+apiVersion: example.com/v1alpha1
+kind: Example
+# Number of replicas
+# +kubebuilder:validation:Minimum=1
+replicas: 3
+# Application name
+appName: "myapp"
+# Enable debug mode
+debug: true
+# Service configuration
+service:
+  # Service port
+  port: 8080
+  # Service type
+  serviceType: "ClusterIP"
+# List of environment variables
+env:
+  # Environment variable configuration
+- # Variable name
+  name: "LOG_LEVEL"
+  # Variable value
+  value: "info"

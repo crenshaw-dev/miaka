@@ -1,0 +1,135 @@
+package init
+
+import (
+	"fmt"
+	"os"
+
+	"gopkg.in/yaml.v3"
+)
+
+// ConvertToKRM converts a regular Helm values.yaml to a KRM-compliant YAML file
+// by adding apiVersion and kind fields at the top level.
+// All existing fields remain at the root level (not nested under spec).
+// The metadata field is added automatically by the generator as an implementation detail.
+//
+// If inputFile is empty, creates an empty KRM-compliant YAML (apiVersion and kind are required).
+// If inputFile is provided but doesn't have apiVersion/kind, the provided apiVersion/kind are used.
+// If inputFile already has apiVersion/kind, they are preserved and the provided values are ignored (can be empty).
+func ConvertToKRM(inputFile, outputFile, apiVersion, kind string) error {
+	var contentNode *yaml.Node
+	var rootNode yaml.Node
+	
+	// Handle empty input file (create new empty KRM YAML)
+	if inputFile == "" {
+		if apiVersion == "" || kind == "" {
+			return fmt.Errorf("when creating a new file, --api-version and --kind are required")
+		}
+		
+		// Create a new empty mapping node
+		contentNode = &yaml.Node{
+			Kind:    yaml.MappingNode,
+			Content: []*yaml.Node{},
+		}
+		rootNode = yaml.Node{
+			Kind:    yaml.DocumentNode,
+			Content: []*yaml.Node{contentNode},
+		}
+	} else {
+		// Read input file
+		data, err := os.ReadFile(inputFile)
+		if err != nil {
+			return fmt.Errorf("failed to read input file: %w", err)
+		}
+
+		// Parse YAML with full node structure to preserve comments
+		if err := yaml.Unmarshal(data, &rootNode); err != nil {
+			return fmt.Errorf("failed to parse YAML: %w", err)
+		}
+
+		// The root node is typically a DocumentNode, get the actual content node
+		if rootNode.Kind != yaml.DocumentNode || len(rootNode.Content) == 0 {
+			return fmt.Errorf("invalid YAML structure")
+		}
+
+		contentNode = rootNode.Content[0]
+		
+		// Check if this is a mapping node (object)
+		if contentNode.Kind != yaml.MappingNode {
+			return fmt.Errorf("root YAML node must be an object")
+		}
+	}
+
+	// Check if apiVersion or kind already exist in the input
+	var hasApiVersion, hasKind bool
+	for i := 0; i < len(contentNode.Content); i += 2 {
+		keyNode := contentNode.Content[i]
+		if keyNode.Value == "apiVersion" {
+			hasApiVersion = true
+		}
+		if keyNode.Value == "kind" {
+			hasKind = true
+		}
+	}
+
+	// Determine what values to use
+	finalApiVersion := apiVersion
+	finalKind := kind
+	
+	if hasApiVersion && hasKind {
+		// Both exist in input, use those values (ignore provided flags)
+		// Just write the file as-is
+	} else if hasApiVersion || hasKind {
+		// Only one exists - this is an invalid state
+		if hasApiVersion {
+			return fmt.Errorf("file has apiVersion but missing kind - please provide --kind flag")
+		} else {
+			return fmt.Errorf("file has kind but missing apiVersion - please provide --api-version flag")
+		}
+	} else {
+		// Neither exist, must provide both
+		if finalApiVersion == "" || finalKind == "" {
+			return fmt.Errorf("input file doesn't have apiVersion/kind - please provide --api-version and --kind flags")
+		}
+		
+		// Create new nodes for apiVersion and kind
+		apiVersionKey := &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: "apiVersion",
+		}
+		apiVersionValue := &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: finalApiVersion,
+		}
+
+		kindKey := &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: "kind",
+		}
+		kindValue := &yaml.Node{
+			Kind:  yaml.ScalarNode,
+			Value: finalKind,
+		}
+
+		// Insert new nodes at the beginning while preserving existing nodes
+		newContent := []*yaml.Node{
+			apiVersionKey, apiVersionValue,
+			kindKey, kindValue,
+		}
+		newContent = append(newContent, contentNode.Content...)
+		contentNode.Content = newContent
+	}
+
+	// Marshal back to YAML
+	output, err := yaml.Marshal(&rootNode)
+	if err != nil {
+		return fmt.Errorf("failed to marshal YAML: %w", err)
+	}
+
+	// Write to output file
+	if err := os.WriteFile(outputFile, output, 0644); err != nil {
+		return fmt.Errorf("failed to write output file: %w", err)
+	}
+
+	return nil
+}
+

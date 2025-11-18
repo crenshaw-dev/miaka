@@ -1,0 +1,7 @@
+apiVersion: demo.io/v1
+kind: Demo
+# Port number
+port: 8080
+# Enable feature
+enabled: true
+

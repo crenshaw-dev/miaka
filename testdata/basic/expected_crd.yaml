@@ -1,0 +1,77 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.0.0-20251117230942-fc96413ba8a8+dirty
+  name: examples.example.com
+spec:
+  group: example.com
+  names:
+    kind: Example
+    listKind: ExampleList
+    plural: examples
+    singular: example
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Example is the Schema for the examples API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          appName:
+            description: Application name
+            type: string
+          debug:
+            description: Enable debug mode
+            type: boolean
+          env:
+            description: List of environment variables
+            items:
+              description: EnvConfig defines the environment variable configuration
+              properties:
+                name:
+                  description: Variable name
+                  type: string
+                value:
+                  description: Variable value
+                  type: string
+              type: object
+            type: array
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          replicas:
+            description: Number of replicas
+            minimum: 1
+            type: integer
+          service:
+            description: Service configuration
+            properties:
+              port:
+                description: Service port
+                type: integer
+              serviceType:
+                description: Service type
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: null
+  storedVersions: null

@@ -1,0 +1,1027 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.0.0-20251117230942-fc96413ba8a8+dirty
+  name: eventscharts.argoproj.io
+spec:
+  group: argoproj.io
+  names:
+    kind: EventsChart
+    listKind: EventsChartList
+    plural: eventscharts
+    singular: eventschart
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: EventsChart is the Schema for the eventscharts API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          configs:
+            description: '# Event bus configuration'
+            properties:
+              jetstream:
+                description: '# JetStream event bus'
+                properties:
+                  settings:
+                    description: |-
+                      Default JetStream settings, could be overridden by EventBus JetStream spec
+                      Ref: https://docs.nats.io/running-a-nats-service/configuration#jetstream
+                    properties:
+                      maxFileStore:
+                        description: -- Maximum size of the file storage (e.g. 20G)
+                        type: integer
+                      maxMemoryStore:
+                        description: -- Maximum size of the memory storage (e.g. 1G)
+                        type: integer
+                    type: object
+                  streamConfig:
+                    description: StreamConfig defines the stream configuration
+                    properties:
+                      discard:
+                        description: '-- 0: DiscardOld, 1: DiscardNew'
+                        type: integer
+                      duplicates:
+                        description: -- Not documented at the moment
+                        type: string
+                      maxAge:
+                        description: -- Maximum age of existing messages, i.e. “72h”,
+                          “4h35m”
+                        type: string
+                      maxBytes:
+                        description: Total size of messages before expiring oldest
+                          message, 0 means unlimited.
+                        type: string
+                      maxMsgs:
+                        description: -- Maximum number of messages before expiring
+                          oldest message
+                        type: integer
+                      replicas:
+                        description: -- Number of replicas, defaults to 3 and requires
+                          minimal 3
+                        type: integer
+                      retention:
+                        description: '-- 0: Limits, 1: Interest, 2: WorkQueue'
+                        type: integer
+                    type: object
+                  versions:
+                    description: Supported versions of JetStream eventbus
+                    items:
+                      description: JetstreamConfigVersionsConfig defines the jetstream
+                        config versions configuration
+                      properties:
+                        configReloaderImage:
+                          type: string
+                        metricsExporterImage:
+                          type: string
+                        natsImage:
+                          type: string
+                        startCommand:
+                          type: string
+                        version:
+                          type: string
+                      type: object
+                    type: array
+                type: object
+              nats:
+                description: '# NATS event bus'
+                properties:
+                  versions:
+                    description: |-
+                      -- Supported versions of NATS event bus
+                      @default -- See [values.yaml]
+                    items:
+                      description: VersionsConfig defines the versions configuration
+                      properties:
+                        metricsExporterImage:
+                          type: string
+                        natsStreamingImage:
+                          type: string
+                        version:
+                          type: string
+                      type: object
+                    type: array
+                type: object
+            type: object
+          controller:
+            description: '# Argo Events controller'
+            properties:
+              affinity:
+                description: -- Assign custom [affinity] rules to the deployment
+                properties:
+                  nodeAffinity:
+                    description: NodeAffinityConfig defines the node affinity configuration
+                    properties:
+                      required:
+                        description: RequiredConfig defines the required configuration
+                        properties:
+                          nodeSelectorTerm:
+                            description: NodeSelectorTermConfig defines the node selector
+                              term configuration
+                            properties:
+                              matchExpressions:
+                                items:
+                                  description: MatchExpressionsConfig defines the
+                                    match expressions configuration
+                                  properties:
+                                    key:
+                                      type: string
+                                    nodeSelectorTerm:
+                                      description: MatchExpressionsConfigNodeSelectorTermConfig
+                                        defines the match expressions config node
+                                        selector term configuration
+                                      properties:
+                                        matchExpressions:
+                                          items:
+                                            description: MatchExpressionsConfigNodeSelectorTermConfigMatchExpressionsConfig
+                                              defines the match expressions config
+                                              node selector term config match expressions
+                                              configuration
+                                            properties:
+                                              key:
+                                                type: string
+                                              operator:
+                                                type: string
+                                              values:
+                                                items:
+                                                  type: string
+                                                type: array
+                                            type: object
+                                          type: array
+                                      type: object
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                            type: object
+                        type: object
+                    type: object
+                type: object
+              containerSecurityContext:
+                description: -- Events controller container-level security context
+                properties:
+                  capabilities:
+                    description: CapabilitiesConfig defines the capabilities configuration
+                    properties:
+                      drop:
+                        items:
+                          type: string
+                        type: array
+                      readOnlyRootFilesystem:
+                        type: boolean
+                      runAsNonRoot:
+                        type: boolean
+                    type: object
+                type: object
+              env:
+                description: -- Environment variables to pass to events controller
+                items:
+                  description: EnvConfig defines the env configuration
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      type: string
+                  type: object
+                type: array
+              envFrom:
+                description: |-
+                  -- envFrom to pass to events controller
+                  @default -- `[]` (See [values.yaml])
+                items:
+                  description: EnvFromConfig defines the env from configuration
+                  properties:
+                    configMapRef:
+                      description: ConfigMapRefConfig defines the config map ref configuration
+                      properties:
+                        name:
+                          type: string
+                      type: object
+                    secretRef:
+                      description: SecretRefConfig defines the secret ref configuration
+                      properties:
+                        name:
+                          type: string
+                      type: object
+                  type: object
+                type: array
+              image:
+                description: ControllerConfigImageConfig defines the controller config
+                  image configuration
+                properties:
+                  imagePullPolicy:
+                    description: |-
+                      -- Image pull policy for the events controller
+                      @default -- `""` (defaults to global.image.imagePullPolicy)
+                    type: string
+                  repository:
+                    description: |-
+                      -- Repository to use for the events controller
+                      @default -- `""` (defaults to global.image.repository)
+                    type: string
+                  tag:
+                    description: |-
+                      -- Tag to use for the events controller
+                      @default -- `""` (defaults to global.image.tag)
+                    type: string
+                type: object
+              livenessProbe:
+                description: LivenessProbeConfig defines the liveness probe configuration
+                properties:
+                  failureThreshold:
+                    description: -- Minimum consecutive failures for the [probe] to
+                      be considered failed after having succeeded
+                    type: integer
+                  initialDelaySeconds:
+                    description: -- Number of seconds after the container has started
+                      before [probe] is initiated
+                    type: integer
+                  periodSeconds:
+                    description: -- How often (in seconds) to perform the [probe]
+                    type: integer
+                  successThreshold:
+                    description: -- Minimum consecutive successes for the [probe]
+                      to be considered successful after having failed
+                    type: integer
+                  timeoutSeconds:
+                    description: -- Number of seconds after which the [probe] times
+                      out
+                    type: integer
+                type: object
+              metrics:
+                description: '# Events controller metrics configuration'
+                properties:
+                  enabled:
+                    description: -- Deploy metrics service
+                    type: boolean
+                  service:
+                    description: ServiceConfig defines the service configuration
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: -- Metrics service annotations
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: -- Metrics service labels
+                        type: object
+                      servicePort:
+                        description: -- Metrics service port
+                        type: integer
+                    type: object
+                  serviceMonitor:
+                    description: ServiceMonitorConfig defines the service monitor
+                      configuration
+                    properties:
+                      additionalLabels:
+                        additionalProperties:
+                          type: string
+                        description: -- Prometheus ServiceMonitor labels
+                        type: object
+                      enabled:
+                        description: -- Enable a prometheus ServiceMonitor
+                        type: boolean
+                      interval:
+                        description: -- Prometheus ServiceMonitor interval
+                        type: string
+                      metricRelabelings:
+                        description: -- Prometheus [MetricRelabelConfigs] to apply
+                          to samples before ingestion
+                        items:
+                          description: MetricRelabelingsConfig defines the metric
+                            relabelings configuration
+                          properties:
+                            sourceLabels:
+                              items:
+                                type: string
+                              type: array
+                            targetLabel:
+                              type: string
+                          type: object
+                        type: array
+                      namespace:
+                        description: |-
+                          prometheus: kube-prometheus
+                          -- Prometheus ServiceMonitor namespace
+                        type: string
+                      relabelings:
+                        description: -- Prometheus [RelabelConfigs] to apply to samples
+                          before scraping
+                        items:
+                          description: RelabelingsConfig defines the relabelings configuration
+                          properties:
+                            sourceLabels:
+                              items:
+                                type: string
+                              type: array
+                            targetLabel:
+                              type: string
+                          type: object
+                        type: array
+                      selector:
+                        description: -- Prometheus ServiceMonitor selector
+                        properties:
+                          matchLabels:
+                            description: MatchLabelsConfig defines the match labels
+                              configuration
+                            properties:
+                              app:
+                                type: string
+                            type: object
+                        type: object
+                    type: object
+                type: object
+              name:
+                description: -- Argo Events controller name string
+                type: string
+              nodeSelector:
+                description: -- [Node selector]
+                properties:
+                  kubernetes.io/arch:
+                    type: string
+                type: object
+              pdb:
+                description: Pod disruption budget
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: -- Annotations to be added to events controller pdb
+                    type: object
+                  enabled:
+                    description: -- Deploy a PodDisruptionBudget for the events controller
+                    type: boolean
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: |-
+                      minAvailable: 1
+                      maxUnavailable: 0
+                      -- Labels to be added to events controller pdb
+                    type: object
+                type: object
+              podAnnotations:
+                additionalProperties:
+                  type: string
+                description: -- Annotations to be added to events controller pods
+                type: object
+              podLabels:
+                additionalProperties:
+                  type: string
+                description: -- Labels to be added to events controller pods
+                type: object
+              priorityClassName:
+                description: -- Priority class for the events controller pods
+                type: string
+              rbac:
+                description: RbacConfig defines the rbac configuration
+                properties:
+                  enabled:
+                    description: -- Create events controller RBAC
+                    type: boolean
+                  managedNamespace:
+                    description: -- Additional namespace to be monitored by the controller
+                    type: string
+                  namespaced:
+                    description: -- Restrict events controller to operate only in
+                      a single namespace instead of cluster-wide scope.
+                    type: boolean
+                  rules:
+                    description: -- Additional user rules for event controller's rbac
+                    items:
+                      description: RulesConfig defines the rules configuration
+                      properties:
+                        apiGroups:
+                          items:
+                            type: string
+                          type: array
+                        resources:
+                          items:
+                            type: string
+                          type: array
+                        verbs:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                type: object
+              readinessProbe:
+                description: |-
+                  # Readiness and liveness probes for default backend
+                  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+                properties:
+                  failureThreshold:
+                    description: -- Minimum consecutive failures for the [probe] to
+                      be considered failed after having succeeded
+                    type: integer
+                  initialDelaySeconds:
+                    description: -- Number of seconds after the container has started
+                      before [probe] is initiated
+                    type: integer
+                  periodSeconds:
+                    description: -- How often (in seconds) to perform the [probe]
+                    type: integer
+                  successThreshold:
+                    description: -- Minimum consecutive successes for the [probe]
+                      to be considered successful after having failed
+                    type: integer
+                  timeoutSeconds:
+                    description: -- Number of seconds after which the [probe] times
+                      out
+                    type: integer
+                type: object
+              replicas:
+                description: -- The number of events controller pods to run.
+                type: integer
+              resources:
+                description: -- Resource limits and requests for the events controller
+                  pods
+                properties:
+                  limits:
+                    description: LimitsConfig defines the limits configuration
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    type: object
+                  requests:
+                    description: RequestsConfig defines the requests configuration
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    type: object
+                type: object
+              revisionHistoryLimit:
+                description: -- The number of replicasets history to keep
+                type: integer
+              serviceAccount:
+                description: ServiceAccountConfig defines the service account configuration
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: -- Annotations applied to created service account
+                    type: object
+                  automountServiceAccountToken:
+                    description: -- Automount API credentials for the Service Account
+                    type: boolean
+                  create:
+                    description: -- Create a service account for the events controller
+                    type: boolean
+                  name:
+                    description: -- Service account name
+                    type: string
+                type: object
+              tolerations:
+                description: -- [Tolerations] for use with node taints
+                items:
+                  description: TolerationsConfig defines the tolerations configuration
+                  properties:
+                    effect:
+                      type: string
+                    key:
+                      type: string
+                    operator:
+                      type: string
+                    value:
+                      type: string
+                  type: object
+                type: array
+              topologySpreadConstraints:
+                description: |-
+                  -- Assign custom [TopologySpreadConstraints] rules to the events controller
+                  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
+                  # If labelSelector is left out, it will default to the labelSelector configuration of the deployment
+                items:
+                  description: TopologySpreadConstraintsConfig defines the topology
+                    spread constraints configuration
+                  properties:
+                    maxSkew:
+                      type: integer
+                    topologyKey:
+                      type: string
+                    whenUnsatisfiable:
+                      type: string
+                  type: object
+                type: array
+              volumeMounts:
+                description: -- Additional volumeMounts to the events controller main
+                  container
+                items:
+                  description: VolumeMountsConfig defines the volume mounts configuration
+                  properties:
+                    mountPath:
+                      type: string
+                    name:
+                      type: string
+                  type: object
+                type: array
+              volumes:
+                description: -- Additional volumes to the events controller pod
+                items:
+                  description: VolumesConfig defines the volumes configuration
+                  properties:
+                    emptyDir:
+                      additionalProperties: false
+                      description: EmptyDirConfig defines the empty dir configuration
+                      type: object
+                    name:
+                      type: string
+                  type: object
+                type: array
+            type: object
+          crds:
+            description: '# Custom resource configuration'
+            properties:
+              annotations:
+                additionalProperties:
+                  type: string
+                description: -- Annotations to be added to all CRDs
+                type: object
+              install:
+                description: -- Install and upgrade CRDs
+                type: boolean
+              keep:
+                description: -- Keep CRDs on chart uninstall
+                type: boolean
+            type: object
+          createAggregateRoles:
+            description: |-
+              -- Create clusterroles that extend existing clusterroles to interact with argo-events crds
+              Only applies for cluster-wide installation (`controller.rbac.namespaced: false`)
+              # Ref: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles
+            type: boolean
+          fullnameOverride:
+            description: -- String to fully override "argo-events.fullname" template
+            type: string
+          global:
+            description: GlobalConfig defines the global configuration
+            properties:
+              additionalLabels:
+                additionalProperties:
+                  type: string
+                description: -- Additional labels to add to all resources
+                type: object
+              hostAliases:
+                description: -- Mapping between IP and hostnames that will be injected
+                  as entries in the pod's hosts files
+                items:
+                  description: HostAliasesConfig defines the host aliases configuration
+                  properties:
+                    hostnames:
+                      items:
+                        type: string
+                      type: array
+                    ip:
+                      type: string
+                  type: object
+                type: array
+              image:
+                description: ImageConfig defines the image configuration
+                properties:
+                  imagePullPolicy:
+                    description: -- If defined, a imagePullPolicy applied to all Argo
+                      Events deployments
+                    type: string
+                  repository:
+                    description: -- If defined, a repository applied to all Argo Events
+                      deployments
+                    type: string
+                  tag:
+                    description: -- Overrides the global Argo Events image tag whose
+                      default is the chart appVersion
+                    type: string
+                type: object
+              imagePullSecrets:
+                description: -- If defined, uses a Secret to pull an image from a
+                  private Docker registry or repository
+                items:
+                  description: ImagePullSecretsConfig defines the image pull secrets
+                    configuration
+                  properties:
+                    name:
+                      type: string
+                  type: object
+                type: array
+              podAnnotations:
+                additionalProperties:
+                  type: string
+                description: -- Annotations for the all deployed pods
+                type: object
+              podLabels:
+                additionalProperties:
+                  type: string
+                description: -- Labels for the all deployed pods
+                type: object
+              securityContext:
+                description: -- Toggle and define securityContext. See [values.yaml]
+                properties:
+                  fsGroup:
+                    type: integer
+                  runAsGroup:
+                    type: integer
+                  runAsNonRoot:
+                    type: boolean
+                  runAsUser:
+                    type: integer
+                type: object
+            type: object
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          nameOverride:
+            description: -- Provide a name in place of `argo-events`
+            type: string
+          namespaceOverride:
+            description: |-
+              -- Override the namespace
+              @default -- `.Release.Namespace`
+            type: string
+          openshift:
+            description: -- Deploy on OpenShift
+            type: boolean
+          webhook:
+            description: '# Argo Events admission webhook'
+            properties:
+              affinity:
+                description: -- Assign custom [affinity] rules to the deployment
+                properties:
+                  nodeAffinity:
+                    description: WebhookConfigAffinityConfigNodeAffinityConfig defines
+                      the webhook config affinity config node affinity configuration
+                    properties:
+                      required:
+                        description: WebhookConfigAffinityConfigNodeAffinityConfigRequiredConfig
+                          defines the webhook config affinity config node affinity
+                          config required configuration
+                        properties:
+                          nodeSelectorTerm:
+                            description: WebhookConfigAffinityConfigNodeAffinityConfigRequiredConfigNodeSelectorTermConfig
+                              defines the webhook config affinity config node affinity
+                              config required config node selector term configuration
+                            properties:
+                              matchExpressions:
+                                items:
+                                  description: WebhookConfigAffinityConfigNodeAffinityConfigRequiredConfigNodeSelectorTermConfigMatchExpressionsConfig
+                                    defines the webhook config affinity config node
+                                    affinity config required config node selector
+                                    term config match expressions configuration
+                                  properties:
+                                    key:
+                                      type: string
+                                    nodeSelectorTerm:
+                                      description: WebhookConfigAffinityConfigNodeAffinityConfigRequiredConfigNodeSelectorTermConfigMatchExpressionsConfigNodeSelectorTermConfig
+                                        defines the webhook config affinity config
+                                        node affinity config required config node
+                                        selector term config match expressions config
+                                        node selector term configuration
+                                      properties:
+                                        matchExpressions:
+                                          items:
+                                            description: WebhookConfigAffinityConfigNodeAffinityConfigRequiredConfigNodeSelectorTermConfigMatchExpressionsConfigNodeSelectorTermConfigMatchExpressionsConfig
+                                              defines the webhook config affinity
+                                              config node affinity config required
+                                              config node selector term config match
+                                              expressions config node selector term
+                                              config match expressions configuration
+                                            properties:
+                                              key:
+                                                type: string
+                                              operator:
+                                                type: string
+                                              values:
+                                                items:
+                                                  type: string
+                                                type: array
+                                            type: object
+                                          type: array
+                                      type: object
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                            type: object
+                        type: object
+                    type: object
+                type: object
+              containerSecurityContext:
+                description: -- Event controller container-level security context
+                properties:
+                  capabilities:
+                    description: WebhookConfigContainerSecurityContextConfigCapabilitiesConfig
+                      defines the webhook config container security context config
+                      capabilities configuration
+                    properties:
+                      drop:
+                        items:
+                          type: string
+                        type: array
+                      readOnlyRootFilesystem:
+                        type: boolean
+                      runAsNonRoot:
+                        type: boolean
+                    type: object
+                type: object
+              enabled:
+                description: -- Enable admission webhook. Applies only for cluster-wide
+                  installation
+                type: boolean
+              env:
+                description: |-
+                  -- Environment variables to pass to event controller
+                  @default -- `[]` (See [values.yaml])
+                items:
+                  description: WebhookConfigEnvConfig defines the webhook config env
+                    configuration
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      type: string
+                  type: object
+                type: array
+              envFrom:
+                description: |-
+                  -- envFrom to pass to event controller
+                  @default -- `[]` (See [values.yaml])
+                items:
+                  description: WebhookConfigEnvFromConfig defines the webhook config
+                    env from configuration
+                  properties:
+                    configMapRef:
+                      description: WebhookConfigEnvFromConfigConfigMapRefConfig defines
+                        the webhook config env from config config map ref configuration
+                      properties:
+                        name:
+                          type: string
+                      type: object
+                    secretRef:
+                      description: WebhookConfigEnvFromConfigSecretRefConfig defines
+                        the webhook config env from config secret ref configuration
+                      properties:
+                        name:
+                          type: string
+                      type: object
+                  type: object
+                type: array
+              image:
+                description: WebhookConfigImageConfig defines the webhook config image
+                  configuration
+                properties:
+                  imagePullPolicy:
+                    description: |-
+                      -- Image pull policy for the event controller
+                      @default -- `""` (defaults to global.image.imagePullPolicy)
+                    type: string
+                  repository:
+                    description: |-
+                      -- Repository to use for the event controller
+                      @default -- `""` (defaults to global.image.repository)
+                    type: string
+                  tag:
+                    description: |-
+                      -- Tag to use for the event controller
+                      @default -- `""` (defaults to global.image.tag)
+                    type: string
+                type: object
+              livenessProbe:
+                description: WebhookConfigLivenessProbeConfig defines the webhook
+                  config liveness probe configuration
+                properties:
+                  failureThreshold:
+                    description: -- Minimum consecutive failures for the [probe] to
+                      be considered failed after having succeeded
+                    type: integer
+                  initialDelaySeconds:
+                    description: -- Number of seconds after the container has started
+                      before [probe] is initiated
+                    type: integer
+                  periodSeconds:
+                    description: -- How often (in seconds) to perform the [probe]
+                    type: integer
+                  successThreshold:
+                    description: -- Minimum consecutive successes for the [probe]
+                      to be considered successful after having failed
+                    type: integer
+                  timeoutSeconds:
+                    description: -- Number of seconds after which the [probe] times
+                      out
+                    type: integer
+                type: object
+              name:
+                description: -- Argo Events admission webhook name string
+                type: string
+              nodeSelector:
+                description: -- [Node selector]
+                properties:
+                  kubernetes.io/arch:
+                    type: string
+                type: object
+              pdb:
+                description: Pod disruption budget
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: -- Annotations to be added to admission webhook pdb
+                    type: object
+                  enabled:
+                    description: -- Deploy a PodDisruptionBudget for the admission
+                      webhook
+                    type: boolean
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: |-
+                      minAvailable: 1
+                      maxUnavailable: 0
+                      -- Labels to be added to admission webhook pdb
+                    type: object
+                type: object
+              podAnnotations:
+                additionalProperties:
+                  type: string
+                description: -- Annotations to be added to event controller pods
+                type: object
+              podLabels:
+                additionalProperties:
+                  type: string
+                description: -- Labels to be added to event controller pods
+                type: object
+              port:
+                description: -- Port to listen on
+                type: integer
+              priorityClassName:
+                description: -- Priority class for the event controller pods
+                type: string
+              readinessProbe:
+                description: |-
+                  # Readiness and liveness probes for default backend
+                  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+                properties:
+                  failureThreshold:
+                    description: -- Minimum consecutive failures for the [probe] to
+                      be considered failed after having succeeded
+                    type: integer
+                  initialDelaySeconds:
+                    description: -- Number of seconds after the container has started
+                      before [probe] is initiated
+                    type: integer
+                  periodSeconds:
+                    description: -- How often (in seconds) to perform the [probe]
+                    type: integer
+                  successThreshold:
+                    description: -- Minimum consecutive successes for the [probe]
+                      to be considered successful after having failed
+                    type: integer
+                  timeoutSeconds:
+                    description: -- Number of seconds after which the [probe] times
+                      out
+                    type: integer
+                type: object
+              replicas:
+                description: -- The number of webhook pods to run.
+                type: integer
+              resources:
+                description: -- Resource limits and requests for the event controller
+                  pods
+                properties:
+                  limits:
+                    description: WebhookConfigResourcesConfigLimitsConfig defines
+                      the webhook config resources config limits configuration
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    type: object
+                  requests:
+                    description: WebhookConfigResourcesConfigRequestsConfig defines
+                      the webhook config resources config requests configuration
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    type: object
+                type: object
+              revisionHistoryLimit:
+                description: -- The number of replicasets history to keep
+                type: integer
+              serviceAccount:
+                description: WebhookConfigServiceAccountConfig defines the webhook
+                  config service account configuration
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: -- Annotations applied to created service account
+                    type: object
+                  automountServiceAccountToken:
+                    description: -- Automount API credentials for the Service Account
+                    type: boolean
+                  create:
+                    description: -- Create a service account for the admission webhook
+                    type: boolean
+                  name:
+                    description: -- Service account name
+                    type: string
+                type: object
+              tolerations:
+                description: -- [Tolerations] for use with node taints
+                items:
+                  description: WebhookConfigTolerationsConfig defines the webhook
+                    config tolerations configuration
+                  properties:
+                    effect:
+                      type: string
+                    key:
+                      type: string
+                    operator:
+                      type: string
+                    value:
+                      type: string
+                  type: object
+                type: array
+              topologySpreadConstraints:
+                description: |-
+                  -- Assign custom [TopologySpreadConstraints] rules to the event controller
+                  # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
+                  # If labelSelector is left out, it will default to the labelSelector configuration of the deployment
+                items:
+                  description: WebhookConfigTopologySpreadConstraintsConfig defines
+                    the webhook config topology spread constraints configuration
+                  properties:
+                    maxSkew:
+                      type: integer
+                    topologyKey:
+                      type: string
+                    whenUnsatisfiable:
+                      type: string
+                  type: object
+                type: array
+              volumeMounts:
+                description: -- Additional volumeMounts to the event controller main
+                  container
+                items:
+                  description: WebhookConfigVolumeMountsConfig defines the webhook
+                    config volume mounts configuration
+                  properties:
+                    mountPath:
+                      type: string
+                    name:
+                      type: string
+                  type: object
+                type: array
+              volumes:
+                description: -- Additional volumes to the event controller pod
+                items:
+                  description: WebhookConfigVolumesConfig defines the webhook config
+                    volumes configuration
+                  properties:
+                    emptyDir:
+                      additionalProperties: false
+                      description: WebhookConfigVolumesConfigEmptyDirConfig defines
+                        the webhook config volumes config empty dir configuration
+                      type: object
+                    name:
+                      type: string
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: null
+  storedVersions: null
