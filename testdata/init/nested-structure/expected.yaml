@@ -1,0 +1,12 @@
+apiVersion: test.io/v1
+kind: Test
+service:
+    port: 80
+    type: ClusterIP
+    annotations:
+        foo: bar
+env:
+    - name: FOO
+      value: bar
+    - name: BAZ
+      value: qux

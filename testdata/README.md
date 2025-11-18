@@ -1,90 +1,69 @@
-# Test Data
+# Test Data Structure
 
-This directory contains test cases for validating the Miaka tool's output.
+This directory contains test cases for the `miaka` CLI commands.
 
-## Structure
-
-Each subdirectory represents a test case with the following files:
+## Directory Structure
 
 ```
 testdata/
-  <test-case-name>/
-    input.yaml           - KRM-compliant input YAML
-    expected_types.go    - Expected Go types output
-    expected_crd.yaml    - Expected CRD output
-    .skip                - (Optional) Mark test as skipped
+├── build/          # Test cases for 'miaka build' command
+│   ├── basic/
+│   ├── minimal/
+│   └── argo-events/
+└── init/           # Test cases for 'miaka init' command
+    ├── basic-conversion/
+    ├── empty-file/
+    ├── nested-structure/
+    ├── comments-preservation/
+    ├── array-handling/
+    └── existing-krm/
 ```
 
-## Automated Testing
+## Build Test Cases
 
-The `integration_test.go` file at the project root automatically discovers and runs all test cases in this directory.
+Each test case directory under `testdata/build/` should contain:
 
-Run all integration tests:
-```bash
-make test
-# or specifically:
-go test -v -run TestDataTestCases
-```
+- **`input.yaml`** (required) - The input YAML file to process
+- **`expected_types.go`** (optional) - Expected generated Go types
+- **`expected_crd.yaml`** (optional) - Expected generated CRD
+- **`expected_schema.json`** (optional) - Expected generated JSON Schema
+- **`.skip`** (optional) - If present, the test will be skipped. The file contents will be used as the skip reason.
 
-Each test case automatically:
-1. Generates Go types from `input.yaml`
-2. Compares output with `expected_types.go`
-3. Generates CRD from the types
-4. Compares output with `expected_crd.yaml`
+The test will:
+1. Run `miaka build` on `input.yaml`
+2. Generate types, CRD, and JSON Schema
+3. Compare outputs with expected files (if they exist)
 
-## Skipping Test Cases
+## Init Test Cases
 
-To skip a test case (e.g., for known limitations), create a `.skip` file in the test case directory:
+Each test case directory under `testdata/init/` should contain:
 
-```bash
-echo "Reason for skipping this test" > testdata/my-case/.skip
-```
+- **`input.yaml`** (optional) - The input values.yaml file. If absent, tests creating empty KRM files.
+- **`expected.yaml`** (required) - The expected output example.values.yaml
+- **`flags.txt`** (optional) - Command-line flags to pass, one per line (e.g., `--api-version=myapp.io/v1`)
+- **`.skip`** (optional) - If present, the test will be skipped. The file contents will be used as the skip reason.
 
-The test will be marked as skipped and won't cause test failures.
-
-## Test Cases
-
-### `basic/`
-A comprehensive example demonstrating:
-- Multiple field types (int, string, bool)
-- Nested structs (ServiceConfig)
-- Arrays (EnvConfig)
-- Kubebuilder validation markers
-
-### `minimal/`
-A minimal example with just a single field to test basic functionality.
-
-### `argo-events/` (skipped)
-A complex real-world example that exposes current limitations (interface{} types not supported).
+The test will:
+1. Run `miaka init` with the specified flags
+2. Convert `input.yaml` (or create empty file if no input)
+3. Compare output with `expected.yaml`
 
 ## Adding New Test Cases
 
-1. Create a new directory under `testdata/`:
-   ```bash
-   mkdir testdata/my-new-case
-   ```
+To add a new test case:
 
-2. Add your `input.yaml` file with KRM-compliant YAML
+1. Create a new directory under `testdata/build/` or `testdata/init/`
+2. Add the required files (see above)
+3. Run the tests to verify
 
-3. Generate expected outputs:
-   ```bash
-   miaka build testdata/my-new-case/input.yaml \
-     -o testdata/my-new-case/expected_types.go \
-     -c testdata/my-new-case/expected_crd.yaml \
-     --keep-types
-   ```
+The test framework will automatically discover and run all test cases in these directories.
 
-4. Review the generated files to ensure they match expectations
+## Skipping Tests
 
-5. Run tests to verify:
-   ```bash
-   make test
-   ```
+To skip a test temporarily:
 
-## Notes
+```bash
+echo "Reason for skipping" > testdata/build/my-test/.skip
+```
 
-- `go.mod` and `go.sum` are intermediate files created during CRD generation
-- These are created in temporary directories and automatically cleaned up
-- They are not part of the expected test outputs
-- Controller-gen version annotations in CRDs are normalized during comparison to avoid false failures
-
+The test will be skipped and the reason will be displayed in the test output.

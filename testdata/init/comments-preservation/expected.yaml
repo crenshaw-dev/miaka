@@ -1,0 +1,6 @@
+apiVersion: test.io/v1
+kind: Test
+# Replica count
+replicaCount: 3
+# Docker image
+image: nginx:latest

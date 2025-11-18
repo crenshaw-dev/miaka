@@ -1,0 +1,10 @@
+env:
+- name: FOO
+  value: bar
+- name: BAZ
+  value: qux
+ports:
+- 80
+- 443
+- 8080
+

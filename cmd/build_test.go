@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TestBuildCommand_Testdata runs table-driven tests for all test cases in testdata/
+// TestBuildCommand_Testdata runs table-driven tests for all test cases in testdata/build/
 func TestBuildCommand_Testdata(t *testing.T) {
-	testdataDir := "../testdata"
+	testdataDir := "../testdata/build"
 
 	// Find all test case directories
 	entries, err := os.ReadDir(testdataDir)
@@ -64,7 +64,7 @@ func TestBuildCommand_Testdata(t *testing.T) {
 	}
 
 	if len(testCases) == 0 {
-		t.Fatal("No test cases found in testdata/")
+		t.Fatal("No test cases found in testdata/build/")
 	}
 
 	for _, tc := range testCases {

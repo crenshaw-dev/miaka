@@ -1,0 +1,2 @@
+apiVersion: test.io/v1
+kind: Test

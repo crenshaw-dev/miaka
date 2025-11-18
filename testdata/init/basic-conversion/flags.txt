@@ -1,0 +1,3 @@
+--api-version=myapp.io/v1
+--kind=MyApp
+
