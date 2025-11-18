@@ -1,0 +1,54 @@
+# GoReleaser configuration for miaka
+# See: https://goreleaser.com
+
+version: 2
+
+before:
+  hooks:
+    # Run tests before building
+    - go test ./...
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Inject version information
+    ldflags:
+      - -s -w
+      - -X github.com/crenshaw-dev/miaka/cmd.version={{.Version}}
+      - -X github.com/crenshaw-dev/miaka/cmd.commit={{.Commit}}
+      - -X github.com/crenshaw-dev/miaka/cmd.date={{.Date}}
+    binary: miaka
+
+archives:
+  - format: tar.gz
+    # Use zip for Windows
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE*
+
+checksum:
+  name_template: 'checksums.txt'
+
+release:
+  # Create draft releases (best practice for immutable releases)
+  draft: true
+  # Prevent accidental overwrites
+  mode: keep-existing
+  # Use GitHub releases
+  github:
+    owner: crenshaw-dev
+    name: miaka
+
+changelog:
+  sort: asc
+

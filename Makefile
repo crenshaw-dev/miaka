@@ -1,12 +1,12 @@
-.PHONY: build test
+.PHONY: build test release
 
-# Version information (for local builds)
-VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+# Version information (for local builds, not used for releases)
+BUILD_VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
 # Build flags
-LDFLAGS := -X github.com/crenshaw-dev/miaka/cmd.version=$(VERSION) \
+LDFLAGS := -X github.com/crenshaw-dev/miaka/cmd.version=$(BUILD_VERSION) \
            -X github.com/crenshaw-dev/miaka/cmd.commit=$(COMMIT) \
            -X github.com/crenshaw-dev/miaka/cmd.date=$(DATE)
 
@@ -18,3 +18,19 @@ build:
 # Run tests
 test:
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+# Trigger a release by creating and pushing a tag
+# Usage: make release VERSION=v0.1.0
+release:
+ifndef VERSION
+	@echo "Error: VERSION must be set (e.g., make release VERSION=v0.1.0)"
+	@exit 1
+endif
+	@if ! echo "$(VERSION)" | grep -q "^v[0-9]"; then \
+		echo "Error: VERSION must start with 'v' followed by a number (e.g., v0.1.0)"; \
+		exit 1; \
+	fi
+	@echo "Creating release $(VERSION)..."
+	git tag -a $(VERSION) -m "Release $(VERSION)"
+	git push origin $(VERSION)
+	@echo "✓ Tag $(VERSION) pushed. Check GitHub Actions for build progress."
