@@ -1,3 +1,4 @@
+// Package schema provides types and utilities for representing data schemas.
 package schema
 
 import (

@@ -60,7 +60,7 @@ func init() {
 	// Don't mark as required - we'll validate conditionally in runInit
 }
 
-func runInit(cmd *cobra.Command, args []string) error {
+func runInit(_ *cobra.Command, args []string) error {
 	// Determine input file: use provided arg, or default to values.yaml
 	inputFile := "values.yaml"
 	if len(args) > 0 {

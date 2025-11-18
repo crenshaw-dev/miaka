@@ -3,6 +3,7 @@ package schema
 // FieldType represents the type of a field in Go
 type FieldType string
 
+// Field type constants
 const (
 	TypeInt     FieldType = "int"
 	TypeFloat64 FieldType = "float64"

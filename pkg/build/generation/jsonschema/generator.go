@@ -1,3 +1,4 @@
+// Package jsonschema generates JSON Schema files for Helm chart validation.
 package jsonschema
 
 import (

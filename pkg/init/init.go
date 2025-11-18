@@ -1,3 +1,4 @@
+// Package init provides functionality for converting Helm values to KRM format.
 package init
 
 import (
@@ -54,13 +55,13 @@ func CheckKRMFields(inputFile string) (hasApiVersion, hasKind bool) {
 func ConvertToKRM(inputFile, outputFile, apiVersion, kind string) error {
 	var contentNode *yaml.Node
 	var rootNode yaml.Node
-	
+
 	// Handle empty input file (create new empty KRM YAML)
 	if inputFile == "" {
 		if apiVersion == "" || kind == "" {
 			return fmt.Errorf("apiVersion and kind are required (provide via --api-version and --kind flags)")
 		}
-		
+
 		// Create a new empty mapping node
 		contentNode = &yaml.Node{
 			Kind:    yaml.MappingNode,
@@ -88,7 +89,7 @@ func ConvertToKRM(inputFile, outputFile, apiVersion, kind string) error {
 		}
 
 		contentNode = rootNode.Content[0]
-		
+
 		// Check if this is a mapping node (object)
 		if contentNode.Kind != yaml.MappingNode {
 			return fmt.Errorf("root YAML node must be an object")
@@ -110,23 +111,23 @@ func ConvertToKRM(inputFile, outputFile, apiVersion, kind string) error {
 	// Determine what values to use
 	finalApiVersion := apiVersion
 	finalKind := kind
-	
-	if hasApiVersion && hasKind {
-		// Both exist in input, use those values (ignore provided flags)
-		// Just write the file as-is
-	} else if hasApiVersion || hasKind {
-		// Only one exists - this is an invalid state
+
+	// Both exist in input - use those values (ignore provided flags)
+	if !hasApiVersion || !hasKind {
+		// Handle cases where one or both are missing
 		if hasApiVersion {
+			// Only apiVersion exists - missing kind
 			return fmt.Errorf("file has apiVersion but missing kind - provide --kind flag or run interactively")
-		} else {
+		}
+		if hasKind {
+			// Only kind exists - missing apiVersion
 			return fmt.Errorf("file has kind but missing apiVersion - provide --api-version flag or run interactively")
 		}
-	} else {
 		// Neither exist, must provide both
 		if finalApiVersion == "" || finalKind == "" {
 			return fmt.Errorf("apiVersion and kind are required (provide via flags or run interactively)")
 		}
-		
+
 		// Create new nodes for apiVersion and kind
 		apiVersionKey := &yaml.Node{
 			Kind:  yaml.ScalarNode,
@@ -168,4 +169,3 @@ func ConvertToKRM(inputFile, outputFile, apiVersion, kind string) error {
 
 	return nil
 }
-

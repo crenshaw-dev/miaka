@@ -1,3 +1,4 @@
+// Package cmd provides the command-line interface for miaka.
 package cmd
 
 import (
@@ -64,7 +65,7 @@ func init() {
 	buildCmd.Flags().StringVarP(&buildSchemaPath, "schema", "s", "values.schema.json", "Output path for JSON Schema file")
 }
 
-func runBuild(cmd *cobra.Command, args []string) error {
+func runBuild(_ *cobra.Command, args []string) error {
 	// Determine input file: use provided arg, or default to example.values.yaml
 	inputFile := "example.values.yaml"
 	if len(args) > 0 {
@@ -117,10 +118,10 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	code, err := g.Generate()
 
 	// Write types.go file even if there were formatting errors (for debugging)
-	if code != nil && len(code) > 0 {
+	if len(code) > 0 {
 		if writeErr := os.WriteFile(typesFilePath, code, 0644); writeErr != nil {
 			if err != nil {
-				return fmt.Errorf("failed to write types file: %w (original error: %v)", writeErr, err)
+				return fmt.Errorf("failed to write types file: %w (original error: %w)", writeErr, err)
 			}
 			return fmt.Errorf("failed to write types file: %w", writeErr)
 		}
@@ -195,7 +196,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		if err := validation.CheckBreakingChanges(tmpOldCRD.Name(), newCRDContent); err != nil {
 			// Restore the old CRD since we're rejecting the breaking change
 			if writeErr := os.WriteFile(buildCRDPath, oldCRDContent, 0644); writeErr != nil {
-				return fmt.Errorf("breaking change detected and failed to restore old CRD: %w (original error: %v)", writeErr, err)
+				return fmt.Errorf("breaking change detected and failed to restore old CRD: %w (original error: %w)", writeErr, err)
 			}
 			return fmt.Errorf("failed to generate CRD: %w", err)
 		}

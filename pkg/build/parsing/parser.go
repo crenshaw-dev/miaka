@@ -1,3 +1,4 @@
+// Package parsing provides YAML parsing functionality with comment preservation.
 package parsing
 
 import (
@@ -152,11 +153,6 @@ func (p *Parser) parseObject(node *yaml.Node, structName string, structComments 
 	}
 
 	return structDef, nil
-}
-
-// parseField parses a field and returns the field definition and any nested structs
-func (p *Parser) parseField(fieldName string, valueNode *yaml.Node, comments []string) (*schema.Field, []schema.StructDef, error) {
-	return p.parseFieldWithPath(fieldName, fieldName, valueNode, comments)
 }
 
 // parseFieldWithPath parses a field with YAML path tracking
@@ -386,7 +382,7 @@ func extractComments(node *yaml.Node) []string {
 
 // extractCommentsForStruct extracts comments that should apply to a struct
 // For objects, we use head comments on the mapping node
-func extractCommentsForStruct(node *yaml.Node) []string {
+func extractCommentsForStruct(_ *yaml.Node) []string {
 	// For structs defined by objects, no additional comments beyond field comments
 	return []string{}
 }
@@ -401,9 +397,7 @@ func extractListItemComments(sequenceNode *yaml.Node) []string {
 		firstItem := sequenceNode.Content[0]
 		if firstItem.HeadComment != "" {
 			lines := strings.Split(firstItem.HeadComment, "\n")
-			for _, line := range lines {
-				comments = append(comments, line)
-			}
+			comments = append(comments, lines...)
 		}
 	}
 

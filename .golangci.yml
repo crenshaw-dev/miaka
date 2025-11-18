@@ -1,0 +1,75 @@
+version: 2
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - revive
+    - unconvert
+    - unparam
+    - gosec
+    - bodyclose
+    - noctx
+    - errorlint
+  
+  exclusions:
+    paths:
+      - _test\.go
+      - testdata/
+    
+    rules:
+      # Gosec - CLI tools legitimately need these patterns
+      - linters:
+          - gosec
+        text: "G104: Errors unhandled"
+      - linters:
+          - gosec
+        text: "G304: Potential file inclusion via variable"
+      - linters:
+          - gosec
+        text: "G306: Expect WriteFile permissions to be 0600"
+      - linters:
+          - gosec
+        text: "G301: Expect directory permissions to be 0750"
+      
+      # Errcheck - defer cleanup operations
+      - linters:
+          - errcheck
+        text: "Error return value of `os.Remove` is not checked"
+      - linters:
+          - errcheck
+        text: "Error return value of `os.RemoveAll` is not checked"
+      - linters:
+          - errcheck
+        text: "Error return value of.*Close` is not checked"
+      
+      # Revive - apiVersion naming matches Kubernetes conventions
+      - linters:
+          - revive
+        text: "var-naming.*[Aa]pi[Vv]ersion"
+
+linters-settings:
+  errcheck:
+    check-blank: true
+    check-type-assertions: true
+  
+  govet:
+    enable-all: true
+  
+  revive:
+    rules:
+      - name: var-naming
+        disabled: true
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

@@ -1,3 +1,4 @@
+// Package gotypes generates Go type definitions from YAML schemas.
 package gotypes
 
 import (
@@ -10,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/crenshaw-dev/miaka/pkg/build/schema"
-	runtimeschema "k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // Generator handles Go code generation using AST
@@ -301,17 +301,6 @@ func splitPascalCase(s string) []string {
 // isUpper checks if a rune is uppercase
 func isUpper(r rune) bool {
 	return r >= 'A' && r <= 'Z'
-}
-
-// extractGroup extracts the group from an apiVersion using Kubernetes libraries
-// e.g., "example.com/v1alpha1" -> "example.com"
-func extractGroup(apiVersion string) string {
-	gv, err := runtimeschema.ParseGroupVersion(apiVersion)
-	if err != nil {
-		// Fallback to original string if parsing fails
-		return apiVersion
-	}
-	return gv.Group
 }
 
 // fixInlineComments fixes comments that appear inline with struct/field declarations

@@ -1,3 +1,4 @@
+// Package validation provides validation utilities for CRDs and YAML files.
 package validation
 
 import (

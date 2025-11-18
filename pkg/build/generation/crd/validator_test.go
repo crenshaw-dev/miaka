@@ -3,7 +3,6 @@ package crd
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -266,11 +265,4 @@ func TestValidateCRD_WithArrays(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected valid CRD with arrays to pass, got error: %v", err)
 	}
-}
-
-// contains checks if a string contains a substring (case-insensitive)
-func contains(s, substr string) bool {
-	s = strings.ToLower(s)
-	substr = strings.ToLower(substr)
-	return strings.Contains(s, substr)
 }

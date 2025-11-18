@@ -1,6 +1,8 @@
+// Package crd generates Kubernetes Custom Resource Definitions from Go types.
 package crd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -68,7 +70,7 @@ func (g *Generator) Generate(typesFile string, outputDir string) error {
 
 	// Create go.mod in temp directory
 	goModPath := filepath.Join(tmpDir, "go.mod")
-	goModContent := fmt.Sprintf("module generated\n\ngo 1.21\n\nrequire k8s.io/apimachinery v0.31.0\n")
+	goModContent := "module generated\n\ngo 1.21\n\nrequire k8s.io/apimachinery v0.31.0\n"
 	if err := os.WriteFile(goModPath, []byte(goModContent), 0644); err != nil {
 		return fmt.Errorf("failed to create go.mod: %w", err)
 	}
@@ -84,7 +86,8 @@ package %s
 	}
 
 	// Run go mod tidy in temp directory to generate go.sum
-	cmd := exec.Command("go", "mod", "tidy")
+	ctx := context.Background()
+	cmd := exec.CommandContext(ctx, "go", "mod", "tidy")
 	cmd.Dir = tmpDir
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to run go mod tidy: %w\nOutput: %s", err, string(output))
