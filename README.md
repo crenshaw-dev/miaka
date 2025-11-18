@@ -9,9 +9,9 @@
 
 ## Why Miaka?
 
-🚀 **Easy Schema Generation** - Automatically generate CRDs and JSON schemas from your YAML
-🛡️ **Breaking Change Detection** - Prevent API breakage with automatic compatibility checking
-✨ **KRM Compliance** - Make your values files follow the Kubernetes Resource Model standard
+* 🚀 **Easy Schema Generation** - Automatically generate CRDs and JSON schemas from your YAML
+* 🛡️ **Breaking Change Detection** - Prevent API breakage with automatic compatibility checking
+* ✨ **KRM Compliance** - Make your values files follow the Kubernetes Resource Model standard
 
 ## Installation
 
@@ -30,6 +30,9 @@ Convert your existing Helm `values.yaml` to KRM format (or start from scratch):
 cd <path to your Helm chart>
 miaka init
 ```
+
+This generates:
+- `example.values.yaml` - Complete example values file for generating schemas
 
 ### 2. Generate your schemas
 
@@ -53,12 +56,14 @@ miaka build
 
 If you introduce breaking changes (like changing a field type), the build fails with clear error messages showing exactly what broke.
 
+Miaka uses crd.yaml to detect breaking changes, so make sure to keep that file!
+
 ## Features
 
 - **Comment-driven docs**: Add descriptions and kubebuilder validation tags as YAML comments
 - **Type inference**: Automatically infers correct types from your example values
 - **Dual validation**: Validates against both CRD (Kubernetes) and JSON Schema (Helm)
-- **Legacy chart friendly**: Works with existing charts - no need to nest fields under `spec`
+- **Legacy chart friendly**: Works with existing charts - no need to change the structure
 
 ## Example
 
@@ -74,6 +79,16 @@ replicas: 3
 ```
 
 Miaka generates schemas with these descriptions and validations automatically.
+
+## How It Works
+
+Miaka doesn't reinvent the wheel - it brings together proven Kubernetes ecosystem tools:
+
+1. **Schema Generation**: Uses [controller-gen](https://book.kubebuilder.io/reference/controller-gen.html) (the official Kubernetes CRD generator) to create OpenAPI v3 schemas from Go types
+2. **Validation**: Leverages Helm's JSON Schema validation to verify your values against the generated schema
+3. **Breaking Change Detection**: Employs [crdify](https://github.com/kubernetes-sigs/crdify) to catch API compatibility issues between versions
+
+No magic, just battle-tested tools working together.
 
 ## Learn More
 
