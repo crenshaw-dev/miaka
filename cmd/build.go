@@ -44,8 +44,10 @@ kubebuilder markers from your YAML comments.`,
 
   # Custom types.go and CRD output locations
   miaka build -t pkg/apis/v1/types.go -c crds/my-crd.yaml example.values.yaml`,
-	Args: cobra.ExactArgs(1),
-	RunE: runBuild,
+	Args:          cobra.ExactArgs(1),
+	RunE:          runBuild,
+	SilenceUsage:  true,
+	SilenceErrors: true,
 }
 
 func init() {
@@ -134,11 +136,51 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	// Generate CRD
 	fmt.Printf("Generating CRD %s...\n", buildCRDPath)
+
 	crdDir := filepath.Dir(buildCRDPath)
 	crdFileName := filepath.Base(buildCRDPath)
 
+	// Save existing CRD for breaking change comparison (if it exists)
+	var oldCRDContent []byte
+	var hadExistingCRD bool
+	if existingData, err := os.ReadFile(buildCRDPath); err == nil {
+		oldCRDContent = existingData
+		hadExistingCRD = true
+		fmt.Println("Checking for breaking changes against existing CRD...")
+	}
+
 	if err := generateCRD(s, typesFilePath, crdDir, crdFileName); err != nil {
 		return fmt.Errorf("failed to generate CRD: %w", err)
+	}
+
+	// Check for breaking changes if there was an existing CRD
+	if hadExistingCRD {
+		newCRDContent, err := os.ReadFile(buildCRDPath)
+		if err != nil {
+			return fmt.Errorf("failed to read generated CRD: %w", err)
+		}
+
+		// Create temp file with old CRD for comparison
+		tmpOldCRD, err := os.CreateTemp("", "old-crd-*.yaml")
+		if err != nil {
+			return fmt.Errorf("failed to create temp file for old CRD: %w", err)
+		}
+		defer os.Remove(tmpOldCRD.Name())
+
+		if _, err := tmpOldCRD.Write(oldCRDContent); err != nil {
+			tmpOldCRD.Close()
+			return fmt.Errorf("failed to write old CRD to temp file: %w", err)
+		}
+		tmpOldCRD.Close()
+
+		// Check for breaking changes
+		if err := crdgen.CheckBreakingChanges(tmpOldCRD.Name(), newCRDContent); err != nil {
+			// Restore the old CRD since we're rejecting the breaking change
+			if writeErr := os.WriteFile(buildCRDPath, oldCRDContent, 0644); writeErr != nil {
+				return fmt.Errorf("breaking change detected and failed to restore old CRD: %w (original error: %v)", writeErr, err)
+			}
+			return fmt.Errorf("failed to generate CRD: %w", err)
+		}
 	}
 
 	// Add strict validation to CRD (additionalProperties: false)

@@ -279,6 +279,174 @@ func TestBuildCommand_InvalidInput(t *testing.T) {
 	}
 }
 
+// TestBuildCommand_BreakingChangeDetection tests that breaking changes are detected and fail the build
+func TestBuildCommand_BreakingChangeDetection(t *testing.T) {
+	tmpDir := t.TempDir()
+	crdOutput := filepath.Join(tmpDir, "crd.yaml")
+	schemaOutput := filepath.Join(tmpDir, "schema.json")
+
+	// Step 1: Create initial input and build CRD
+	initialInput := filepath.Join(tmpDir, "initial.yaml")
+	initialYAML := `apiVersion: example.com/v1
+kind: Example
+# Number of replicas
+# +kubebuilder:validation:Minimum=1
+replicas: 3
+# Application name
+appName: "myapp"
+# Configuration settings
+config:
+  # Timeout in seconds
+  timeout: 30
+  # Retry count
+  retries: 5
+`
+	if err := os.WriteFile(initialInput, []byte(initialYAML), 0644); err != nil {
+		t.Fatalf("Failed to write initial input: %v", err)
+	}
+
+	// Build the initial CRD
+	cmd := newBuildCommand()
+	cmd.SetArgs([]string{
+		initialInput,
+		"-c", crdOutput,
+		"-s", schemaOutput,
+	})
+
+	outBuf := new(bytes.Buffer)
+	errBuf := new(bytes.Buffer)
+	cmd.SetOut(outBuf)
+	cmd.SetErr(errBuf)
+
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatalf("Initial build failed: %v\nStderr: %s\nStdout: %s", err, errBuf.String(), outBuf.String())
+	}
+
+	// Verify CRD was created
+	if _, err := os.Stat(crdOutput); os.IsNotExist(err) {
+		t.Fatalf("Initial CRD was not created: %s", crdOutput)
+	}
+
+	// Step 2: Create breaking change input (change field type from int to string)
+	breakingInput := filepath.Join(tmpDir, "breaking.yaml")
+	breakingYAML := `apiVersion: example.com/v1
+kind: Example
+# Number of replicas (changed to string - BREAKING CHANGE!)
+replicas: "3"
+# Application name
+appName: "myapp"
+# Configuration settings
+config:
+  # Timeout in seconds
+  timeout: 30
+  # Retry count
+  retries: 5
+`
+	if err := os.WriteFile(breakingInput, []byte(breakingYAML), 0644); err != nil {
+		t.Fatalf("Failed to write breaking input: %v", err)
+	}
+
+	// Step 3: Attempt to build with breaking change - should fail
+	cmd2 := newBuildCommand()
+	cmd2.SetArgs([]string{
+		breakingInput,
+		"-c", crdOutput,
+		"-s", schemaOutput,
+	})
+
+	outBuf2 := new(bytes.Buffer)
+	errBuf2 := new(bytes.Buffer)
+	cmd2.SetOut(outBuf2)
+	cmd2.SetErr(errBuf2)
+
+	err = cmd2.Execute()
+	if err == nil {
+		t.Fatal("Expected build to fail with breaking change detection, but it succeeded")
+	}
+
+	// Verify error message mentions breaking changes
+	errOutput := err.Error()
+	if !strings.Contains(errOutput, "breaking changes detected") {
+		t.Errorf("Expected 'breaking changes detected' in error message, got: %s", errOutput)
+	}
+
+	t.Logf("Breaking change correctly detected: %s", errOutput)
+}
+
+// TestBuildCommand_CompatibleChange tests that compatible changes don't fail the build
+func TestBuildCommand_CompatibleChange(t *testing.T) {
+	tmpDir := t.TempDir()
+	crdOutput := filepath.Join(tmpDir, "crd.yaml")
+	schemaOutput := filepath.Join(tmpDir, "schema.json")
+
+	// Step 1: Create initial input and build CRD
+	initialInput := filepath.Join(tmpDir, "initial.yaml")
+	initialYAML := `apiVersion: example.com/v1
+kind: Example
+# Number of replicas
+replicas: 3
+# Application name
+appName: "myapp"
+`
+	if err := os.WriteFile(initialInput, []byte(initialYAML), 0644); err != nil {
+		t.Fatalf("Failed to write initial input: %v", err)
+	}
+
+	// Build the initial CRD
+	cmd := newBuildCommand()
+	cmd.SetArgs([]string{
+		initialInput,
+		"-c", crdOutput,
+		"-s", schemaOutput,
+	})
+
+	outBuf := new(bytes.Buffer)
+	errBuf := new(bytes.Buffer)
+	cmd.SetOut(outBuf)
+	cmd.SetErr(errBuf)
+
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatalf("Initial build failed: %v\nStderr: %s", err, errBuf.String())
+	}
+
+	// Step 2: Create compatible change input (add a new optional field)
+	compatibleInput := filepath.Join(tmpDir, "compatible.yaml")
+	compatibleYAML := `apiVersion: example.com/v1
+kind: Example
+# Number of replicas
+replicas: 3
+# Application name
+appName: "myapp"
+# New optional field (compatible change)
+description: "A description"
+`
+	if err := os.WriteFile(compatibleInput, []byte(compatibleYAML), 0644); err != nil {
+		t.Fatalf("Failed to write compatible input: %v", err)
+	}
+
+	// Step 3: Build with compatible change - should succeed
+	cmd2 := newBuildCommand()
+	cmd2.SetArgs([]string{
+		compatibleInput,
+		"-c", crdOutput,
+		"-s", schemaOutput,
+	})
+
+	outBuf2 := new(bytes.Buffer)
+	errBuf2 := new(bytes.Buffer)
+	cmd2.SetOut(outBuf2)
+	cmd2.SetErr(errBuf2)
+
+	err = cmd2.Execute()
+	if err != nil {
+		t.Fatalf("Build with compatible change should succeed, but failed: %v\nStderr: %s", err, errBuf2.String())
+	}
+
+	t.Log("Compatible change correctly allowed")
+}
+
 // compareFiles compares two files and reports differences
 func compareFiles(t *testing.T, fileType, generatedPath, expectedPath string) {
 	t.Helper()
