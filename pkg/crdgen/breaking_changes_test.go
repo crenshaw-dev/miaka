@@ -4,13 +4,15 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/spf13/afero"
 )
 
 func TestCheckBreakingChanges_NoExistingCRD(t *testing.T) {
 	// Test that when no existing CRD exists, no error is returned
-	fs := afero.NewMemMapFs()
+	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
 
 	newCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -37,7 +39,8 @@ spec:
                 type: integer
 `)
 
-	err := CheckBreakingChangesWithFS(fs, "nonexistent.yaml", newCRD)
+	nonexistentPath := filepath.Join(tmpDir, "nonexistent.yaml")
+	err = CheckBreakingChanges(nonexistentPath, newCRD)
 	if err != nil {
 		t.Errorf("Expected no error when old CRD doesn't exist, got: %v", err)
 	}
@@ -45,7 +48,11 @@ spec:
 
 func TestCheckBreakingChanges_CompatibleChange(t *testing.T) {
 	// Test that compatible changes (adding a field) don't cause errors
-	fs := afero.NewMemMapFs()
+	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
 
 	oldCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -99,12 +106,12 @@ spec:
                 type: string
 `)
 
-	// Write old CRD to filesystem
-	if err := afero.WriteFile(fs, "old.yaml", oldCRD, 0644); err != nil {
+	oldCRDPath := filepath.Join(tmpDir, "old.yaml")
+	if err := os.WriteFile(oldCRDPath, oldCRD, 0644); err != nil {
 		t.Fatalf("Failed to write old CRD: %v", err)
 	}
 
-	err := CheckBreakingChangesWithFS(fs, "old.yaml", newCRD)
+	err = CheckBreakingChanges(oldCRDPath, newCRD)
 	if err != nil {
 		t.Errorf("Expected no error for compatible change, got: %v", err)
 	}
@@ -112,7 +119,11 @@ spec:
 
 func TestCheckBreakingChanges_FieldTypeChange(t *testing.T) {
 	// Test that changing a field type is detected as a breaking change
-	fs := afero.NewMemMapFs()
+	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
 
 	oldCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -164,12 +175,12 @@ spec:
                 type: string
 `)
 
-	// Write old CRD to filesystem
-	if err := afero.WriteFile(fs, "old.yaml", oldCRD, 0644); err != nil {
+	oldCRDPath := filepath.Join(tmpDir, "old.yaml")
+	if err := os.WriteFile(oldCRDPath, oldCRD, 0644); err != nil {
 		t.Fatalf("Failed to write old CRD: %v", err)
 	}
 
-	err := CheckBreakingChangesWithFS(fs, "old.yaml", newCRD)
+	err = CheckBreakingChanges(oldCRDPath, newCRD)
 	if err == nil {
 		t.Error("Expected error for type change, got none")
 	}
@@ -177,7 +188,11 @@ spec:
 
 func TestCheckBreakingChanges_FieldRemoval(t *testing.T) {
 	// Test that removing a field is detected as a breaking change
-	fs := afero.NewMemMapFs()
+	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
 
 	oldCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -231,12 +246,12 @@ spec:
                 type: integer
 `)
 
-	// Write old CRD to filesystem
-	if err := afero.WriteFile(fs, "old.yaml", oldCRD, 0644); err != nil {
+	oldCRDPath := filepath.Join(tmpDir, "old.yaml")
+	if err := os.WriteFile(oldCRDPath, oldCRD, 0644); err != nil {
 		t.Fatalf("Failed to write old CRD: %v", err)
 	}
 
-	err := CheckBreakingChangesWithFS(fs, "old.yaml", newCRD)
+	err = CheckBreakingChanges(oldCRDPath, newCRD)
 	if err == nil {
 		t.Error("Expected error for field removal, got none")
 	}
@@ -384,7 +399,12 @@ spec:
 	}
 
 	// Should error for type change
-	err = CheckBreakingChangesWithFiles(oldCRDPath, newCRDPath)
+	newCRDContent, err := os.ReadFile(newCRDPath)
+	if err != nil {
+		t.Fatalf("Failed to read new CRD: %v", err)
+	}
+
+	err = CheckBreakingChanges(oldCRDPath, newCRDContent)
 	if err == nil {
 		t.Error("Expected error for type change, got none")
 	}

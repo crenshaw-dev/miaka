@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/spf13/afero"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/crdify/pkg/config"
@@ -115,70 +114,4 @@ func renderErrorsOnly(results *runner.Results) string {
 	}
 
 	return out.String()
-}
-
-// CheckBreakingChangesWithFiles compares two CRD files and returns an error if breaking changes are detected.
-// This is useful for testing.
-func CheckBreakingChangesWithFiles(oldCRDPath, newCRDPath string) error {
-	newCRDContent, err := os.ReadFile(newCRDPath)
-	if err != nil {
-		return fmt.Errorf("failed to read new CRD file: %w", err)
-	}
-
-	return CheckBreakingChanges(oldCRDPath, newCRDContent)
-}
-
-// CheckBreakingChangesWithFS is a variant that uses afero for filesystem operations,
-// useful for testing with mock filesystems
-func CheckBreakingChangesWithFS(fs afero.Fs, oldCRDPath string, newCRDContent []byte) error {
-	// Check if old CRD exists
-	exists, err := afero.Exists(fs, oldCRDPath)
-	if err != nil {
-		return fmt.Errorf("failed to check if old CRD exists: %w", err)
-	}
-	if !exists {
-		// No existing CRD, skip validation
-		return nil
-	}
-
-	// Load old CRD
-	fileBytes, err := afero.ReadFile(fs, oldCRDPath)
-	if err != nil {
-		return fmt.Errorf("failed to read existing CRD from %s: %w", oldCRDPath, err)
-	}
-
-	oldCRD := &apiextensionsv1.CustomResourceDefinition{}
-	if err := yaml.Unmarshal(fileBytes, oldCRD); err != nil {
-		return fmt.Errorf("failed to unmarshal existing CRD: %w", err)
-	}
-
-	// Parse new CRD from content
-	newCRD := &apiextensionsv1.CustomResourceDefinition{}
-	if err := yaml.Unmarshal(newCRDContent, newCRD); err != nil {
-		return fmt.Errorf("failed to unmarshal new CRD: %w", err)
-	}
-
-	// Create default config for crdify
-	cfg := &config.Config{
-		UnhandledEnforcement: config.EnforcementPolicyNone,
-		Conversion:           config.ConversionPolicyNone,
-	}
-
-	// Create runner with default validations
-	r, err := runner.New(cfg, runner.DefaultRegistry())
-	if err != nil {
-		return fmt.Errorf("failed to create crdify runner: %w", err)
-	}
-
-	// Run validations
-	results := r.Run(oldCRD, newCRD)
-
-	// Check for breaking changes (errors)
-	if results.HasFailures() {
-		// Format the results as plain text for error message
-		output := renderErrorsOnly(results)
-		return fmt.Errorf("breaking changes detected:\n%s", output)
-	}
-
-	return nil
 }

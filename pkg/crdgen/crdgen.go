@@ -154,7 +154,6 @@ package %s
 		return fmt.Errorf("failed to copy CRD to output directory: %w", err)
 	}
 
-	// Temp directory will be automatically cleaned up by defer
 	return nil
 }
 
