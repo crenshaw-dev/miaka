@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"bytes"
 	"os"
 	"path/filepath"
@@ -38,9 +40,7 @@ func TestInitCommand_Testdata(t *testing.T) {
 
 	// Find all test case directories
 	entries, err := os.ReadDir(testdataDir)
-	if err != nil {
-		t.Fatalf("Failed to read testdata/init directory: %v", err)
-	}
+	require.NoError(t, err, "Failed to read testdata/init directory: %v")
 
 	var testCases []struct {
 		name     string
@@ -164,14 +164,10 @@ func compareInitFiles(t *testing.T, generatedPath, expectedPath string) {
 	t.Helper()
 
 	generated, err := os.ReadFile(generatedPath)
-	if err != nil {
-		t.Fatalf("Failed to read generated file: %v", err)
-	}
+	require.NoError(t, err, "Failed to read generated file: %v")
 
 	expected, err := os.ReadFile(expectedPath)
-	if err != nil {
-		t.Fatalf("Failed to read expected file: %v", err)
-	}
+	require.NoError(t, err, "Failed to read expected file: %v")
 
 	generatedStr := normalizeInitOutput(string(generated))
 	expectedStr := normalizeInitOutput(string(expected))
@@ -224,13 +220,9 @@ func TestInitCommand_ValidationError(t *testing.T) {
 	cmd.SetErr(errBuf)
 
 	err := cmd.Execute()
-	if err == nil {
-		t.Fatal("Expected error for invalid YAML, but command succeeded")
-	}
+	require.Error(t, err, "Expected error for invalid YAML, but command succeeded")
 
-	if !strings.Contains(err.Error(), "failed to parse") {
-		t.Errorf("Expected parse error, got: %v", err)
-	}
+	assert.Contains(t, err.Error(), "failed to parse", "Expected parse error, got: %v")
 }
 
 // TestInitCommand_MissingFlags tests error handling when required flags are missing
@@ -256,9 +248,7 @@ image: nginx:latest
 	})
 
 	err := cmd.Execute()
-	if err == nil {
-		t.Error("Expected error when apiVersion is missing, but command succeeded")
-	}
+	require.Error(t, err, "Expected error when apiVersion is missing, but command succeeded")
 
 	// Test missing kind
 	cmd2 := newInitCommand()
@@ -269,9 +259,7 @@ image: nginx:latest
 	})
 
 	err = cmd2.Execute()
-	if err == nil {
-		t.Error("Expected error when kind is missing, but command succeeded")
-	}
+	require.Error(t, err, "Expected error when kind is missing, but command succeeded")
 }
 
 // TestInitCommand_NonExistentInputFile tests error handling for explicitly specified non-existent files
@@ -288,13 +276,9 @@ func TestInitCommand_NonExistentInputFile(t *testing.T) {
 	})
 
 	err := cmd.Execute()
-	if err == nil {
-		t.Fatal("Expected error for non-existent input file, but command succeeded")
-	}
+	require.Error(t, err, "Expected error for non-existent input file, but command succeeded")
 
-	if !strings.Contains(err.Error(), "failed to read") {
-		t.Errorf("Expected 'failed to read' error, got: %v", err)
-	}
+	assert.Contains(t, err.Error(), "failed to read", "Expected 'failed to read' error, got: %v")
 }
 
 // TestInitCommand_OnlyOneKRMField tests error handling when only apiVersion or kind is present
@@ -319,11 +303,8 @@ data:
 	})
 
 	err := cmd1.Execute()
-	if err == nil {
-		t.Error("Expected error when file has apiVersion but missing kind")
-	} else if !strings.Contains(err.Error(), "kind") {
-		t.Errorf("Expected error about missing kind, got: %v", err)
-	}
+	require.Error(t, err, "Expected error when file has apiVersion but missing kind")
+	assert.Contains(t, err.Error(), "kind", "Expected error about missing kind")
 
 	// Test with only kind in file
 	inputPath2 := filepath.Join(tmpDir, "only-kind.yaml")
@@ -342,9 +323,6 @@ data:
 	})
 
 	err = cmd2.Execute()
-	if err == nil {
-		t.Error("Expected error when file has kind but missing apiVersion")
-	} else if !strings.Contains(err.Error(), "apiVersion") {
-		t.Errorf("Expected error about missing apiVersion, got: %v", err)
-	}
+	require.Error(t, err, "Expected error when file has kind but missing apiVersion")
+	assert.Contains(t, err.Error(), "apiVersion", "Expected error about missing apiVersion")
 }

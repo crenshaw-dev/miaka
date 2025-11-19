@@ -64,7 +64,7 @@ type ExampleSpec struct {
 	// Verify CRD was created
 	crdPath := filepath.Join(outputDir, "test-crd.yaml")
 	_, err = os.Stat(crdPath)
-	assert.NoError(t, err, "Expected CRD file not found: %s", crdPath)
+	require.NoError(t, err, "Expected CRD file not found: %s", crdPath)
 
 	// Verify CRD content
 	crdContent, err := os.ReadFile(crdPath)

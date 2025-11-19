@@ -1,6 +1,8 @@
 package validation
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
@@ -61,9 +63,7 @@ appName: "myapp"
 
 	// Validate - should succeed
 	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err != nil {
-		t.Errorf("Expected validation to succeed, got error: %v", err)
-	}
+	assert.NoError(t, err, "Expected validation to succeed")
 }
 
 // TestValidateAgainstCRD_InvalidType tests validation with wrong type
@@ -121,9 +121,7 @@ appName: "myapp"
 
 	// Validate - should fail
 	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err == nil {
-		t.Error("Expected validation to fail with type error, but it succeeded")
-	}
+	require.Error(t, err, "Expected validation to fail with type error, but it succeeded")
 }
 
 // TestValidateAgainstCRD_ValidationConstraint tests validation with constraint violation
@@ -181,9 +179,7 @@ appName: "myapp"
 
 	// Validate - should fail
 	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err == nil {
-		t.Error("Expected validation to fail with minimum constraint violation, but it succeeded")
-	}
+	require.Error(t, err, "Expected validation to fail with minimum constraint violation, but it succeeded")
 }
 
 // TestValidateAgainstCRD_MalformedCRD tests error handling for malformed CRD
@@ -211,9 +207,7 @@ replicas: 3
 
 	// Validate - should fail with unmarshal error
 	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err == nil {
-		t.Error("Expected validation to fail with malformed CRD, but it succeeded")
-	}
+	require.Error(t, err, "Expected validation to fail with malformed CRD, but it succeeded")
 }
 
 // TestValidateAgainstCRD_MalformedResource tests error handling for malformed resource
@@ -262,9 +256,7 @@ spec:
 
 	// Validate - should fail with unmarshal error
 	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err == nil {
-		t.Error("Expected validation to fail with malformed resource, but it succeeded")
-	}
+	require.Error(t, err, "Expected validation to fail with malformed resource, but it succeeded")
 }
 
 // TestValidateAgainstCRD_MissingCRDFile tests error handling for missing CRD file
@@ -286,7 +278,5 @@ replicas: 3
 	// Validate with non-existent CRD file
 	crdPath := filepath.Join(tmpDir, "nonexistent.yaml")
 	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err == nil {
-		t.Error("Expected validation to fail with missing CRD file, but it succeeded")
-	}
+	require.Error(t, err, "Expected validation to fail with missing CRD file, but it succeeded")
 }

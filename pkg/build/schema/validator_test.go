@@ -1,8 +1,10 @@
 package schema
 
 import (
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestValidateSchema_NoInterfaceTypes(t *testing.T) {
@@ -41,9 +43,7 @@ func TestValidateSchema_NoInterfaceTypes(t *testing.T) {
 	}
 
 	err := ValidateSchema(s)
-	if err != nil {
-		t.Errorf("ValidateSchema() expected no error for valid schema, got: %v", err)
-	}
+	assert.NoError(t, err, "ValidateSchema() expected no error for valid schema")
 }
 
 func TestValidateSchema_InterfaceType(t *testing.T) {
@@ -75,30 +75,18 @@ func TestValidateSchema_InterfaceType(t *testing.T) {
 	}
 
 	err := ValidateSchema(s)
-	if err == nil {
-		t.Error("ValidateSchema() expected error for interface{} type, got nil")
-		return
-	}
+	require.Error(t, err, "ValidateSchema() expected error for interface{} type")
 
 	// Check that error is of correct type
 	interfaceErr, ok := err.(*InterfaceTypeError)
-	if !ok {
-		t.Errorf("ValidateSchema() expected *InterfaceTypeError, got %T", err)
-		return
-	}
+	require.True(t, ok, "ValidateSchema() expected *InterfaceTypeError, got %T", err)
 
-	if len(interfaceErr.Fields) != 1 {
-		t.Errorf("Expected 1 interface field, got %d", len(interfaceErr.Fields))
-	}
+	assert.Len(t, interfaceErr.Fields, 1, "Expected 1 interface field")
 
 	// Check error message contains helpful information
 	errMsg := err.Error()
-	if !strings.Contains(errMsg, "interface{}") {
-		t.Error("Error message should mention interface{}")
-	}
-	if !strings.Contains(errMsg, "data") {
-		t.Error("Error message should mention the field name")
-	}
+	assert.Contains(t, errMsg, "interface{}", "Error message should mention interface{}")
+	assert.Contains(t, errMsg, "data", "Error message should mention the field name")
 }
 
 func TestValidateSchema_InterfaceSlice(t *testing.T) {
@@ -124,24 +112,13 @@ func TestValidateSchema_InterfaceSlice(t *testing.T) {
 	}
 
 	err := ValidateSchema(s)
-	if err == nil {
-		t.Error("ValidateSchema() expected error for []interface{} type, got nil")
-		return
-	}
+	require.Error(t, err, "ValidateSchema() expected error for []interface{} type")
 
 	interfaceErr, ok := err.(*InterfaceTypeError)
-	if !ok {
-		t.Errorf("ValidateSchema() expected *InterfaceTypeError, got %T", err)
-		return
-	}
+	require.True(t, ok, "ValidateSchema() expected *InterfaceTypeError, got %T", err)
 
-	if len(interfaceErr.Fields) != 1 {
-		t.Errorf("Expected 1 interface field, got %d", len(interfaceErr.Fields))
-	}
-
-	if !interfaceErr.Fields[0].IsArray {
-		t.Error("Expected IsArray to be true for []interface{}")
-	}
+	assert.Len(t, interfaceErr.Fields, 1, "Expected 1 interface field")
+	assert.True(t, interfaceErr.Fields[0].IsArray, "Expected IsArray to be true for []interface{}")
 }
 
 func TestValidateSchema_InterfaceSliceElement(t *testing.T) {
@@ -168,24 +145,13 @@ func TestValidateSchema_InterfaceSliceElement(t *testing.T) {
 	}
 
 	err := ValidateSchema(s)
-	if err == nil {
-		t.Error("ValidateSchema() expected error for slice with interface{} element, got nil")
-		return
-	}
+	require.Error(t, err, "ValidateSchema() expected error for slice with interface{} element")
 
 	interfaceErr, ok := err.(*InterfaceTypeError)
-	if !ok {
-		t.Errorf("ValidateSchema() expected *InterfaceTypeError, got %T", err)
-		return
-	}
+	require.True(t, ok, "ValidateSchema() expected *InterfaceTypeError, got %T", err)
 
-	if len(interfaceErr.Fields) != 1 {
-		t.Errorf("Expected 1 interface field, got %d", len(interfaceErr.Fields))
-	}
-
-	if !interfaceErr.Fields[0].IsArray {
-		t.Error("Expected IsArray to be true for slice with interface{} element")
-	}
+	assert.Len(t, interfaceErr.Fields, 1, "Expected 1 interface field")
+	assert.True(t, interfaceErr.Fields[0].IsArray, "Expected IsArray to be true for slice with interface{} element")
 }
 
 func TestValidateSchema_MultipleInterfaceTypes(t *testing.T) {
@@ -224,20 +190,12 @@ func TestValidateSchema_MultipleInterfaceTypes(t *testing.T) {
 	}
 
 	err := ValidateSchema(s)
-	if err == nil {
-		t.Error("ValidateSchema() expected error for multiple interface{} types, got nil")
-		return
-	}
+	require.Error(t, err, "ValidateSchema() expected error for multiple interface{} types")
 
 	interfaceErr, ok := err.(*InterfaceTypeError)
-	if !ok {
-		t.Errorf("ValidateSchema() expected *InterfaceTypeError, got %T", err)
-		return
-	}
+	require.True(t, ok, "ValidateSchema() expected *InterfaceTypeError, got %T", err)
 
-	if len(interfaceErr.Fields) != 3 {
-		t.Errorf("Expected 3 interface fields, got %d", len(interfaceErr.Fields))
-	}
+	assert.Len(t, interfaceErr.Fields, 3, "Expected 3 interface fields")
 }
 
 func TestValidateSchema_EmptySchema(t *testing.T) {
@@ -249,9 +207,7 @@ func TestValidateSchema_EmptySchema(t *testing.T) {
 	}
 
 	err := ValidateSchema(s)
-	if err != nil {
-		t.Errorf("ValidateSchema() expected no error for empty schema, got: %v", err)
-	}
+	assert.NoError(t, err, "ValidateSchema() expected no error for empty schema")
 }
 
 func TestInterfaceTypeError_ErrorMessage(t *testing.T) {
@@ -289,8 +245,6 @@ func TestInterfaceTypeError_ErrorMessage(t *testing.T) {
 	}
 
 	for _, required := range requiredStrings {
-		if !strings.Contains(errMsg, required) {
-			t.Errorf("Error message missing required string %q", required)
-		}
+		assert.Contains(t, errMsg, required, "Error message missing required string")
 	}
 }

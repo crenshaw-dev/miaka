@@ -1,6 +1,8 @@
 package parsing
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,9 +44,7 @@ name: test
 
 	p := NewParser()
 	s, err := p.ParseFile(testFile)
-	if err != nil {
-		t.Fatalf("ParseFile failed: %v", err)
-	}
+	require.NoError(t, err, "ParseFile failed: %v")
 
 	if s.APIVersion != "example.com/v1" {
 		t.Errorf("Expected apiVersion 'example.com/v1', got '%s'", s.APIVersion)
@@ -61,12 +61,8 @@ name: test
 func TestParseFile_NonExistent(t *testing.T) {
 	p := NewParser()
 	_, err := p.ParseFile("nonexistent.yaml")
-	if err == nil {
-		t.Fatal("Expected error for non-existent file")
-	}
-	if !strings.Contains(err.Error(), "failed to read file") {
-		t.Errorf("Expected 'failed to read file' error, got: %v", err)
-	}
+	require.Error(t, err, "Expected error for non-existent file")
+	assert.Contains(t, err.Error(), "failed to read file", "Expected 'failed to read file' error, got: %v")
 }
 
 // TestParse_BasicTypes tests parsing of basic scalar types
@@ -80,9 +76,7 @@ boolField: true
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	if len(s.Structs) != 1 {
 		t.Fatalf("Expected 1 struct, got %d", len(s.Structs))
@@ -107,9 +101,7 @@ boolField: true
 			t.Errorf("Unexpected field: %s", field.Name)
 			continue
 		}
-		if field.Type != expectedType {
-			t.Errorf("Field %s: expected type %s, got %s", field.Name, expectedType, field.Type)
-		}
+		assert.Equal(t, expectedType, field.Type, "Field %s: expected type %s, got %s")
 	}
 }
 
@@ -124,9 +116,7 @@ database:
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	// Should have main struct + nested Database struct
 	if len(s.Structs) != 2 {
@@ -163,9 +153,7 @@ database:
 			t.Errorf("Unexpected field in Database: %s", field.Name)
 			continue
 		}
-		if field.Type != expectedType {
-			t.Errorf("Field %s: expected type %s, got %s", field.Name, expectedType, field.Type)
-		}
+		assert.Equal(t, expectedType, field.Type, "Field %s: expected type %s, got %s")
 	}
 }
 
@@ -183,9 +171,7 @@ tags:
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	mainStruct := s.Structs[0]
 
@@ -247,9 +233,7 @@ containers:
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	// Should have main struct + Container struct
 	if len(s.Structs) != 2 {
@@ -314,9 +298,7 @@ emptyList: []
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	mainStruct := s.Structs[0]
 	var emptyField *schema.Field
@@ -350,9 +332,7 @@ ports: []
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	mainStruct := s.Structs[0]
 
@@ -379,9 +359,7 @@ ports: []
 			continue
 		}
 
-		if field.Type != tt.expectedType {
-			t.Errorf("Field %s: expected type '%s', got '%s'", tt.fieldName, tt.expectedType, field.Type)
-		}
+		assert.Equal(t, tt.expectedType, field.Type, "Field %s: expected type '%s', got '%s'")
 	}
 }
 
@@ -397,9 +375,7 @@ name: myapp
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	mainStruct := s.Structs[0]
 
@@ -457,9 +433,7 @@ config:
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	// Should have main + Config + DatabaseConfig + ConnectionConfig + CredentialsConfig = 5 structs
 	if len(s.Structs) < 4 {
@@ -497,9 +471,7 @@ database:
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	// Should have unique struct names for all structs
 	// Expected: Example, ServiceConfig, DatabaseConfig, and 2 nested config structs with unique names
@@ -530,9 +502,7 @@ replicas: 3
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	mainStruct := s.Structs[0]
 
@@ -552,12 +522,8 @@ func TestParse_InvalidYAML(t *testing.T) {
 
 	p := NewParser()
 	_, err := p.Parse([]byte(invalidYAML))
-	if err == nil {
-		t.Fatal("Expected error for invalid YAML")
-	}
-	if !strings.Contains(err.Error(), "failed to parse YAML") {
-		t.Errorf("Expected parse error, got: %v", err)
-	}
+	require.Error(t, err, "Expected error for invalid YAML")
+	assert.Contains(t, err.Error(), "failed to parse YAML", "Expected parse error, got: %v")
 }
 
 // TestParse_RootNotMapping tests error when root is not a mapping
@@ -568,12 +534,8 @@ func TestParse_RootNotMapping(t *testing.T) {
 `
 	p := NewParser()
 	_, err := p.Parse([]byte(yamlContent))
-	if err == nil {
-		t.Fatal("Expected error when root is not a mapping")
-	}
-	if !strings.Contains(err.Error(), "root node must be a mapping") {
-		t.Errorf("Expected 'root node must be a mapping' error, got: %v", err)
-	}
+	require.Error(t, err, "Expected error when root is not a mapping")
+	assert.Contains(t, err.Error(), "root node must be a mapping", "Expected 'root node must be a mapping' error, got: %v")
 }
 
 // TestParse_MissingAPIVersion tests handling of missing apiVersion
@@ -583,9 +545,7 @@ replicas: 3
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	if s.APIVersion != "" {
 		t.Errorf("Expected empty apiVersion, got: %s", s.APIVersion)
@@ -605,9 +565,7 @@ database:
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	// Find the ConnectionConfig struct
 	var connStruct *schema.StructDef
@@ -636,9 +594,7 @@ database:
 	}
 
 	expectedPath := "ConnectionConfig.host"
-	if hostField.YAMLPath != expectedPath {
-		t.Errorf("Expected YAMLPath '%s', got '%s'", expectedPath, hostField.YAMLPath)
-	}
+	assert.Equal(t, expectedPath, hostField.YAMLPath, "Expected YAMLPath '%s', got '%s'")
 }
 
 // TestParse_JSONNames tests that JSON names are preserved
@@ -651,9 +607,7 @@ kebab-case-field: value3
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	mainStruct := s.Structs[0]
 
@@ -680,9 +634,7 @@ kebab-case-field: value3
 			continue
 		}
 
-		if field.JSONName != tt.expectedJSON {
-			t.Errorf("Field %s: expected JSONName '%s', got '%s'", tt.fieldName, tt.expectedJSON, field.JSONName)
-		}
+		assert.Equal(t, tt.expectedJSON, field.JSONName, "Field %s: expected JSONName '%s', got '%s'")
 	}
 }
 
@@ -728,9 +680,7 @@ func TestExtractTypeHint(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := extractTypeHint(tt.comments)
-			if result != tt.expected {
-				t.Errorf("Expected '%s', got '%s'", tt.expected, result)
-			}
+			assert.Equal(t, tt.expected, result, "Expected '%s', got '%s'")
 		})
 	}
 }
@@ -748,9 +698,7 @@ items:
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	// Find the ItemsConfig struct
 	var itemStruct *schema.StructDef
@@ -793,9 +741,7 @@ field3: value3
 `
 	p := NewParser()
 	s, err := p.Parse([]byte(yamlContent))
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	require.NoError(t, err, "Parse failed: %v")
 
 	mainStruct := s.Structs[0]
 

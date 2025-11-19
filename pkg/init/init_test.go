@@ -1,6 +1,8 @@
 package init
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,33 +30,21 @@ service:
 
 	// Run conversion
 	err := ConvertToKRM(inputFile, outputFile, "myapp.io/v1", "MyApp")
-	if err != nil {
-		t.Fatalf("ConvertToKRM failed: %v", err)
-	}
+	require.NoError(t, err, "ConvertToKRM failed: %v")
 
 	// Read output file
 	output, err := os.ReadFile(outputFile)
-	if err != nil {
-		t.Fatalf("Failed to read output file: %v", err)
-	}
+	require.NoError(t, err, "Failed to read output file: %v")
 
 	outputStr := string(output)
 
 	// Verify apiVersion and kind are present
-	if !strings.Contains(outputStr, "apiVersion: myapp.io/v1") {
-		t.Error("Output does not contain apiVersion")
-	}
-	if !strings.Contains(outputStr, "kind: MyApp") {
-		t.Error("Output does not contain kind")
-	}
+	assert.Contains(t, outputStr, "apiVersion: myapp.io/v1", "Output does not contain apiVersion")
+	assert.Contains(t, outputStr, "kind: MyApp", "Output does not contain kind")
 
 	// Verify original fields are preserved
-	if !strings.Contains(outputStr, "replicaCount: 3") {
-		t.Error("Output does not contain original replicaCount field")
-	}
-	if !strings.Contains(outputStr, "image: nginx:latest") {
-		t.Error("Output does not contain original image field")
-	}
+	assert.Contains(t, outputStr, "replicaCount: 3", "Output does not contain original replicaCount field")
+	assert.Contains(t, outputStr, "image: nginx:latest", "Output does not contain original image field")
 }
 
 func TestConvertToKRM_FieldOrdering(t *testing.T) {
@@ -70,15 +60,11 @@ baz: qux
 	}
 
 	err := ConvertToKRM(inputFile, outputFile, "test.io/v1", "Test")
-	if err != nil {
-		t.Fatalf("ConvertToKRM failed: %v", err)
-	}
+	require.NoError(t, err, "ConvertToKRM failed: %v")
 
 	// Parse output to verify field order
 	output, err := os.ReadFile(outputFile)
-	if err != nil {
-		t.Fatalf("Failed to read output file: %v", err)
-	}
+	require.NoError(t, err, "Failed to read output file: %v")
 
 	var node yaml.Node
 	if err := yaml.Unmarshal(output, &node); err != nil {
@@ -125,24 +111,16 @@ image: nginx:latest
 	}
 
 	err := ConvertToKRM(inputFile, outputFile, "test.io/v1", "Test")
-	if err != nil {
-		t.Fatalf("ConvertToKRM failed: %v", err)
-	}
+	require.NoError(t, err, "ConvertToKRM failed: %v")
 
 	output, err := os.ReadFile(outputFile)
-	if err != nil {
-		t.Fatalf("Failed to read output file: %v", err)
-	}
+	require.NoError(t, err, "Failed to read output file: %v")
 
 	outputStr := string(output)
 
 	// Verify comments are preserved
-	if !strings.Contains(outputStr, "# Replica count") {
-		t.Error("Comment for replicaCount was not preserved")
-	}
-	if !strings.Contains(outputStr, "# Docker image") {
-		t.Error("Comment for image was not preserved")
-	}
+	assert.Contains(t, outputStr, "# Replica count", "Comment for replicaCount was not preserved")
+	assert.Contains(t, outputStr, "# Docker image", "Comment for image was not preserved")
 }
 
 func TestConvertToKRM_NestedObjects(t *testing.T) {
@@ -161,27 +139,17 @@ func TestConvertToKRM_NestedObjects(t *testing.T) {
 	}
 
 	err := ConvertToKRM(inputFile, outputFile, "test.io/v1", "Test")
-	if err != nil {
-		t.Fatalf("ConvertToKRM failed: %v", err)
-	}
+	require.NoError(t, err, "ConvertToKRM failed: %v")
 
 	output, err := os.ReadFile(outputFile)
-	if err != nil {
-		t.Fatalf("Failed to read output file: %v", err)
-	}
+	require.NoError(t, err, "Failed to read output file: %v")
 
 	outputStr := string(output)
 
 	// Verify nested structure is preserved
-	if !strings.Contains(outputStr, "service:") {
-		t.Error("Nested service object not preserved")
-	}
-	if !strings.Contains(outputStr, "port: 80") {
-		t.Error("Nested service.port not preserved")
-	}
-	if !strings.Contains(outputStr, "annotations:") {
-		t.Error("Deeply nested annotations not preserved")
-	}
+	assert.Contains(t, outputStr, "service:", "Nested service object not preserved")
+	assert.Contains(t, outputStr, "port: 80", "Nested service.port not preserved")
+	assert.Contains(t, outputStr, "annotations:", "Deeply nested annotations not preserved")
 }
 
 func TestConvertToKRM_Arrays(t *testing.T) {
@@ -200,27 +168,17 @@ func TestConvertToKRM_Arrays(t *testing.T) {
 	}
 
 	err := ConvertToKRM(inputFile, outputFile, "test.io/v1", "Test")
-	if err != nil {
-		t.Fatalf("ConvertToKRM failed: %v", err)
-	}
+	require.NoError(t, err, "ConvertToKRM failed: %v")
 
 	output, err := os.ReadFile(outputFile)
-	if err != nil {
-		t.Fatalf("Failed to read output file: %v", err)
-	}
+	require.NoError(t, err, "Failed to read output file: %v")
 
 	outputStr := string(output)
 
 	// Verify array is preserved
-	if !strings.Contains(outputStr, "env:") {
-		t.Error("Array field not preserved")
-	}
-	if !strings.Contains(outputStr, "name: FOO") {
-		t.Error("Array item not preserved")
-	}
-	if !strings.Contains(outputStr, "value: bar") {
-		t.Error("Array item value not preserved")
-	}
+	assert.Contains(t, outputStr, "env:", "Array field not preserved")
+	assert.Contains(t, outputStr, "name: FOO", "Array item not preserved")
+	assert.Contains(t, outputStr, "value: bar", "Array item value not preserved")
 }
 
 func TestConvertToKRM_AlreadyHasAPIVersion(t *testing.T) {
@@ -240,9 +198,7 @@ data:
 
 	// Should succeed without providing flags (uses existing values)
 	err := ConvertToKRM(inputFile, outputFile, "", "")
-	if err != nil {
-		t.Errorf("Expected success when file has both apiVersion and kind, got error: %v", err)
-	}
+	assert.NoError(t, err, "Expected success when file has both apiVersion and kind")
 }
 
 func TestConvertToKRM_AlreadyHasKind(t *testing.T) {
@@ -261,12 +217,8 @@ data:
 
 	// Should return error asking for apiVersion flag
 	err := ConvertToKRM(inputFile, outputFile, "", "")
-	if err == nil {
-		t.Error("Expected error when file has kind but missing apiVersion, got nil")
-	}
-	if !strings.Contains(err.Error(), "missing apiVersion") {
-		t.Errorf("Expected error about missing apiVersion, got: %v", err)
-	}
+	require.Error(t, err, "Expected error when file has kind but missing apiVersion, got nil")
+	assert.Contains(t, err.Error(), "missing apiVersion", "Expected error about missing apiVersion, got: %v")
 }
 
 func TestConvertToKRM_InvalidInputFile(t *testing.T) {
@@ -275,9 +227,7 @@ func TestConvertToKRM_InvalidInputFile(t *testing.T) {
 
 	// Non-existent input file
 	err := ConvertToKRM("nonexistent.yaml", outputFile, "test.io/v1", "Test")
-	if err == nil {
-		t.Error("Expected error for non-existent input file, got nil")
-	}
+	require.Error(t, err, "Expected error for non-existent input file, got nil")
 }
 
 func TestConvertToKRM_InvalidYAML(t *testing.T) {
@@ -292,9 +242,7 @@ func TestConvertToKRM_InvalidYAML(t *testing.T) {
 	}
 
 	err := ConvertToKRM(inputFile, outputFile, "test.io/v1", "Test")
-	if err == nil {
-		t.Error("Expected error for invalid YAML, got nil")
-	}
+	require.Error(t, err, "Expected error for invalid YAML, got nil")
 }
 
 func TestConvertToKRM_EmptyInputFile(t *testing.T) {
@@ -303,25 +251,17 @@ func TestConvertToKRM_EmptyInputFile(t *testing.T) {
 
 	// Test creating empty file with no input
 	err := ConvertToKRM("", outputFile, "test.io/v1", "Test")
-	if err != nil {
-		t.Fatalf("ConvertToKRM failed: %v", err)
-	}
+	require.NoError(t, err, "ConvertToKRM failed: %v")
 
 	// Read output file
 	output, err := os.ReadFile(outputFile)
-	if err != nil {
-		t.Fatalf("Failed to read output file: %v", err)
-	}
+	require.NoError(t, err, "Failed to read output file: %v")
 
 	outputStr := string(output)
 
 	// Verify apiVersion and kind are present
-	if !strings.Contains(outputStr, "apiVersion: test.io/v1") {
-		t.Error("Output does not contain apiVersion")
-	}
-	if !strings.Contains(outputStr, "kind: Test") {
-		t.Error("Output does not contain kind")
-	}
+	assert.Contains(t, outputStr, "apiVersion: test.io/v1", "Output does not contain apiVersion")
+	assert.Contains(t, outputStr, "kind: Test", "Output does not contain kind")
 
 	// Verify no other fields
 	lines := strings.Split(strings.TrimSpace(outputStr), "\n")
@@ -336,21 +276,13 @@ func TestConvertToKRM_EmptyInputFileRequiresFlags(t *testing.T) {
 
 	// Should fail without apiVersion
 	err := ConvertToKRM("", outputFile, "", "Test")
-	if err == nil {
-		t.Error("Expected error when creating empty file without apiVersion, got nil")
-	}
-	if !strings.Contains(err.Error(), "required") {
-		t.Errorf("Expected error about required flags, got: %v", err)
-	}
+	require.Error(t, err, "Expected error when creating empty file without apiVersion, got nil")
+	assert.Contains(t, err.Error(), "required", "Expected error about required flags, got: %v")
 
 	// Should fail without kind
 	err = ConvertToKRM("", outputFile, "test.io/v1", "")
-	if err == nil {
-		t.Error("Expected error when creating empty file without kind, got nil")
-	}
-	if !strings.Contains(err.Error(), "required") {
-		t.Errorf("Expected error about required flags, got: %v", err)
-	}
+	require.Error(t, err, "Expected error when creating empty file without kind, got nil")
+	assert.Contains(t, err.Error(), "required", "Expected error about required flags, got: %v")
 }
 
 func TestConvertToKRM_MissingFieldsRequireFlags(t *testing.T) {
@@ -368,38 +300,24 @@ image: nginx:latest
 
 	// Should fail without providing flags
 	err := ConvertToKRM(inputFile, outputFile, "", "")
-	if err == nil {
-		t.Error("Expected error when input doesn't have apiVersion/kind and flags aren't provided, got nil")
-	}
-	if !strings.Contains(err.Error(), "required") {
-		t.Errorf("Expected error about required fields, got: %v", err)
-	}
+	require.Error(t, err, "Expected error when input doesn't have apiVersion/kind and flags aren't provided, got nil")
+	assert.Contains(t, err.Error(), "required", "Expected error about required fields, got: %v")
 
 	// Should succeed when providing flags
 	err = ConvertToKRM(inputFile, outputFile, "test.io/v1", "Test")
-	if err != nil {
-		t.Fatalf("ConvertToKRM failed: %v", err)
-	}
+	require.NoError(t, err, "ConvertToKRM failed: %v")
 
 	// Read output file
 	output, err := os.ReadFile(outputFile)
-	if err != nil {
-		t.Fatalf("Failed to read output file: %v", err)
-	}
+	require.NoError(t, err, "Failed to read output file: %v")
 
 	outputStr := string(output)
 
 	// Verify apiVersion and kind are added
-	if !strings.Contains(outputStr, "apiVersion: test.io/v1") {
-		t.Error("Output does not contain apiVersion")
-	}
-	if !strings.Contains(outputStr, "kind: Test") {
-		t.Error("Output does not contain kind")
-	}
+	assert.Contains(t, outputStr, "apiVersion: test.io/v1", "Output does not contain apiVersion")
+	assert.Contains(t, outputStr, "kind: Test", "Output does not contain kind")
 	// Verify original fields preserved
-	if !strings.Contains(outputStr, "replicaCount: 3") {
-		t.Error("Output does not contain original replicaCount")
-	}
+	assert.Contains(t, outputStr, "replicaCount: 3", "Output does not contain original replicaCount")
 }
 
 func TestCheckKRMFields_BothPresent(t *testing.T) {

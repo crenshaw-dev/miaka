@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInferType(t *testing.T) {
@@ -286,7 +287,7 @@ func TestParseAPIVersion(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err, "ParseAPIVersion(%q) unexpected error", tt.apiVersion)
+			require.NoError(t, err, "ParseAPIVersion(%q) unexpected error", tt.apiVersion)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

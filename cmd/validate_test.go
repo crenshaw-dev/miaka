@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"bytes"
 	"os"
 	"path/filepath"
@@ -16,9 +18,7 @@ func TestValidateCommand_Testdata(t *testing.T) {
 
 	// Find all test case directories
 	entries, err := os.ReadDir(testdataDir)
-	if err != nil {
-		t.Fatalf("Failed to read testdata directory: %v", err)
-	}
+	require.NoError(t, err, "Failed to read testdata directory: %v")
 
 	var testCases []struct {
 		name        string
@@ -150,12 +150,8 @@ replicas: 3
 		cmd.SetArgs([]string{valuesPath})
 
 		err := cmd.Execute()
-		if err == nil {
-			t.Fatal("Expected error for missing CRD, got nil")
-		}
-		if !strings.Contains(err.Error(), "CRD file not found") {
-			t.Errorf("Expected 'CRD file not found' error, got: %v", err)
-		}
+		require.Error(t, err, "Expected error for missing CRD, got nil")
+		assert.Contains(t, err.Error(), "CRD file not found", "Expected 'CRD file not found' error, got: %v")
 	})
 
 	t.Run("MissingSchema", func(t *testing.T) {
@@ -196,12 +192,8 @@ spec:
 		cmd.SetArgs([]string{valuesPath})
 
 		err := cmd.Execute()
-		if err == nil {
-			t.Fatal("Expected error for missing schema, got nil")
-		}
-		if !strings.Contains(err.Error(), "JSON Schema file not found") {
-			t.Errorf("Expected 'JSON Schema file not found' error, got: %v", err)
-		}
+		require.Error(t, err, "Expected error for missing schema, got nil")
+		assert.Contains(t, err.Error(), "JSON Schema file not found", "Expected 'JSON Schema file not found' error, got: %v")
 	})
 }
 
@@ -262,9 +254,7 @@ spec:
 	cmd.SetArgs([]string{valuesPath})
 
 	err := cmd.Execute()
-	if err == nil {
-		t.Fatal("Expected error for invalid YAML, got nil")
-	}
+	require.Error(t, err, "Expected error for invalid YAML, got nil")
 	// The error should come from either CRD or schema validation failing to parse
 }
 
@@ -284,10 +274,6 @@ func TestValidateCommand_NoArgs(t *testing.T) {
 	cmd.SetArgs([]string{})
 
 	err := cmd.Execute()
-	if err == nil {
-		t.Fatal("Expected error for no arguments, got nil")
-	}
-	if !strings.Contains(err.Error(), "accepts 1 arg") {
-		t.Errorf("Expected 'accepts 1 arg' error, got: %v", err)
-	}
+	require.Error(t, err, "Expected error for no arguments, got nil")
+	assert.Contains(t, err.Error(), "accepts 1 arg", "Expected 'accepts 1 arg' error, got: %v")
 }

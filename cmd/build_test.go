@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"bytes"
 	"os"
 	"path/filepath"
@@ -16,9 +18,7 @@ func TestBuildCommand_Testdata(t *testing.T) {
 
 	// Find all test case directories
 	entries, err := os.ReadDir(testdataDir)
-	if err != nil {
-		t.Fatalf("Failed to read testdata directory: %v", err)
-	}
+	require.NoError(t, err, "Failed to read testdata directory: %v")
 
 	var testCases []struct {
 		name     string
@@ -193,15 +193,11 @@ emptyArray: []
 	cmd.SetErr(errBuf)
 
 	err := cmd.Execute()
-	if err == nil {
-		t.Fatal("Expected validation error but command succeeded")
-	}
+	require.Error(t, err, "Expected validation error but command succeeded")
 
 	// Check error message contains validation information
 	errOutput := err.Error()
-	if !strings.Contains(errOutput, "interface{}") {
-		t.Errorf("Expected interface{} validation error, got: %s", errOutput)
-	}
+	assert.Contains(t, errOutput, "interface{}", "Expected interface{} validation error, got: %s")
 }
 
 // TestBuildCommand_TypeHints tests that type hints work correctly
@@ -243,19 +239,13 @@ names: []
 
 	// Read generated types
 	content, err := os.ReadFile(typesOutput)
-	if err != nil {
-		t.Fatalf("Failed to read generated types: %v", err)
-	}
+	require.NoError(t, err, "Failed to read generated types: %v")
 
 	contentStr := string(content)
 
 	// Verify type hints were applied
-	if !strings.Contains(contentStr, "Labels map[string]string") {
-		t.Errorf("Expected 'Labels map[string]string' in generated types, got:\n%s", contentStr)
-	}
-	if !strings.Contains(contentStr, "Names []string") {
-		t.Errorf("Expected 'Names []string' in generated types, got:\n%s", contentStr)
-	}
+	assert.Contains(t, contentStr, "Labels map[string]string", "Expected 'Labels map[string]string' in generated types, got:\n%s")
+	assert.Contains(t, contentStr, "Names []string", "Expected 'Names []string' in generated types, got:\n%s")
 }
 
 // TestBuildCommand_InvalidInput tests error handling for invalid input
@@ -277,9 +267,7 @@ func TestBuildCommand_InvalidInput(t *testing.T) {
 	cmd.SetErr(errBuf)
 
 	err := cmd.Execute()
-	if err == nil {
-		t.Fatal("Expected error for nonexistent file but command succeeded")
-	}
+	require.Error(t, err, "Expected error for nonexistent file but command succeeded")
 
 	if !strings.Contains(err.Error(), "failed to parse YAML") &&
 		!strings.Contains(err.Error(), "no such file") &&
@@ -370,15 +358,11 @@ config:
 	cmd2.SetErr(errBuf2)
 
 	err = cmd2.Execute()
-	if err == nil {
-		t.Fatal("Expected build to fail with breaking change detection, but it succeeded")
-	}
+	require.Error(t, err, "Expected build to fail with breaking change detection, but it succeeded")
 
 	// Verify error message mentions breaking changes
 	errOutput := err.Error()
-	if !strings.Contains(errOutput, "breaking changes detected") {
-		t.Errorf("Expected 'breaking changes detected' in error message, got: %s", errOutput)
-	}
+	assert.Contains(t, errOutput, "breaking changes detected", "Expected 'breaking changes detected' in error message, got: %s")
 
 	t.Logf("Breaking change correctly detected: %s", errOutput)
 }
@@ -461,14 +445,10 @@ func compareFiles(t *testing.T, fileType, generatedPath, expectedPath string) {
 	t.Helper()
 
 	generated, err := os.ReadFile(generatedPath)
-	if err != nil {
-		t.Fatalf("Failed to read generated %s: %v", fileType, err)
-	}
+	require.NoError(t, err, "Failed to read generated %s: %v")
 
 	expected, err := os.ReadFile(expectedPath)
-	if err != nil {
-		t.Fatalf("Failed to read expected %s: %v", fileType, err)
-	}
+	require.NoError(t, err, "Failed to read expected %s: %v")
 
 	generatedStr := normalizeOutput(string(generated))
 	expectedStr := normalizeOutput(string(expected))
@@ -567,9 +547,7 @@ func TestBuildCommand_MissingExampleValuesYaml(t *testing.T) {
 
 	// Change to temp directory (where example.values.yaml doesn't exist)
 	origDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Failed to get working directory: %v", err)
-	}
+	require.NoError(t, err, "Failed to get working directory: %v")
 	defer os.Chdir(origDir)
 
 	if err := os.Chdir(tmpDir); err != nil {
@@ -585,13 +563,9 @@ func TestBuildCommand_MissingExampleValuesYaml(t *testing.T) {
 	cmd.SetErr(errBuf)
 
 	err = cmd.Execute()
-	if err == nil {
-		t.Fatal("Expected error for missing example.values.yaml but command succeeded")
-	}
+	require.Error(t, err, "Expected error for missing example.values.yaml but command succeeded")
 
-	if !strings.Contains(err.Error(), "example.values.yaml not found") {
-		t.Errorf("Expected 'example.values.yaml not found' error, got: %v", err)
-	}
+	assert.Contains(t, err.Error(), "example.values.yaml not found", "Expected 'example.values.yaml not found' error, got: %v")
 }
 
 // TestBuildCommand_InvalidYaml tests error handling for malformed YAML
@@ -624,13 +598,9 @@ replicas: 3
 	cmd.SetErr(errBuf)
 
 	err := cmd.Execute()
-	if err == nil {
-		t.Fatal("Expected error for invalid YAML but command succeeded")
-	}
+	require.Error(t, err, "Expected error for invalid YAML but command succeeded")
 
-	if !strings.Contains(err.Error(), "failed to parse YAML") {
-		t.Errorf("Expected 'failed to parse YAML' error, got: %v", err)
-	}
+	assert.Contains(t, err.Error(), "failed to parse YAML", "Expected 'failed to parse YAML' error, got: %v")
 }
 
 // TestBuildCommand_SaveTypesGo tests that types.go can be saved with -t flag
@@ -677,20 +647,12 @@ appName: "myapp"
 
 	// Verify the file contains expected content
 	content, err := os.ReadFile(typesOutput)
-	if err != nil {
-		t.Fatalf("Failed to read types file: %v", err)
-	}
+	require.NoError(t, err, "Failed to read types file: %v")
 
 	contentStr := string(content)
-	if !strings.Contains(contentStr, "type Example struct") {
-		t.Errorf("Expected 'type Example struct' in types.go, got:\n%s", contentStr)
-	}
-	if !strings.Contains(contentStr, "Replicas") {
-		t.Errorf("Expected 'Replicas' field in types.go, got:\n%s", contentStr)
-	}
-	if !strings.Contains(contentStr, "AppName") {
-		t.Errorf("Expected 'AppName' field in types.go, got:\n%s", contentStr)
-	}
+	assert.Contains(t, contentStr, "type Example struct", "Expected 'type Example struct' in types.go, got:\n%s")
+	assert.Contains(t, contentStr, "Replicas", "Expected 'Replicas' field in types.go, got:\n%s")
+	assert.Contains(t, contentStr, "AppName", "Expected 'AppName' field in types.go, got:\n%s")
 
 	// Verify success message mentions the file (it prints to stdout via fmt.Printf, not cmd.OutOrStdout)
 	// Since we're calling runBuild directly through cobra, check the actual console output isn't captured
@@ -727,9 +689,7 @@ replicas: 3
 	cmd.SetErr(errBuf)
 
 	err := cmd.Execute()
-	if err == nil {
-		t.Fatal("Expected error for invalid apiVersion format but command succeeded")
-	}
+	require.Error(t, err, "Expected error for invalid apiVersion format but command succeeded")
 
 	errMsg := err.Error()
 	if !strings.Contains(errMsg, "invalid apiVersion") && !strings.Contains(errMsg, "apiVersion") {
@@ -766,15 +726,11 @@ replicas: 3
 	cmd.SetErr(errBuf)
 
 	err := cmd.Execute()
-	if err != nil {
-		t.Fatalf("Initial build failed: %v", err)
-	}
+	require.NoError(t, err, "Initial build failed: %v")
 
 	// Read the original CRD content
 	originalCRD, err := os.ReadFile(crdOutput)
-	if err != nil {
-		t.Fatalf("Failed to read original CRD: %v", err)
-	}
+	require.NoError(t, err, "Failed to read original CRD: %v")
 
 	// Step 2: Attempt breaking change
 	breakingInput := filepath.Join(tmpDir, "breaking.yaml")
@@ -799,15 +755,11 @@ replicas: "3"
 	cmd2.SetErr(errBuf2)
 
 	err = cmd2.Execute()
-	if err == nil {
-		t.Fatal("Expected build to fail with breaking change")
-	}
+	require.Error(t, err, "Expected build to fail with breaking change")
 
 	// Step 3: Verify the CRD was restored to original
 	restoredCRD, err := os.ReadFile(crdOutput)
-	if err != nil {
-		t.Fatalf("Failed to read restored CRD: %v", err)
-	}
+	require.NoError(t, err, "Failed to read restored CRD: %v")
 
 	if !bytes.Equal(originalCRD, restoredCRD) {
 		t.Error("CRD was not restored to original after breaking change detection")

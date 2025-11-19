@@ -1,6 +1,8 @@
 package validation
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,9 +11,7 @@ import (
 func TestCheckBreakingChanges_NoExistingCRD(t *testing.T) {
 	// Test that when no existing CRD exists, no error is returned
 	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir: %v")
 	defer os.RemoveAll(tmpDir)
 
 	newCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
@@ -41,17 +41,13 @@ spec:
 
 	nonexistentPath := filepath.Join(tmpDir, "nonexistent.yaml")
 	err = CheckBreakingChanges(nonexistentPath, newCRD)
-	if err != nil {
-		t.Errorf("Expected no error when old CRD doesn't exist, got: %v", err)
-	}
+	assert.NoError(t, err, "Expected no error when old CRD doesn't exist")
 }
 
 func TestCheckBreakingChanges_CompatibleChange(t *testing.T) {
 	// Test that compatible changes (adding a field) don't cause errors
 	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir: %v")
 	defer os.RemoveAll(tmpDir)
 
 	oldCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
@@ -112,17 +108,13 @@ spec:
 	}
 
 	err = CheckBreakingChanges(oldCRDPath, newCRD)
-	if err != nil {
-		t.Errorf("Expected no error for compatible change, got: %v", err)
-	}
+	assert.NoError(t, err, "Expected no error for compatible change")
 }
 
 func TestCheckBreakingChanges_FieldTypeChange(t *testing.T) {
 	// Test that changing a field type is detected as a breaking change
 	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir: %v")
 	defer os.RemoveAll(tmpDir)
 
 	oldCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
@@ -181,17 +173,13 @@ spec:
 	}
 
 	err = CheckBreakingChanges(oldCRDPath, newCRD)
-	if err == nil {
-		t.Error("Expected error for type change, got none")
-	}
+	require.Error(t, err, "Expected error for type change, got none")
 }
 
 func TestCheckBreakingChanges_FieldRemoval(t *testing.T) {
 	// Test that removing a field is detected as a breaking change
 	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir: %v")
 	defer os.RemoveAll(tmpDir)
 
 	oldCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
@@ -252,17 +240,13 @@ spec:
 	}
 
 	err = CheckBreakingChanges(oldCRDPath, newCRD)
-	if err == nil {
-		t.Error("Expected error for field removal, got none")
-	}
+	require.Error(t, err, "Expected error for field removal, got none")
 }
 
 func TestCheckBreakingChanges_RealFilesystem(t *testing.T) {
 	// Test with real filesystem operations
 	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir: %v")
 	defer os.RemoveAll(tmpDir)
 
 	oldCRDPath := filepath.Join(tmpDir, "old.yaml")
@@ -324,17 +308,13 @@ spec:
 
 	// Should not error for compatible change
 	err = CheckBreakingChanges(oldCRDPath, newCRD)
-	if err != nil {
-		t.Errorf("Expected no error for compatible change, got: %v", err)
-	}
+	assert.NoError(t, err, "Expected no error for compatible change")
 }
 
 func TestCheckBreakingChangesWithFiles(t *testing.T) {
 	// Test the convenience function that takes two file paths
 	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir: %v")
 	defer os.RemoveAll(tmpDir)
 
 	oldCRDPath := filepath.Join(tmpDir, "old.yaml")
@@ -400,12 +380,8 @@ spec:
 
 	// Should error for type change
 	newCRDContent, err := os.ReadFile(newCRDPath)
-	if err != nil {
-		t.Fatalf("Failed to read new CRD: %v", err)
-	}
+	require.NoError(t, err, "Failed to read new CRD: %v")
 
 	err = CheckBreakingChanges(oldCRDPath, newCRDContent)
-	if err == nil {
-		t.Error("Expected error for type change, got none")
-	}
+	require.Error(t, err, "Expected error for type change, got none")
 }
