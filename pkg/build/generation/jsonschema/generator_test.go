@@ -263,7 +263,7 @@ func TestRemoveKubernetesExtensions_Array(t *testing.T) {
 	assert.Equal(t, "integer", item1["type"])
 }
 
-func TestRemoveKubernetesExtensions_NonMapNonArray(t *testing.T) {
+func TestRemoveKubernetesExtensions_NonMapNonArray(_ *testing.T) {
 	// Should not panic or error on primitive values
 	removeKubernetesExtensions("string")
 	removeKubernetesExtensions(42)

@@ -13,5 +13,10 @@ linters:
     - testableexamples
     - usetesting
     - testifylint
+    - gocritic
+    - revive
+    - gocognit
+    - misspell
+    - ineffassign
   disable:
     - errcheck

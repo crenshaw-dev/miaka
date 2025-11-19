@@ -13,7 +13,7 @@ import (
 // newInitCommand creates a fresh init command instance for testing
 func newInitCommand() *cobra.Command {
 	// Reset flags to defaults
-	initApiVersion = ""
+	initAPIVersion = ""
 	initKind = ""
 	initOutput = "example.values.yaml"
 
@@ -25,7 +25,7 @@ func newInitCommand() *cobra.Command {
 		RunE:  runInit,
 	}
 
-	cmd.Flags().StringVar(&initApiVersion, "api-version", "", "API version (e.g., myapp.io/v1)")
+	cmd.Flags().StringVar(&initAPIVersion, "api-version", "", "API version (e.g., myapp.io/v1)")
 	cmd.Flags().StringVar(&initKind, "kind", "", "Kind name (e.g., MyApp)")
 	cmd.Flags().StringVarP(&initOutput, "output", "o", "example.values.yaml", "Output file path")
 

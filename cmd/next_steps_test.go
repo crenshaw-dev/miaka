@@ -28,7 +28,7 @@ image: nginx:latest`
 	os.Stdout = w
 
 	// Set flags for non-interactive mode
-	initApiVersion = "myapp.io/v1"
+	initAPIVersion = "myapp.io/v1"
 	initKind = "MyApp"
 	initOutput = "example.values.yaml"
 

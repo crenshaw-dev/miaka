@@ -9,7 +9,7 @@ import (
 )
 
 // CheckKRMFields checks if a YAML file has apiVersion and kind fields
-func CheckKRMFields(inputFile string) (hasApiVersion, hasKind bool) {
+func CheckKRMFields(inputFile string) (hasAPIVersion, hasKind bool) {
 	data, err := os.ReadFile(inputFile)
 	if err != nil {
 		return false, false
@@ -33,14 +33,14 @@ func CheckKRMFields(inputFile string) (hasApiVersion, hasKind bool) {
 	for i := 0; i < len(contentNode.Content); i += 2 {
 		keyNode := contentNode.Content[i]
 		if keyNode.Value == "apiVersion" {
-			hasApiVersion = true
+			hasAPIVersion = true
 		}
 		if keyNode.Value == "kind" {
 			hasKind = true
 		}
 	}
 
-	return hasApiVersion, hasKind
+	return hasAPIVersion, hasKind
 }
 
 // ConvertToKRM converts a regular Helm values.yaml to a KRM-compliant YAML file
@@ -97,11 +97,11 @@ func ConvertToKRM(inputFile, outputFile, apiVersion, kind string) error {
 	}
 
 	// Check if apiVersion or kind already exist in the input
-	var hasApiVersion, hasKind bool
+	var hasAPIVersion, hasKind bool
 	for i := 0; i < len(contentNode.Content); i += 2 {
 		keyNode := contentNode.Content[i]
 		if keyNode.Value == "apiVersion" {
-			hasApiVersion = true
+			hasAPIVersion = true
 		}
 		if keyNode.Value == "kind" {
 			hasKind = true
@@ -109,13 +109,13 @@ func ConvertToKRM(inputFile, outputFile, apiVersion, kind string) error {
 	}
 
 	// Determine what values to use
-	finalApiVersion := apiVersion
+	finalAPIVersion := apiVersion
 	finalKind := kind
 
 	// Both exist in input - use those values (ignore provided flags)
-	if !hasApiVersion || !hasKind {
+	if !hasAPIVersion || !hasKind {
 		// Handle cases where one or both are missing
-		if hasApiVersion {
+		if hasAPIVersion {
 			// Only apiVersion exists - missing kind
 			return fmt.Errorf("file has apiVersion but missing kind - provide --kind flag or run interactively")
 		}
@@ -124,7 +124,7 @@ func ConvertToKRM(inputFile, outputFile, apiVersion, kind string) error {
 			return fmt.Errorf("file has kind but missing apiVersion - provide --api-version flag or run interactively")
 		}
 		// Neither exist, must provide both
-		if finalApiVersion == "" || finalKind == "" {
+		if finalAPIVersion == "" || finalKind == "" {
 			return fmt.Errorf("apiVersion and kind are required (provide via flags or run interactively)")
 		}
 
@@ -135,7 +135,7 @@ func ConvertToKRM(inputFile, outputFile, apiVersion, kind string) error {
 		}
 		apiVersionValue := &yaml.Node{
 			Kind:  yaml.ScalarNode,
-			Value: finalApiVersion,
+			Value: finalAPIVersion,
 		}
 
 		kindKey := &yaml.Node{

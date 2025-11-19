@@ -415,9 +415,9 @@ data:
 		t.Fatalf("Failed to create input file: %v", err)
 	}
 
-	hasApiVersion, hasKind := CheckKRMFields(inputFile)
-	if !hasApiVersion {
-		t.Error("Expected hasApiVersion to be true")
+	hasAPIVersion, hasKind := CheckKRMFields(inputFile)
+	if !hasAPIVersion {
+		t.Error("Expected hasAPIVersion to be true")
 	}
 	if !hasKind {
 		t.Error("Expected hasKind to be true")
@@ -435,9 +435,9 @@ image: nginx:latest
 		t.Fatalf("Failed to create input file: %v", err)
 	}
 
-	hasApiVersion, hasKind := CheckKRMFields(inputFile)
-	if hasApiVersion {
-		t.Error("Expected hasApiVersion to be false")
+	hasAPIVersion, hasKind := CheckKRMFields(inputFile)
+	if hasAPIVersion {
+		t.Error("Expected hasAPIVersion to be false")
 	}
 	if hasKind {
 		t.Error("Expected hasKind to be false")
@@ -456,9 +456,9 @@ data:
 		t.Fatalf("Failed to create input file: %v", err)
 	}
 
-	hasApiVersion, hasKind := CheckKRMFields(inputFile)
-	if !hasApiVersion {
-		t.Error("Expected hasApiVersion to be true")
+	hasAPIVersion, hasKind := CheckKRMFields(inputFile)
+	if !hasAPIVersion {
+		t.Error("Expected hasAPIVersion to be true")
 	}
 	if hasKind {
 		t.Error("Expected hasKind to be false")
@@ -477,9 +477,9 @@ data:
 		t.Fatalf("Failed to create input file: %v", err)
 	}
 
-	hasApiVersion, hasKind := CheckKRMFields(inputFile)
-	if hasApiVersion {
-		t.Error("Expected hasApiVersion to be false")
+	hasAPIVersion, hasKind := CheckKRMFields(inputFile)
+	if hasAPIVersion {
+		t.Error("Expected hasAPIVersion to be false")
 	}
 	if !hasKind {
 		t.Error("Expected hasKind to be true")
@@ -487,9 +487,9 @@ data:
 }
 
 func TestCheckKRMFields_NonExistentFile(t *testing.T) {
-	hasApiVersion, hasKind := CheckKRMFields("nonexistent.yaml")
-	if hasApiVersion {
-		t.Error("Expected hasApiVersion to be false for non-existent file")
+	hasAPIVersion, hasKind := CheckKRMFields("nonexistent.yaml")
+	if hasAPIVersion {
+		t.Error("Expected hasAPIVersion to be false for non-existent file")
 	}
 	if hasKind {
 		t.Error("Expected hasKind to be false for non-existent file")
@@ -505,9 +505,9 @@ func TestCheckKRMFields_InvalidYAML(t *testing.T) {
 		t.Fatalf("Failed to create input file: %v", err)
 	}
 
-	hasApiVersion, hasKind := CheckKRMFields(inputFile)
-	if hasApiVersion {
-		t.Error("Expected hasApiVersion to be false for invalid YAML")
+	hasAPIVersion, hasKind := CheckKRMFields(inputFile)
+	if hasAPIVersion {
+		t.Error("Expected hasAPIVersion to be false for invalid YAML")
 	}
 	if hasKind {
 		t.Error("Expected hasKind to be false for invalid YAML")

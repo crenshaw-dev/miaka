@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/crdify/pkg/config"
 	"sigs.k8s.io/crdify/pkg/runner"
+	"sigs.k8s.io/crdify/pkg/validations"
 )
 
 // CheckBreakingChanges compares an existing CRD file with a newly generated CRD
@@ -80,39 +81,39 @@ func renderErrorsOnly(results *runner.Results) string {
 	var out strings.Builder
 
 	// CRD Validations
-	for _, result := range results.CRDValidation {
-		if len(result.Errors) > 0 {
-			for _, err := range result.Errors {
-				out.WriteString(fmt.Sprintf("- %s - %s\n", result.Name, err))
-			}
-		}
-	}
+	renderCRDValidationErrors(&out, results.CRDValidation)
 
 	// Same Version Validations
-	for version, versionResults := range results.SameVersionValidation {
-		for property, propertyResults := range versionResults {
-			for _, propertyResult := range propertyResults {
-				if len(propertyResult.Errors) > 0 {
-					for _, err := range propertyResult.Errors {
-						out.WriteString(fmt.Sprintf("- %s - %s - %s - %s\n", version, property, propertyResult.Name, err))
-					}
-				}
-			}
-		}
-	}
+	renderVersionValidationErrors(&out, results.SameVersionValidation)
 
 	// Served Version Validations
-	for version, versionResults := range results.ServedVersionValidation {
+	renderVersionValidationErrors(&out, results.ServedVersionValidation)
+
+	return out.String()
+}
+
+// renderCRDValidationErrors renders CRD validation errors
+func renderCRDValidationErrors(out *strings.Builder, validationResults []validations.ComparisonResult) {
+	for _, result := range validationResults {
+		if len(result.Errors) > 0 {
+			for _, err := range result.Errors {
+				fmt.Fprintf(out, "- %s - %s\n", result.Name, err)
+			}
+		}
+	}
+}
+
+// renderVersionValidationErrors renders version validation errors
+func renderVersionValidationErrors(out *strings.Builder, validationResults map[string]map[string][]validations.ComparisonResult) {
+	for version, versionResults := range validationResults {
 		for property, propertyResults := range versionResults {
 			for _, propertyResult := range propertyResults {
 				if len(propertyResult.Errors) > 0 {
 					for _, err := range propertyResult.Errors {
-						out.WriteString(fmt.Sprintf("- %s - %s - %s - %s\n", version, property, propertyResult.Name, err))
+						fmt.Fprintf(out, "- %s - %s - %s - %s\n", version, property, propertyResult.Name, err)
 					}
 				}
 			}
 		}
 	}
-
-	return out.String()
 }

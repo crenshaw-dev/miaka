@@ -82,12 +82,13 @@ func ValidateSchema(schema *Schema) error {
 			isArray := false
 			fieldPath := structDef.Name + "." + field.JSONName
 
-			if field.IsSlice && field.ElemType == "interface{}" {
+			switch {
+			case field.IsSlice && field.ElemType == "interface{}":
 				isInterface = true
 				isArray = true
-			} else if field.Type == "interface{}" {
+			case field.Type == "interface{}":
 				isInterface = true
-			} else if field.Type == "[]interface{}" {
+			case field.Type == "[]interface{}":
 				isInterface = true
 				isArray = true
 			}

@@ -503,8 +503,11 @@ func normalizeControllerGenVersion(s string) string {
 	lines := strings.Split(s, "\n")
 	for i, line := range lines {
 		if strings.Contains(line, "controller-gen.kubebuilder.io/version:") {
-			indent := strings.TrimRight(line[:strings.Index(line, "controller-gen")], " ")
-			lines[i] = indent + "controller-gen.kubebuilder.io/version: <normalized>"
+			idx := strings.Index(line, "controller-gen")
+			if idx >= 0 {
+				indent := strings.TrimRight(line[:idx], " ")
+				lines[i] = indent + "controller-gen.kubebuilder.io/version: <normalized>"
+			}
 		}
 	}
 	return strings.Join(lines, "\n")

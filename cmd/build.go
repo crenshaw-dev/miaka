@@ -87,32 +87,60 @@ func runBuild(_ *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to parse YAML: %w", err)
 	}
 
-	// Determine where to write types.go (do this early so we can write on errors)
-	var typesFilePath string
-	var tmpDir string
+	// Prepare types file path and cleanup
+	typesFilePath, cleanup, err := prepareTypesFile()
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	// Generate and write types
+	if err := generateAndWriteTypes(s, inputFile, typesFilePath); err != nil {
+		return err
+	}
+
+	// Generate CRD with breaking change detection
+	hadExistingCRD, err := handleCRDGeneration(s, typesFilePath, inputFile)
+	if err != nil {
+		return err
+	}
+
+	// Generate and validate JSON Schema
+	if err := generateJSONSchema(inputFile); err != nil {
+		return err
+	}
+
+	// Print next steps for first-time users
+	if !hadExistingCRD {
+		printNextSteps(inputFile)
+	}
+
+	return nil
+}
+
+// prepareTypesFile sets up the types file path and returns a cleanup function
+func prepareTypesFile() (typesFilePath string, cleanup func(), err error) {
 	if buildTypesPath == "" {
 		// No --types flag specified, use temp file
-		var err error
-		tmpDir, err = os.MkdirTemp("", "miaka-build-*")
+		tmpDir, err := os.MkdirTemp("", "miaka-build-*")
 		if err != nil {
-			return fmt.Errorf("failed to create temp directory: %w", err)
+			return "", nil, fmt.Errorf("failed to create temp directory: %w", err)
 		}
-		defer func() {
+		cleanup = func() {
 			if tmpDir != "" {
-				err = os.RemoveAll(tmpDir)
-				if err != nil {
+				if err := os.RemoveAll(tmpDir); err != nil {
 					fmt.Fprintf(os.Stderr, "warning: failed to remove temp directory %s: %v\n", tmpDir, err)
 				}
 			}
-		}()
-
-		typesFilePath = filepath.Join(tmpDir, "types.go")
-	} else {
-		// Use specified output path
-		typesFilePath = buildTypesPath
+		}
+		return filepath.Join(tmpDir, "types.go"), cleanup, nil
 	}
+	// Use specified output path
+	return buildTypesPath, func() {}, nil
+}
 
-	// Generate Go code
+// generateAndWriteTypes generates Go types and writes them to file
+func generateAndWriteTypes(s *schema.Schema, inputFile, typesFilePath string) error {
 	fmt.Printf("Generating Go types from %s...\n", inputFile)
 	g := gotypes.NewGenerator(s)
 	code, err := g.Generate()
@@ -153,7 +181,11 @@ func runBuild(_ *cobra.Command, args []string) error {
 		fmt.Printf("✓ Types saved to %s\n", typesFilePath)
 	}
 
-	// Generate CRD
+	return nil
+}
+
+// handleCRDGeneration generates CRD and handles breaking change detection
+func handleCRDGeneration(s *schema.Schema, typesFilePath, inputFile string) (hadExistingCRD bool, err error) {
 	fmt.Printf("Generating CRD %s...\n", buildCRDPath)
 
 	crdDir := filepath.Dir(buildCRDPath)
@@ -161,55 +193,31 @@ func runBuild(_ *cobra.Command, args []string) error {
 
 	// Save existing CRD for breaking change comparison (if it exists)
 	var oldCRDContent []byte
-	var hadExistingCRD bool
-	if existingData, err := os.ReadFile(buildCRDPath); err == nil {
+	if existingData, readErr := os.ReadFile(buildCRDPath); readErr == nil {
 		oldCRDContent = existingData
 		hadExistingCRD = true
 		fmt.Println("Checking for breaking changes against existing CRD...")
 	}
 
 	if err := generateCRD(s, typesFilePath, crdDir, crdFileName); err != nil {
-		return fmt.Errorf("failed to generate CRD: %w", err)
+		return hadExistingCRD, fmt.Errorf("failed to generate CRD: %w", err)
 	}
 
 	// Check for breaking changes if there was an existing CRD
 	if hadExistingCRD {
-		newCRDContent, err := os.ReadFile(buildCRDPath)
-		if err != nil {
-			return fmt.Errorf("failed to read generated CRD: %w", err)
-		}
-
-		// Create temp file with old CRD for comparison
-		tmpOldCRD, err := os.CreateTemp("", "old-crd-*.yaml")
-		if err != nil {
-			return fmt.Errorf("failed to create temp file for old CRD: %w", err)
-		}
-		defer os.Remove(tmpOldCRD.Name())
-
-		if _, err := tmpOldCRD.Write(oldCRDContent); err != nil {
-			tmpOldCRD.Close()
-			return fmt.Errorf("failed to write old CRD to temp file: %w", err)
-		}
-		tmpOldCRD.Close()
-
-		// Check for breaking changes
-		if err := validation.CheckBreakingChanges(tmpOldCRD.Name(), newCRDContent); err != nil {
-			// Restore the old CRD since we're rejecting the breaking change
-			if writeErr := os.WriteFile(buildCRDPath, oldCRDContent, 0644); writeErr != nil {
-				return fmt.Errorf("breaking change detected and failed to restore old CRD: %w (original error: %w)", writeErr, err)
-			}
-			return fmt.Errorf("failed to generate CRD: %w", err)
+		if err := checkBreakingChanges(oldCRDContent); err != nil {
+			return hadExistingCRD, err
 		}
 	}
 
 	// Add strict validation to CRD (additionalProperties: false)
 	if err := crd.AddStrictValidation(buildCRDPath); err != nil {
-		return fmt.Errorf("failed to add strict validation to CRD: %w", err)
+		return hadExistingCRD, fmt.Errorf("failed to add strict validation to CRD: %w", err)
 	}
 
 	// Validate the generated CRD itself
 	if err := crd.ValidateCRD(buildCRDPath); err != nil {
-		return fmt.Errorf("generated CRD is invalid: %w", err)
+		return hadExistingCRD, fmt.Errorf("generated CRD is invalid: %w", err)
 	}
 
 	fmt.Printf("✓ CRD generated: %s\n", buildCRDPath)
@@ -217,11 +225,48 @@ func runBuild(_ *cobra.Command, args []string) error {
 	// Validate the input YAML against the generated CRD
 	fmt.Printf("Validating %s against CRD...\n", inputFile)
 	if err := validation.ValidateAgainstCRD(buildCRDPath, inputFile); err != nil {
-		return fmt.Errorf("validation failed: %w", err)
+		return hadExistingCRD, fmt.Errorf("validation failed: %w", err)
 	}
 
 	fmt.Printf("✓ Validation passed: %s conforms to CRD schema\n", inputFile)
 
+	return hadExistingCRD, nil
+}
+
+// checkBreakingChanges compares old and new CRD for breaking changes
+func checkBreakingChanges(oldCRDContent []byte) error {
+	newCRDContent, err := os.ReadFile(buildCRDPath)
+	if err != nil {
+		return fmt.Errorf("failed to read generated CRD: %w", err)
+	}
+
+	// Create temp file with old CRD for comparison
+	tmpOldCRD, err := os.CreateTemp("", "old-crd-*.yaml")
+	if err != nil {
+		return fmt.Errorf("failed to create temp file for old CRD: %w", err)
+	}
+	defer os.Remove(tmpOldCRD.Name())
+
+	if _, err := tmpOldCRD.Write(oldCRDContent); err != nil {
+		tmpOldCRD.Close()
+		return fmt.Errorf("failed to write old CRD to temp file: %w", err)
+	}
+	tmpOldCRD.Close()
+
+	// Check for breaking changes
+	if err := validation.CheckBreakingChanges(tmpOldCRD.Name(), newCRDContent); err != nil {
+		// Restore the old CRD since we're rejecting the breaking change
+		if writeErr := os.WriteFile(buildCRDPath, oldCRDContent, 0644); writeErr != nil {
+			return fmt.Errorf("breaking change detected and failed to restore old CRD: %w (original error: %w)", writeErr, err)
+		}
+		return fmt.Errorf("failed to generate CRD: %w", err)
+	}
+
+	return nil
+}
+
+// generateJSONSchema generates and validates JSON Schema
+func generateJSONSchema(inputFile string) error {
 	// Generate JSON Schema
 	fmt.Printf("Generating JSON Schema %s...\n", buildSchemaPath)
 	if err := jsonschema.GenerateFromCRD(buildCRDPath, buildSchemaPath); err != nil {
@@ -236,28 +281,27 @@ func runBuild(_ *cobra.Command, args []string) error {
 	}
 	fmt.Printf("✓ JSON Schema validation passed\n")
 
-	// Check if this is the first time generating (no existing CRD)
-	// and print helpful next steps
-	if !hadExistingCRD {
-		fmt.Println()
-		fmt.Println("🎉 Generated schemas for the first time!")
-		fmt.Println()
-		fmt.Println("📝 Next steps:")
-		fmt.Println("  1. Validate your actual values files:")
-		fmt.Printf("       miaka validate your-values.yaml\n")
-		fmt.Println()
-		fmt.Println("  2. Improve your schema by editing", inputFile+":")
-		fmt.Println("       - Add kubebuilder validation markers (e.g., +kubebuilder:validation:Minimum=1)")
-		fmt.Println("       - Add field descriptions as comments")
-		fmt.Println("       - Then run 'miaka build' again to regenerate schemas")
-		fmt.Println()
-		fmt.Println("  3. Commit the generated files to git:")
-		fmt.Printf("       git add %s %s %s\n", buildCRDPath, buildSchemaPath, inputFile)
-		fmt.Println("       git commit -m 'Add Miaka schemas'")
-		fmt.Println("       (This enables breaking change detection on future builds)")
-	}
-
 	return nil
+}
+
+// printNextSteps prints helpful next steps for first-time users
+func printNextSteps(inputFile string) {
+	fmt.Println()
+	fmt.Println("🎉 Generated schemas for the first time!")
+	fmt.Println()
+	fmt.Println("📝 Next steps:")
+	fmt.Println("  1. Validate your actual values files:")
+	fmt.Printf("       miaka validate your-values.yaml\n")
+	fmt.Println()
+	fmt.Println("  2. Improve your schema by editing", inputFile+":")
+	fmt.Println("       - Add kubebuilder validation markers (e.g., +kubebuilder:validation:Minimum=1)")
+	fmt.Println("       - Add field descriptions as comments")
+	fmt.Println("       - Then run 'miaka build' again to regenerate schemas")
+	fmt.Println()
+	fmt.Println("  3. Commit the generated files to git:")
+	fmt.Printf("       git add %s %s %s\n", buildCRDPath, buildSchemaPath, inputFile)
+	fmt.Println("       git commit -m 'Add Miaka schemas'")
+	fmt.Println("       (This enables breaking change detection on future builds)")
 }
 
 // generateCRD generates a CRD from the schema and types file

@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	initApiVersion string
+	initAPIVersion string
 	initKind       string
 	initOutput     string
 )
@@ -53,7 +53,7 @@ in non-interactive mode like CI/CD).`,
 }
 
 func init() {
-	initCmd.Flags().StringVar(&initApiVersion, "api-version", "", "API version (e.g., myapp.io/v1)")
+	initCmd.Flags().StringVar(&initAPIVersion, "api-version", "", "API version (e.g., myapp.io/v1)")
 	initCmd.Flags().StringVar(&initKind, "kind", "", "Kind name (e.g., MyApp)")
 	initCmd.Flags().StringVarP(&initOutput, "output", "o", "example.values.yaml", "Output file path")
 
@@ -79,18 +79,18 @@ func runInit(_ *cobra.Command, args []string) error {
 	}
 
 	// Get apiVersion and kind, prompting interactively if needed
-	apiVersion := initApiVersion
+	apiVersion := initAPIVersion
 	kind := initKind
 
 	// Check if the input file already has apiVersion and kind
-	hasApiVersion, hasKind := false, false
+	hasAPIVersion, hasKind := false, false
 	if fileExists {
-		hasApiVersion, hasKind = initpkg.CheckKRMFields(inputFile)
+		hasAPIVersion, hasKind = initpkg.CheckKRMFields(inputFile)
 	}
 
 	// Only prompt if values not provided via flags, not in file, and we're in a TTY
 	if term.IsTerminal(int(os.Stdin.Fd())) {
-		if apiVersion == "" && !hasApiVersion {
+		if apiVersion == "" && !hasAPIVersion {
 			prompt := &survey.Input{
 				Message: "API Version (e.g., myapp.io/v1):",
 			}

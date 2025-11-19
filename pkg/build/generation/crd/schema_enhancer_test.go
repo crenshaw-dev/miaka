@@ -298,7 +298,7 @@ func TestAddAdditionalPropertiesFalse_ObjectWithExistingAdditionalProperties(t *
 	assert.True(t, schema.AdditionalProperties.Allows, "existing additionalProperties should not be changed")
 }
 
-func TestAddAdditionalPropertiesFalse_NilSchema(t *testing.T) {
+func TestAddAdditionalPropertiesFalse_NilSchema(_ *testing.T) {
 	// Should not panic on nil schema
 	addAdditionalPropertiesFalse(nil)
 	// Just testing that it doesn't crash
