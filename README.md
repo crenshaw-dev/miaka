@@ -95,7 +95,7 @@ Miaka generates schemas with these descriptions and validations automatically.
 Miaka doesn't reinvent the wheel - it brings together proven Kubernetes ecosystem tools:
 
 1. **Schema Generation**: Uses [controller-gen](https://book.kubebuilder.io/reference/controller-gen.html) (the official Kubernetes CRD generator) to create OpenAPI v3 schemas from Go types
-2. **Validation**: Leverages Helm's JSON Schema validation to verify your values against the generated schema
+2. **Validation**: Leverages [Helm's JSON Schema validation](https://helm.sh/docs/topics/charts/#schema-files) to verify your values against the generated schema
 3. **Breaking Change Detection**: Employs [crdify](https://github.com/kubernetes-sigs/crdify) to catch API compatibility issues between versions
 
 No magic, just battle-tested tools working together.
