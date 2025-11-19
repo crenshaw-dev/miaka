@@ -2,6 +2,8 @@ package schema
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInferType(t *testing.T) {
@@ -65,9 +67,7 @@ func TestInferType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := InferType(tt.value)
-			if result != tt.expected {
-				t.Errorf("InferType(%v) = %q, want %q", tt.value, result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
@@ -138,9 +138,7 @@ func TestToPascalCase(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ToPascalCase(tt.input)
-			if result != tt.expected {
-				t.Errorf("ToPascalCase(%q) = %q, want %q", tt.input, result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
@@ -181,9 +179,7 @@ func TestGenerateStructName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := GenerateStructName(tt.input)
-			if result != tt.expected {
-				t.Errorf("GenerateStructName(%q) = %q, want %q", tt.input, result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
@@ -210,9 +206,8 @@ func TestFormatComments(t *testing.T) {
 			expected: []string{"Hello", "World"},
 		},
 		{
-			name:     "empty comments",
-			input:    []string{"", "  ", "#"},
-			expected: []string{},
+			name:  "empty comments",
+			input: []string{"", "  ", "#"},
 		},
 		{
 			name:     "mixed",
@@ -220,23 +215,18 @@ func TestFormatComments(t *testing.T) {
 			expected: []string{"Comment 1", "Comment 2"},
 		},
 		{
-			name:     "nil input",
-			input:    nil,
-			expected: []string{},
+			name:  "nil input",
+			input: nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := FormatComments(tt.input)
-			if len(result) != len(tt.expected) {
-				t.Errorf("FormatComments() returned %d comments, want %d", len(result), len(tt.expected))
-				return
-			}
-			for i := range result {
-				if result[i] != tt.expected[i] {
-					t.Errorf("FormatComments()[%d] = %q, want %q", i, result[i], tt.expected[i])
-				}
+			if len(tt.expected) == 0 {
+				assert.Empty(t, result)
+			} else {
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
@@ -292,20 +282,12 @@ func TestParseAPIVersion(t *testing.T) {
 			result, err := ParseAPIVersion(tt.apiVersion)
 
 			if tt.expectError {
-				if err == nil {
-					t.Errorf("ParseAPIVersion(%q) expected error, got nil", tt.apiVersion)
-				}
+				assert.Error(t, err, "ParseAPIVersion(%q) expected error", tt.apiVersion)
 				return
 			}
 
-			if err != nil {
-				t.Errorf("ParseAPIVersion(%q) unexpected error: %v", tt.apiVersion, err)
-				return
-			}
-
-			if result != tt.expected {
-				t.Errorf("ParseAPIVersion(%q) = %q, want %q", tt.apiVersion, result, tt.expected)
-			}
+			assert.NoError(t, err, "ParseAPIVersion(%q) unexpected error", tt.apiVersion)
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }

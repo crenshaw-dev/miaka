@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/yaml"
 )
@@ -45,14 +47,14 @@ func TestValidateCRD_Valid(t *testing.T) {
 		},
 	}
 
-	data, _ := yaml.Marshal(crd)
-	os.WriteFile(crdPath, data, 0644)
+	data, err := yaml.Marshal(crd)
+	require.NoError(t, err)
+	err = os.WriteFile(crdPath, data, 0644)
+	require.NoError(t, err)
 
 	// Should pass validation
-	err := ValidateCRD(crdPath)
-	if err != nil {
-		t.Errorf("Expected valid CRD to pass, got error: %v", err)
-	}
+	err = ValidateCRD(crdPath)
+	assert.NoError(t, err, "Expected valid CRD to pass")
 }
 
 func TestValidateCRD_MutuallyExclusivePropertiesAndAdditionalProperties(t *testing.T) {
@@ -103,8 +105,10 @@ func TestValidateCRD_MutuallyExclusivePropertiesAndAdditionalProperties(t *testi
 		},
 	}
 
-	data, _ := yaml.Marshal(crd)
-	os.WriteFile(crdPath, data, 0644)
+	data, err := yaml.Marshal(crd)
+	require.NoError(t, err)
+	err = os.WriteFile(crdPath, data, 0644)
+	require.NoError(t, err)
 
 	// Note: schema.NewStructural() does NOT catch this validation error!
 	// The Kubernetes API server would reject this, but the structural schema validator
@@ -113,7 +117,7 @@ func TestValidateCRD_MutuallyExclusivePropertiesAndAdditionalProperties(t *testi
 	//
 	// This test documents this limitation and ensures our code doesn't crash on such CRDs.
 	// The real validation happens when applying to a cluster.
-	err := ValidateCRD(crdPath)
+	err = ValidateCRD(crdPath)
 
 	// We expect this to pass (even though it's invalid according to Kubernetes)
 	// because schema.NewStructural doesn't catch this specific constraint
@@ -129,14 +133,10 @@ func TestValidateCRD_MutuallyExclusivePropertiesAndAdditionalProperties(t *testi
 
 func TestValidateCRD_FileNotFound(t *testing.T) {
 	err := ValidateCRD("/nonexistent/path/to/crd.yaml")
-	if err == nil {
-		t.Error("Expected error for nonexistent file, but got nil")
-	}
+	require.Error(t, err, "Expected error for nonexistent file")
 	if !os.IsNotExist(err) {
 		// Check that error message mentions file reading
-		if err.Error() == "" || err.Error()[:len("failed to read")] != "failed to read" {
-			t.Errorf("Expected 'failed to read' error, got: %v", err)
-		}
+		assert.Contains(t, err.Error(), "failed to read", "Expected 'failed to read' error")
 	}
 }
 
@@ -145,12 +145,11 @@ func TestValidateCRD_InvalidYAML(t *testing.T) {
 	crdPath := filepath.Join(tmpDir, "invalid.yaml")
 
 	// Write invalid YAML
-	os.WriteFile(crdPath, []byte("this is not: valid: yaml: content"), 0644)
+	err := os.WriteFile(crdPath, []byte("this is not: valid: yaml: content"), 0644)
+	require.NoError(t, err)
 
-	err := ValidateCRD(crdPath)
-	if err == nil {
-		t.Error("Expected error for invalid YAML, but got nil")
-	}
+	err = ValidateCRD(crdPath)
+	assert.Error(t, err, "Expected error for invalid YAML")
 }
 
 func TestValidateCRD_MultipleVersions(t *testing.T) {
@@ -203,14 +202,14 @@ func TestValidateCRD_MultipleVersions(t *testing.T) {
 		},
 	}
 
-	data, _ := yaml.Marshal(crd)
-	os.WriteFile(crdPath, data, 0644)
+	data, err := yaml.Marshal(crd)
+	require.NoError(t, err)
+	err = os.WriteFile(crdPath, data, 0644)
+	require.NoError(t, err)
 
 	// Should pass validation for all versions
-	err := ValidateCRD(crdPath)
-	if err != nil {
-		t.Errorf("Expected valid multi-version CRD to pass, got error: %v", err)
-	}
+	err = ValidateCRD(crdPath)
+	assert.NoError(t, err, "Expected valid multi-version CRD to pass")
 }
 
 func TestValidateCRD_WithArrays(t *testing.T) {
@@ -257,12 +256,12 @@ func TestValidateCRD_WithArrays(t *testing.T) {
 		},
 	}
 
-	data, _ := yaml.Marshal(crd)
-	os.WriteFile(crdPath, data, 0644)
+	data, err := yaml.Marshal(crd)
+	require.NoError(t, err)
+	err = os.WriteFile(crdPath, data, 0644)
+	require.NoError(t, err)
 
 	// Should pass validation
-	err := ValidateCRD(crdPath)
-	if err != nil {
-		t.Errorf("Expected valid CRD with arrays to pass, got error: %v", err)
-	}
+	err = ValidateCRD(crdPath)
+	assert.NoError(t, err, "Expected valid CRD with arrays to pass")
 }

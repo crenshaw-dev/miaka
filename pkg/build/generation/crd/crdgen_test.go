@@ -3,17 +3,17 @@ package crd
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestGenerator_Generate tests the CRD generation with temp directory isolation
 func TestGenerator_Generate(t *testing.T) {
 	// Create temp directory for test output
 	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
 	// Create a sample types.go file
@@ -41,9 +41,8 @@ type ExampleSpec struct {
 `
 
 	typesFile := filepath.Join(tmpDir, "types.go")
-	if err := os.WriteFile(typesFile, []byte(typesContent), 0644); err != nil {
-		t.Fatalf("Failed to write types file: %v", err)
-	}
+	err = os.WriteFile(typesFile, []byte(typesContent), 0644)
+	require.NoError(t, err, "Failed to write types file")
 
 	opts := Options{
 		Group:          "example.com",
@@ -56,51 +55,36 @@ type ExampleSpec struct {
 
 	// Generate CRD - all intermediate files should be in temp, not polluting tmpDir
 	outputDir := filepath.Join(tmpDir, "output")
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		t.Fatalf("Failed to create output dir: %v", err)
-	}
+	err = os.MkdirAll(outputDir, 0755)
+	require.NoError(t, err, "Failed to create output dir")
 
 	err = gen.Generate(typesFile, outputDir)
-	if err != nil {
-		t.Fatalf("Generate failed: %v", err)
-	}
+	require.NoError(t, err, "Generate failed")
 
 	// Verify CRD was created
 	crdPath := filepath.Join(outputDir, "test-crd.yaml")
-	if _, err := os.Stat(crdPath); os.IsNotExist(err) {
-		t.Errorf("Expected CRD file not found: %s", crdPath)
-	}
+	_, err = os.Stat(crdPath)
+	assert.NoError(t, err, "Expected CRD file not found: %s", crdPath)
 
 	// Verify CRD content
 	crdContent, err := os.ReadFile(crdPath)
-	if err != nil {
-		t.Fatalf("Failed to read CRD: %v", err)
-	}
+	require.NoError(t, err, "Failed to read CRD")
 
 	crdStr := string(crdContent)
-	if !strings.Contains(crdStr, "apiVersion: apiextensions.k8s.io/v1") {
-		t.Errorf("CRD missing apiVersion")
-	}
-	if !strings.Contains(crdStr, "kind: CustomResourceDefinition") {
-		t.Errorf("CRD missing kind")
-	}
-	if !strings.Contains(crdStr, "example.com") {
-		t.Errorf("CRD missing group")
-	}
+	assert.Contains(t, crdStr, "apiVersion: apiextensions.k8s.io/v1", "CRD missing apiVersion")
+	assert.Contains(t, crdStr, "kind: CustomResourceDefinition", "CRD missing kind")
+	assert.Contains(t, crdStr, "example.com", "CRD missing group")
 
 	// Verify no intermediate files were left in the types file directory
 	// (They should all be in a temp directory that was cleaned up)
 	entries, err := os.ReadDir(tmpDir)
-	if err != nil {
-		t.Fatalf("Failed to read tmpDir: %v", err)
-	}
+	require.NoError(t, err, "Failed to read tmpDir")
 
 	for _, entry := range entries {
 		name := entry.Name()
 		// Only types.go and output dir should exist, no go.mod, go.sum, or doc.go
-		if name != "types.go" && name != "output" {
-			t.Errorf("Unexpected file in tmpDir: %s (intermediate files should be cleaned up)", name)
-		}
+		assert.True(t, name == "types.go" || name == "output",
+			"Unexpected file in tmpDir: %s (intermediate files should be cleaned up)", name)
 	}
 }
 
@@ -112,10 +96,6 @@ func TestOptions(t *testing.T) {
 		Kind:    "Deployment",
 	}
 
-	if opts.Group != "apps" {
-		t.Errorf("Group = %s, want apps", opts.Group)
-	}
-	if opts.Version != "v1" {
-		t.Errorf("Version = %s, want v1", opts.Version)
-	}
+	assert.Equal(t, "apps", opts.Group)
+	assert.Equal(t, "v1", opts.Version)
 }
