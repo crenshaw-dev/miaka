@@ -23,3 +23,8 @@ linters:
     - nestif
   disable:
     - errcheck
+  settings:
+    revive:
+      rules:
+        - name: early-return
+          severity: warning

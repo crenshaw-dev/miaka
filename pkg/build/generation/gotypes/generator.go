@@ -385,11 +385,10 @@ func handleFieldInlineComment(line string, lines []string, i int, result *[]stri
 func getIndent(line string) string {
 	indent := ""
 	for _, r := range line {
-		if r == '\t' || r == ' ' {
-			indent += string(r)
-		} else {
+		if r != '\t' && r != ' ' {
 			break
 		}
+		indent += string(r)
 	}
 	return indent
 }

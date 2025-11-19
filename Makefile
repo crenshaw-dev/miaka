@@ -1,4 +1,4 @@
-.PHONY: build test lint release
+.PHONY: build test lint lint-fix release
 
 # Version information (for local builds, not used for releases)
 BUILD_VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -29,6 +29,12 @@ lint:
 	@which golangci-lint > /dev/null || (echo "Installing golangci-lint..." && \
 		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin $(GOLANGCI_LINT_VERSION))
 	golangci-lint run ./...
+
+# Run linter with auto-fix
+lint-fix:
+	@which golangci-lint > /dev/null || (echo "Installing golangci-lint..." && \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin $(GOLANGCI_LINT_VERSION))
+	golangci-lint run --fix ./...
 
 # Trigger a release by creating and pushing a tag
 # Usage: make release VERSION=v0.1.0
