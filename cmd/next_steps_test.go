@@ -14,16 +14,12 @@ import (
 func TestInitNextSteps(t *testing.T) {
 	// Create temp directory
 	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir)
-	
-	err := os.Chdir(tmpDir)
-	require.NoError(t, err)
+	t.Chdir(tmpDir)
 	
 	// Create a simple values.yaml
 	valuesContent := `replicas: 3
 image: nginx:latest`
-	err = os.WriteFile("values.yaml", []byte(valuesContent), 0644)
+	err := os.WriteFile("values.yaml", []byte(valuesContent), 0644)
 	require.NoError(t, err)
 	
 	// Capture stdout
@@ -65,18 +61,14 @@ image: nginx:latest`
 func TestBuildFirstTimeNextSteps(t *testing.T) {
 	// Create temp directory
 	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir)
-	
-	err := os.Chdir(tmpDir)
-	require.NoError(t, err)
+	t.Chdir(tmpDir)
 	
 	// Create a valid example.values.yaml
 	exampleContent := `apiVersion: myapp.io/v1
 kind: MyApp
 replicas: 3
 image: nginx:latest`
-	err = os.WriteFile("example.values.yaml", []byte(exampleContent), 0644)
+	err := os.WriteFile("example.values.yaml", []byte(exampleContent), 0644)
 	require.NoError(t, err)
 	
 	// Capture stdout
@@ -117,26 +109,22 @@ image: nginx:latest`
 	
 	// Verify files were created
 	_, err = os.Stat("crd.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = os.Stat("values.schema.json")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestBuildSubsequentRunNoNextSteps(t *testing.T) {
 	// Create temp directory
 	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir)
-	
-	err := os.Chdir(tmpDir)
-	require.NoError(t, err)
+	t.Chdir(tmpDir)
 	
 	// Create a valid example.values.yaml
 	exampleContent := `apiVersion: myapp.io/v1
 kind: MyApp
 replicas: 3
 image: nginx:latest`
-	err = os.WriteFile("example.values.yaml", []byte(exampleContent), 0644)
+	err := os.WriteFile("example.values.yaml", []byte(exampleContent), 0644)
 	require.NoError(t, err)
 	
 	// Create an existing CRD to simulate subsequent run
