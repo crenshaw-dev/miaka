@@ -152,7 +152,7 @@ func newBuildCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "build [example.yaml]",
 		Short:        "Generate Go types and/or CRD from example.values.yaml",
-		Args:         cobra.ExactArgs(1),
+		Args:         cobra.MaximumNArgs(1),
 		RunE:         runBuild,
 		SilenceUsage: true,
 	}
@@ -260,8 +260,16 @@ names: []
 
 // TestBuildCommand_InvalidInput tests error handling for invalid input
 func TestBuildCommand_InvalidInput(t *testing.T) {
+	tmpDir := t.TempDir()
+	crdOutput := filepath.Join(tmpDir, "crd.yaml")
+	schemaOutput := filepath.Join(tmpDir, "schema.json")
+
 	cmd := newBuildCommand()
-	cmd.SetArgs([]string{"nonexistent.yaml"})
+	cmd.SetArgs([]string{
+		"nonexistent.yaml",
+		"-c", crdOutput,
+		"-s", schemaOutput,
+	})
 
 	outBuf := new(bytes.Buffer)
 	errBuf := new(bytes.Buffer)
@@ -551,4 +559,257 @@ func intToString(n int) string {
 		n /= 10
 	}
 	return string(digits)
+}
+
+// TestBuildCommand_MissingExampleValuesYaml tests error when example.values.yaml is missing
+func TestBuildCommand_MissingExampleValuesYaml(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Change to temp directory (where example.values.yaml doesn't exist)
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get working directory: %v", err)
+	}
+	defer os.Chdir(origDir)
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("Failed to change to temp directory: %v", err)
+	}
+
+	cmd := newBuildCommand()
+	cmd.SetArgs([]string{}) // No arguments, should look for example.values.yaml
+
+	outBuf := new(bytes.Buffer)
+	errBuf := new(bytes.Buffer)
+	cmd.SetOut(outBuf)
+	cmd.SetErr(errBuf)
+
+	err = cmd.Execute()
+	if err == nil {
+		t.Fatal("Expected error for missing example.values.yaml but command succeeded")
+	}
+
+	if !strings.Contains(err.Error(), "example.values.yaml not found") {
+		t.Errorf("Expected 'example.values.yaml not found' error, got: %v", err)
+	}
+}
+
+// TestBuildCommand_InvalidYaml tests error handling for malformed YAML
+func TestBuildCommand_InvalidYaml(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputPath := filepath.Join(tmpDir, "invalid.yaml")
+	crdOutput := filepath.Join(tmpDir, "crd.yaml")
+	schemaOutput := filepath.Join(tmpDir, "schema.json")
+
+	// Write malformed YAML
+	invalidYAML := `apiVersion: test.io/v1
+kind: Test
+this is not: valid: yaml: syntax
+replicas: 3
+`
+	if err := os.WriteFile(inputPath, []byte(invalidYAML), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	cmd := newBuildCommand()
+	cmd.SetArgs([]string{
+		inputPath,
+		"-c", crdOutput,
+		"-s", schemaOutput,
+	})
+
+	outBuf := new(bytes.Buffer)
+	errBuf := new(bytes.Buffer)
+	cmd.SetOut(outBuf)
+	cmd.SetErr(errBuf)
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("Expected error for invalid YAML but command succeeded")
+	}
+
+	if !strings.Contains(err.Error(), "failed to parse YAML") {
+		t.Errorf("Expected 'failed to parse YAML' error, got: %v", err)
+	}
+}
+
+// TestBuildCommand_SaveTypesGo tests that types.go can be saved with -t flag
+func TestBuildCommand_SaveTypesGo(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputPath := filepath.Join(tmpDir, "input.yaml")
+	typesOutput := filepath.Join(tmpDir, "saved-types.go")
+	crdOutput := filepath.Join(tmpDir, "crd.yaml")
+	schemaOutput := filepath.Join(tmpDir, "schema.json")
+
+	validYAML := `apiVersion: example.com/v1
+kind: Example
+# Number of replicas
+replicas: 3
+# Application name
+appName: "myapp"
+`
+	if err := os.WriteFile(inputPath, []byte(validYAML), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	cmd := newBuildCommand()
+	cmd.SetArgs([]string{
+		inputPath,
+		"-t", typesOutput,
+		"-c", crdOutput,
+		"-s", schemaOutput,
+	})
+
+	outBuf := new(bytes.Buffer)
+	errBuf := new(bytes.Buffer)
+	cmd.SetOut(outBuf)
+	cmd.SetErr(errBuf)
+
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatalf("Build command failed: %v\nStderr: %s", err, errBuf.String())
+	}
+
+	// Verify types.go was created at the specified location
+	if _, err := os.Stat(typesOutput); os.IsNotExist(err) {
+		t.Errorf("Expected types file not found at specified location: %s", typesOutput)
+	}
+
+	// Verify the file contains expected content
+	content, err := os.ReadFile(typesOutput)
+	if err != nil {
+		t.Fatalf("Failed to read types file: %v", err)
+	}
+
+	contentStr := string(content)
+	if !strings.Contains(contentStr, "type Example struct") {
+		t.Errorf("Expected 'type Example struct' in types.go, got:\n%s", contentStr)
+	}
+	if !strings.Contains(contentStr, "Replicas") {
+		t.Errorf("Expected 'Replicas' field in types.go, got:\n%s", contentStr)
+	}
+	if !strings.Contains(contentStr, "AppName") {
+		t.Errorf("Expected 'AppName' field in types.go, got:\n%s", contentStr)
+	}
+
+	// Verify success message mentions the file (it prints to stdout via fmt.Printf, not cmd.OutOrStdout)
+	// Since we're calling runBuild directly through cobra, check the actual console output isn't captured
+	// Instead, let's just verify the file was created successfully
+	t.Logf("Types file successfully created at: %s", typesOutput)
+}
+
+// TestBuildCommand_InvalidApiVersion tests error handling for invalid apiVersion format
+func TestBuildCommand_InvalidApiVersion(t *testing.T) {
+	tmpDir := t.TempDir()
+	inputPath := filepath.Join(tmpDir, "invalid-version.yaml")
+	crdOutput := filepath.Join(tmpDir, "crd.yaml")
+	schemaOutput := filepath.Join(tmpDir, "schema.json")
+
+	// Write YAML with invalid apiVersion format (malformed)
+	invalidVersionYAML := `apiVersion: this/is/invalid/format
+kind: Test
+replicas: 3
+`
+	if err := os.WriteFile(inputPath, []byte(invalidVersionYAML), 0644); err != nil {
+		t.Fatalf("Failed to write test file: %v", err)
+	}
+
+	cmd := newBuildCommand()
+	cmd.SetArgs([]string{
+		inputPath,
+		"-c", crdOutput,
+		"-s", schemaOutput,
+	})
+
+	outBuf := new(bytes.Buffer)
+	errBuf := new(bytes.Buffer)
+	cmd.SetOut(outBuf)
+	cmd.SetErr(errBuf)
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("Expected error for invalid apiVersion format but command succeeded")
+	}
+
+	errMsg := err.Error()
+	if !strings.Contains(errMsg, "invalid apiVersion") && !strings.Contains(errMsg, "apiVersion") {
+		t.Errorf("Expected apiVersion error, got: %v", err)
+	}
+}
+
+// TestBuildCommand_BreakingChangeRestoresOldCRD tests that CRD is restored on breaking change
+func TestBuildCommand_BreakingChangeRestoresOldCRD(t *testing.T) {
+	tmpDir := t.TempDir()
+	crdOutput := filepath.Join(tmpDir, "crd.yaml")
+	schemaOutput := filepath.Join(tmpDir, "schema.json")
+
+	// Step 1: Create and build initial CRD
+	initialInput := filepath.Join(tmpDir, "initial.yaml")
+	initialYAML := `apiVersion: example.com/v1
+kind: Example
+replicas: 3
+`
+	if err := os.WriteFile(initialInput, []byte(initialYAML), 0644); err != nil {
+		t.Fatalf("Failed to write initial input: %v", err)
+	}
+
+	cmd := newBuildCommand()
+	cmd.SetArgs([]string{
+		initialInput,
+		"-c", crdOutput,
+		"-s", schemaOutput,
+	})
+
+	outBuf := new(bytes.Buffer)
+	errBuf := new(bytes.Buffer)
+	cmd.SetOut(outBuf)
+	cmd.SetErr(errBuf)
+
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatalf("Initial build failed: %v", err)
+	}
+
+	// Read the original CRD content
+	originalCRD, err := os.ReadFile(crdOutput)
+	if err != nil {
+		t.Fatalf("Failed to read original CRD: %v", err)
+	}
+
+	// Step 2: Attempt breaking change
+	breakingInput := filepath.Join(tmpDir, "breaking.yaml")
+	breakingYAML := `apiVersion: example.com/v1
+kind: Example
+replicas: "3"
+`
+	if err := os.WriteFile(breakingInput, []byte(breakingYAML), 0644); err != nil {
+		t.Fatalf("Failed to write breaking input: %v", err)
+	}
+
+	cmd2 := newBuildCommand()
+	cmd2.SetArgs([]string{
+		breakingInput,
+		"-c", crdOutput,
+		"-s", schemaOutput,
+	})
+
+	outBuf2 := new(bytes.Buffer)
+	errBuf2 := new(bytes.Buffer)
+	cmd2.SetOut(outBuf2)
+	cmd2.SetErr(errBuf2)
+
+	err = cmd2.Execute()
+	if err == nil {
+		t.Fatal("Expected build to fail with breaking change")
+	}
+
+	// Step 3: Verify the CRD was restored to original
+	restoredCRD, err := os.ReadFile(crdOutput)
+	if err != nil {
+		t.Fatalf("Failed to read restored CRD: %v", err)
+	}
+
+	if !bytes.Equal(originalCRD, restoredCRD) {
+		t.Error("CRD was not restored to original after breaking change detection")
+	}
 }
