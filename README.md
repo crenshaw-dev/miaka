@@ -70,10 +70,10 @@ Miaka uses crd.yaml to detect breaking changes, so make sure to keep that file!
 
 ## Features
 
-- **Comment-driven docs**: Add descriptions and kubebuilder validation tags as YAML comments
-- **Type inference**: Automatically infers correct types from your example values
-- **Dual validation**: Validates against both CRD (Kubernetes) and JSON Schema (Helm)
-- **Legacy chart friendly**: Works with existing charts - no need to change the structure
+- 📝 **Comment-driven docs**: Add descriptions and kubebuilder validation tags as YAML comments
+- 🔍 **Type inference**: Automatically infers correct types from your example values
+- ✅ **Dual validation**: Validates against both CRD (Kubernetes) and JSON Schema (Helm)
+- 🔄 **Legacy chart friendly**: Works with existing charts - no need to change the structure
 
 ## Example
 
