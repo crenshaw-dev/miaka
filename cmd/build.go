@@ -236,6 +236,27 @@ func runBuild(_ *cobra.Command, args []string) error {
 	}
 	fmt.Printf("✓ JSON Schema validation passed\n")
 
+	// Check if this is the first time generating (no existing CRD)
+	// and print helpful next steps
+	if !hadExistingCRD {
+		fmt.Println()
+		fmt.Println("🎉 Generated schemas for the first time!")
+		fmt.Println()
+		fmt.Println("📝 Next steps:")
+		fmt.Println("  1. Validate your actual values files:")
+		fmt.Printf("       miaka validate your-values.yaml\n")
+		fmt.Println()
+		fmt.Println("  2. Improve your schema by editing", inputFile+":")
+		fmt.Println("       - Add kubebuilder validation markers (e.g., +kubebuilder:validation:Minimum=1)")
+		fmt.Println("       - Add field descriptions as comments")
+		fmt.Println("       - Then run 'miaka build' again to regenerate schemas")
+		fmt.Println()
+		fmt.Println("  3. Commit the generated files to git:")
+		fmt.Printf("       git add %s %s %s\n", buildCRDPath, buildSchemaPath, inputFile)
+		fmt.Println("       git commit -m 'Add Miaka schemas'")
+		fmt.Println("       (This enables breaking change detection on future builds)")
+	}
+
 	return nil
 }
 

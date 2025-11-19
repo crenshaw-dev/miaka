@@ -114,9 +114,17 @@ func runInit(_ *cobra.Command, args []string) error {
 	}
 
 	if inputFile != "" {
-		fmt.Printf("Successfully converted %s to %s\n", inputFile, initOutput)
+		fmt.Printf("✓ Successfully converted %s to %s\n", inputFile, initOutput)
 	} else {
-		fmt.Printf("Successfully created %s\n", initOutput)
+		fmt.Printf("✓ Successfully created %s\n", initOutput)
 	}
+
+	// Print next steps
+	fmt.Println()
+	fmt.Println("📝 Next steps:")
+	fmt.Println("  1. Edit", initOutput, "to add example values for all fields")
+	fmt.Println("  2. Add validation rules using kubebuilder markers (e.g., +kubebuilder:validation:Minimum=1)")
+	fmt.Println("  3. Run 'miaka build' to generate the CRD and JSON Schema")
+
 	return nil
 }

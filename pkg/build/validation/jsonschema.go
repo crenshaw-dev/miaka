@@ -46,7 +46,7 @@ func validateAgainstSchema(values map[string]interface{}, schemaJSON []byte) err
 
 	// Create compiler (following Helm's pattern)
 	compiler := jsonschema.NewCompiler()
-	
+
 	// Add schema resource
 	err = compiler.AddResource("file:///values.schema.json", schema)
 	if err != nil {
@@ -67,4 +67,3 @@ func validateAgainstSchema(values map[string]interface{}, schemaJSON []byte) err
 
 	return nil
 }
-
