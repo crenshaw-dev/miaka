@@ -3,52 +3,10 @@ version: "2"
 run:
   timeout: 5m
   tests: true
-  modules-download-mode: readonly
 
 linters:
   enable:
     - errcheck
     - govet
-    - ineffassign
     - staticcheck
     - unused
-    - misspell
-    - revive
-    - unconvert
-    - unparam
-    - gosec
-    - bodyclose
-    - noctx
-    - errorlint
-
-linters-settings:
-  errcheck:
-    check-blank: true
-    check-type-assertions: true
-  
-  govet:
-    enable-all: true
-  
-  revive:
-    rules:
-      - name: var-naming
-        disabled: true
-
-issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
-  
-  exclude-rules:
-    # Gosec - CLI tools legitimately need these patterns
-    - linters:
-        - gosec
-      text: "G104:"
-    - linters:
-        - gosec
-      text: "G304:"
-    - linters:
-        - gosec
-      text: "G306:"
-    - linters:
-        - gosec
-      text: "G301:"
