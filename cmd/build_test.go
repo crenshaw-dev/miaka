@@ -79,6 +79,7 @@ func TestBuildCommand_Testdata(t *testing.T) {
 }
 
 func runTestCase(t *testing.T, testCaseDir string) {
+	t.Helper()
 	// Create temp directory for output
 	tmpDir := t.TempDir()
 	typesOutput := filepath.Join(tmpDir, "types.go")
@@ -566,15 +567,8 @@ func TestBuildCommand_MissingExampleValuesYaml(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Change to temp directory (where example.values.yaml doesn't exist)
-	origDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Failed to get working directory: %v", err)
-	}
-	defer os.Chdir(origDir)
-
-	if err := os.Chdir(tmpDir); err != nil {
-		t.Fatalf("Failed to change to temp directory: %v", err)
-	}
+	// t.Chdir() automatically handles cleanup
+	t.Chdir(tmpDir)
 
 	cmd := newBuildCommand()
 	cmd.SetArgs([]string{}) // No arguments, should look for example.values.yaml
@@ -584,7 +578,7 @@ func TestBuildCommand_MissingExampleValuesYaml(t *testing.T) {
 	cmd.SetOut(outBuf)
 	cmd.SetErr(errBuf)
 
-	err = cmd.Execute()
+	err := cmd.Execute()
 	if err == nil {
 		t.Fatal("Expected error for missing example.values.yaml but command succeeded")
 	}

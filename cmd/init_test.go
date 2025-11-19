@@ -101,6 +101,7 @@ func TestInitCommand_Testdata(t *testing.T) {
 }
 
 func runInitTestCase(t *testing.T, testCaseDir string) {
+	t.Helper()
 	// Create temp directory for output
 	tmpDir := t.TempDir()
 	outputPath := filepath.Join(tmpDir, "output.yaml")

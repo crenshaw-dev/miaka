@@ -8,11 +8,7 @@ import (
 
 func TestCheckBreakingChanges_NoExistingCRD(t *testing.T) {
 	// Test that when no existing CRD exists, no error is returned
-	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	newCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -40,19 +36,14 @@ spec:
 `)
 
 	nonexistentPath := filepath.Join(tmpDir, "nonexistent.yaml")
-	err = CheckBreakingChanges(nonexistentPath, newCRD)
-	if err != nil {
+	if err := CheckBreakingChanges(nonexistentPath, newCRD); err != nil {
 		t.Errorf("Expected no error when old CRD doesn't exist, got: %v", err)
 	}
 }
 
 func TestCheckBreakingChanges_CompatibleChange(t *testing.T) {
 	// Test that compatible changes (adding a field) don't cause errors
-	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	oldCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -111,19 +102,14 @@ spec:
 		t.Fatalf("Failed to write old CRD: %v", err)
 	}
 
-	err = CheckBreakingChanges(oldCRDPath, newCRD)
-	if err != nil {
+	if err := CheckBreakingChanges(oldCRDPath, newCRD); err != nil {
 		t.Errorf("Expected no error for compatible change, got: %v", err)
 	}
 }
 
 func TestCheckBreakingChanges_FieldTypeChange(t *testing.T) {
 	// Test that changing a field type is detected as a breaking change
-	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	oldCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -180,19 +166,14 @@ spec:
 		t.Fatalf("Failed to write old CRD: %v", err)
 	}
 
-	err = CheckBreakingChanges(oldCRDPath, newCRD)
-	if err == nil {
+	if err := CheckBreakingChanges(oldCRDPath, newCRD); err == nil {
 		t.Error("Expected error for type change, got none")
 	}
 }
 
 func TestCheckBreakingChanges_FieldRemoval(t *testing.T) {
 	// Test that removing a field is detected as a breaking change
-	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	oldCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -251,19 +232,14 @@ spec:
 		t.Fatalf("Failed to write old CRD: %v", err)
 	}
 
-	err = CheckBreakingChanges(oldCRDPath, newCRD)
-	if err == nil {
+	if err := CheckBreakingChanges(oldCRDPath, newCRD); err == nil {
 		t.Error("Expected error for field removal, got none")
 	}
 }
 
 func TestCheckBreakingChanges_RealFilesystem(t *testing.T) {
 	// Test with real filesystem operations
-	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	oldCRDPath := filepath.Join(tmpDir, "old.yaml")
 	oldCRD := []byte(`apiVersion: apiextensions.k8s.io/v1
@@ -323,19 +299,14 @@ spec:
 `)
 
 	// Should not error for compatible change
-	err = CheckBreakingChanges(oldCRDPath, newCRD)
-	if err != nil {
+	if err := CheckBreakingChanges(oldCRDPath, newCRD); err != nil {
 		t.Errorf("Expected no error for compatible change, got: %v", err)
 	}
 }
 
 func TestCheckBreakingChangesWithFiles(t *testing.T) {
 	// Test the convenience function that takes two file paths
-	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	oldCRDPath := filepath.Join(tmpDir, "old.yaml")
 	newCRDPath := filepath.Join(tmpDir, "new.yaml")

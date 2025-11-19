@@ -7,11 +7,7 @@ import (
 )
 
 func TestValidateYAML_ValidData(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "jsonschema-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create a simple JSON Schema
 	schemaPath := filepath.Join(tmpDir, "schema.json")
@@ -43,18 +39,13 @@ count: 5
 	}
 
 	// Test validation
-	err = ValidateYAML(yamlPath, schemaPath)
-	if err != nil {
+	if err := ValidateYAML(yamlPath, schemaPath); err != nil {
 		t.Errorf("ValidateYAML() expected no error for valid data, got: %v", err)
 	}
 }
 
 func TestValidateYAML_InvalidData_MissingRequired(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "jsonschema-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create JSON Schema with required field
 	schemaPath := filepath.Join(tmpDir, "schema.json")
@@ -84,18 +75,13 @@ func TestValidateYAML_InvalidData_MissingRequired(t *testing.T) {
 	}
 
 	// Test validation
-	err = ValidateYAML(yamlPath, schemaPath)
-	if err == nil {
+	if err := ValidateYAML(yamlPath, schemaPath); err == nil {
 		t.Error("ValidateYAML() expected error for missing required field, got nil")
 	}
 }
 
 func TestValidateYAML_InvalidData_WrongType(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "jsonschema-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create JSON Schema
 	schemaPath := filepath.Join(tmpDir, "schema.json")
@@ -121,18 +107,13 @@ func TestValidateYAML_InvalidData_WrongType(t *testing.T) {
 	}
 
 	// Test validation
-	err = ValidateYAML(yamlPath, schemaPath)
-	if err == nil {
+	if err := ValidateYAML(yamlPath, schemaPath); err == nil {
 		t.Error("ValidateYAML() expected error for wrong type, got nil")
 	}
 }
 
 func TestValidateYAML_InvalidData_ViolatesMinimum(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "jsonschema-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create JSON Schema with minimum constraint
 	schemaPath := filepath.Join(tmpDir, "schema.json")
@@ -159,18 +140,13 @@ func TestValidateYAML_InvalidData_ViolatesMinimum(t *testing.T) {
 	}
 
 	// Test validation
-	err = ValidateYAML(yamlPath, schemaPath)
-	if err == nil {
+	if err := ValidateYAML(yamlPath, schemaPath); err == nil {
 		t.Error("ValidateYAML() expected error for violating minimum, got nil")
 	}
 }
 
 func TestValidateYAML_MissingYAMLFile(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "jsonschema-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create schema but no YAML file
 	schemaPath := filepath.Join(tmpDir, "schema.json")
@@ -185,18 +161,13 @@ func TestValidateYAML_MissingYAMLFile(t *testing.T) {
 	yamlPath := filepath.Join(tmpDir, "nonexistent.yaml")
 
 	// Test validation
-	err = ValidateYAML(yamlPath, schemaPath)
-	if err == nil {
+	if err := ValidateYAML(yamlPath, schemaPath); err == nil {
 		t.Error("ValidateYAML() expected error for missing YAML file, got nil")
 	}
 }
 
 func TestValidateYAML_MissingSchemaFile(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "jsonschema-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create YAML but no schema file
 	yamlPath := filepath.Join(tmpDir, "test.yaml")
@@ -209,18 +180,13 @@ func TestValidateYAML_MissingSchemaFile(t *testing.T) {
 	schemaPath := filepath.Join(tmpDir, "nonexistent.json")
 
 	// Test validation
-	err = ValidateYAML(yamlPath, schemaPath)
-	if err == nil {
+	if err := ValidateYAML(yamlPath, schemaPath); err == nil {
 		t.Error("ValidateYAML() expected error for missing schema file, got nil")
 	}
 }
 
 func TestValidateYAML_InvalidYAML(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "jsonschema-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create schema
 	schemaPath := filepath.Join(tmpDir, "schema.json")
@@ -242,18 +208,13 @@ func TestValidateYAML_InvalidYAML(t *testing.T) {
 	}
 
 	// Test validation
-	err = ValidateYAML(yamlPath, schemaPath)
-	if err == nil {
+	if err := ValidateYAML(yamlPath, schemaPath); err == nil {
 		t.Error("ValidateYAML() expected error for invalid YAML, got nil")
 	}
 }
 
 func TestValidateYAML_InvalidSchema(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "jsonschema-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create invalid JSON schema
 	schemaPath := filepath.Join(tmpDir, "schema.json")
@@ -273,8 +234,7 @@ func TestValidateYAML_InvalidSchema(t *testing.T) {
 	}
 
 	// Test validation
-	err = ValidateYAML(yamlPath, schemaPath)
-	if err == nil {
+	if err := ValidateYAML(yamlPath, schemaPath); err == nil {
 		t.Error("ValidateYAML() expected error for invalid schema, got nil")
 	}
 }

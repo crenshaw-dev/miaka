@@ -9,5 +9,8 @@ linters:
     - govet
     - staticcheck
     - unused
+    - thelper
+    - testableexamples
+    - usetesting
   disable:
     - errcheck

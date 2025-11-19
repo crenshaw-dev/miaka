@@ -10,11 +10,7 @@ import (
 // TestGenerator_Generate tests the CRD generation with temp directory isolation
 func TestGenerator_Generate(t *testing.T) {
 	// Create temp directory for test output
-	tmpDir, err := os.MkdirTemp("", "crdgen-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Create a sample types.go file
 	typesContent := `package v1
@@ -60,8 +56,7 @@ type ExampleSpec struct {
 		t.Fatalf("Failed to create output dir: %v", err)
 	}
 
-	err = gen.Generate(typesFile, outputDir)
-	if err != nil {
+	if err := gen.Generate(typesFile, outputDir); err != nil {
 		t.Fatalf("Generate failed: %v", err)
 	}
 
