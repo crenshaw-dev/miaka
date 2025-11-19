@@ -51,10 +51,10 @@ kubebuilder markers from your YAML comments.`,
 
   # Custom types.go and CRD output locations
   miaka build -t pkg/apis/v1/types.go -c crds/my-crd.yaml myfile.yaml`,
-	Args:          cobra.MaximumNArgs(1),
-	RunE:          runBuild,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runBuild,
+	// SilenceUsage prevents usage from showing on business logic errors
+	SilenceUsage: true,
 }
 
 func init() {

@@ -35,10 +35,10 @@ current directory.`,
 
   # Validate user-provided values
   miaka validate user-values.yaml`,
-	Args:          cobra.ExactArgs(1),
-	RunE:          runValidate,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+	Args: cobra.ExactArgs(1),
+	RunE: runValidate,
+	// SilenceUsage prevents usage from showing on business logic errors
+	SilenceUsage: true,
 }
 
 func init() {

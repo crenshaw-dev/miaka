@@ -29,8 +29,8 @@ see the documentation at https://github.com/crenshaw-dev/miaka`,
 
 // Execute runs the root command
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	err := rootCmd.Execute()
+	if err != nil {
 		os.Exit(1)
 	}
 }
