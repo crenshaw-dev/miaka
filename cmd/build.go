@@ -126,23 +126,22 @@ func runBuild(_ *cobra.Command, args []string) error {
 
 // prepareTypesFile sets up the types file path and returns a cleanup function
 func prepareTypesFile() (typesFilePath string, cleanup func(), err error) {
-	if buildTypesPath == "" {
-		// No --types flag specified, use temp file
-		tmpDir, err := os.MkdirTemp("", "miaka-build-*")
-		if err != nil {
-			return "", nil, fmt.Errorf("failed to create temp directory: %w", err)
-		}
-		cleanup = func() {
-			if tmpDir != "" {
-				if err := os.RemoveAll(tmpDir); err != nil {
-					fmt.Fprintf(os.Stderr, "warning: failed to remove temp directory %s: %v\n", tmpDir, err)
-				}
-			}
-		}
-		return filepath.Join(tmpDir, "types.go"), cleanup, nil
+	if buildTypesPath != "" {
+		// Use specified output path
+		return buildTypesPath, func() {}, nil
 	}
-	// Use specified output path
-	return buildTypesPath, func() {}, nil
+
+	// No --types flag specified, use temp file
+	tmpDir, err := os.MkdirTemp("", "miaka-build-*")
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to create temp directory: %w", err)
+	}
+	cleanup = func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: failed to remove temp directory %s: %v\n", tmpDir, err)
+		}
+	}
+	return filepath.Join(tmpDir, "types.go"), cleanup, nil
 }
 
 // generateAndWriteTypes generates Go types and writes them to file
