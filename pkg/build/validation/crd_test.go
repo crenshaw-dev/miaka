@@ -4,6 +4,9 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestValidateAgainstCRD_Valid tests validation with a valid resource
@@ -42,9 +45,8 @@ spec:
             type: string
 `
 	crdPath := filepath.Join(tmpDir, "crd.yaml")
-	if err := os.WriteFile(crdPath, []byte(crdContent), 0644); err != nil {
-		t.Fatalf("Failed to write CRD: %v", err)
-	}
+	err := os.WriteFile(crdPath, []byte(crdContent), 0644)
+	require.NoError(t, err, "Failed to write CRD")
 
 	// Create a valid resource
 	resourceContent := `apiVersion: example.com/v1alpha1
@@ -55,15 +57,12 @@ replicas: 3
 appName: "myapp"
 `
 	resourcePath := filepath.Join(tmpDir, "resource.yaml")
-	if err := os.WriteFile(resourcePath, []byte(resourceContent), 0644); err != nil {
-		t.Fatalf("Failed to write resource: %v", err)
-	}
+	err = os.WriteFile(resourcePath, []byte(resourceContent), 0644)
+	require.NoError(t, err, "Failed to write resource")
 
 	// Validate - should succeed
-	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err != nil {
-		t.Errorf("Expected validation to succeed, got error: %v", err)
-	}
+	err = ValidateAgainstCRD(crdPath, resourcePath)
+	assert.NoError(t, err, "Expected validation to succeed")
 }
 
 // TestValidateAgainstCRD_InvalidType tests validation with wrong type
@@ -102,9 +101,8 @@ spec:
             type: string
 `
 	crdPath := filepath.Join(tmpDir, "crd.yaml")
-	if err := os.WriteFile(crdPath, []byte(crdContent), 0644); err != nil {
-		t.Fatalf("Failed to write CRD: %v", err)
-	}
+	err := os.WriteFile(crdPath, []byte(crdContent), 0644)
+	require.NoError(t, err, "Failed to write CRD")
 
 	// Create an invalid resource (replicas is a string instead of integer)
 	resourceContent := `apiVersion: example.com/v1alpha1
@@ -115,15 +113,12 @@ replicas: "three"
 appName: "myapp"
 `
 	resourcePath := filepath.Join(tmpDir, "resource.yaml")
-	if err := os.WriteFile(resourcePath, []byte(resourceContent), 0644); err != nil {
-		t.Fatalf("Failed to write resource: %v", err)
-	}
+	err = os.WriteFile(resourcePath, []byte(resourceContent), 0644)
+	require.NoError(t, err, "Failed to write resource")
 
 	// Validate - should fail
-	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err == nil {
-		t.Error("Expected validation to fail with type error, but it succeeded")
-	}
+	err = ValidateAgainstCRD(crdPath, resourcePath)
+	assert.Error(t, err, "Expected validation to fail with type error")
 }
 
 // TestValidateAgainstCRD_ValidationConstraint tests validation with constraint violation
@@ -162,9 +157,8 @@ spec:
             type: string
 `
 	crdPath := filepath.Join(tmpDir, "crd.yaml")
-	if err := os.WriteFile(crdPath, []byte(crdContent), 0644); err != nil {
-		t.Fatalf("Failed to write CRD: %v", err)
-	}
+	err := os.WriteFile(crdPath, []byte(crdContent), 0644)
+	require.NoError(t, err, "Failed to write CRD")
 
 	// Create an invalid resource (replicas violates minimum constraint)
 	resourceContent := `apiVersion: example.com/v1alpha1
@@ -175,15 +169,12 @@ replicas: 0
 appName: "myapp"
 `
 	resourcePath := filepath.Join(tmpDir, "resource.yaml")
-	if err := os.WriteFile(resourcePath, []byte(resourceContent), 0644); err != nil {
-		t.Fatalf("Failed to write resource: %v", err)
-	}
+	err = os.WriteFile(resourcePath, []byte(resourceContent), 0644)
+	require.NoError(t, err, "Failed to write resource")
 
 	// Validate - should fail
-	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err == nil {
-		t.Error("Expected validation to fail with minimum constraint violation, but it succeeded")
-	}
+	err = ValidateAgainstCRD(crdPath, resourcePath)
+	assert.Error(t, err, "Expected validation to fail with minimum constraint violation")
 }
 
 // TestValidateAgainstCRD_MalformedCRD tests error handling for malformed CRD
@@ -193,9 +184,8 @@ func TestValidateAgainstCRD_MalformedCRD(t *testing.T) {
 	// Create a malformed CRD
 	crdContent := `this is not valid yaml: [[[`
 	crdPath := filepath.Join(tmpDir, "crd.yaml")
-	if err := os.WriteFile(crdPath, []byte(crdContent), 0644); err != nil {
-		t.Fatalf("Failed to write CRD: %v", err)
-	}
+	err := os.WriteFile(crdPath, []byte(crdContent), 0644)
+	require.NoError(t, err, "Failed to write CRD")
 
 	// Create a valid resource
 	resourceContent := `apiVersion: example.com/v1alpha1
@@ -205,15 +195,12 @@ metadata:
 replicas: 3
 `
 	resourcePath := filepath.Join(tmpDir, "resource.yaml")
-	if err := os.WriteFile(resourcePath, []byte(resourceContent), 0644); err != nil {
-		t.Fatalf("Failed to write resource: %v", err)
-	}
+	err = os.WriteFile(resourcePath, []byte(resourceContent), 0644)
+	require.NoError(t, err, "Failed to write resource")
 
 	// Validate - should fail with unmarshal error
-	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err == nil {
-		t.Error("Expected validation to fail with malformed CRD, but it succeeded")
-	}
+	err = ValidateAgainstCRD(crdPath, resourcePath)
+	assert.Error(t, err, "Expected validation to fail with malformed CRD")
 }
 
 // TestValidateAgainstCRD_MalformedResource tests error handling for malformed resource
@@ -249,22 +236,18 @@ spec:
             type: integer
 `
 	crdPath := filepath.Join(tmpDir, "crd.yaml")
-	if err := os.WriteFile(crdPath, []byte(crdContent), 0644); err != nil {
-		t.Fatalf("Failed to write CRD: %v", err)
-	}
+	err := os.WriteFile(crdPath, []byte(crdContent), 0644)
+	require.NoError(t, err, "Failed to write CRD")
 
 	// Create a malformed resource
 	resourceContent := `this is not valid yaml: [[[`
 	resourcePath := filepath.Join(tmpDir, "resource.yaml")
-	if err := os.WriteFile(resourcePath, []byte(resourceContent), 0644); err != nil {
-		t.Fatalf("Failed to write resource: %v", err)
-	}
+	err = os.WriteFile(resourcePath, []byte(resourceContent), 0644)
+	require.NoError(t, err, "Failed to write resource")
 
 	// Validate - should fail with unmarshal error
-	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err == nil {
-		t.Error("Expected validation to fail with malformed resource, but it succeeded")
-	}
+	err = ValidateAgainstCRD(crdPath, resourcePath)
+	assert.Error(t, err, "Expected validation to fail with malformed resource")
 }
 
 // TestValidateAgainstCRD_MissingCRDFile tests error handling for missing CRD file
@@ -279,14 +262,11 @@ metadata:
 replicas: 3
 `
 	resourcePath := filepath.Join(tmpDir, "resource.yaml")
-	if err := os.WriteFile(resourcePath, []byte(resourceContent), 0644); err != nil {
-		t.Fatalf("Failed to write resource: %v", err)
-	}
+	err := os.WriteFile(resourcePath, []byte(resourceContent), 0644)
+	require.NoError(t, err, "Failed to write resource")
 
 	// Validate with non-existent CRD file
 	crdPath := filepath.Join(tmpDir, "nonexistent.yaml")
-	err := ValidateAgainstCRD(crdPath, resourcePath)
-	if err == nil {
-		t.Error("Expected validation to fail with missing CRD file, but it succeeded")
-	}
+	err = ValidateAgainstCRD(crdPath, resourcePath)
+	assert.Error(t, err, "Expected validation to fail with missing CRD file")
 }

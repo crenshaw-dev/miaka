@@ -1,10 +1,11 @@
 package gotypes
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/crenshaw-dev/miaka/pkg/build/schema"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenerate_SimpleStruct(t *testing.T) {
@@ -38,47 +39,29 @@ func TestGenerate_SimpleStruct(t *testing.T) {
 
 	g := NewGenerator(schema)
 	code, err := g.Generate()
-	if err != nil {
-		t.Fatalf("Generate() failed: %v", err)
-	}
+	require.NoError(t, err, "Generate() failed")
 
 	output := string(code)
 
 	// Check package declaration
-	if !strings.Contains(output, "package v1alpha1") {
-		t.Error("Expected package v1alpha1")
-	}
+	assert.Contains(t, output, "package v1alpha1", "Expected package v1alpha1")
 
 	// Check imports
-	if !strings.Contains(output, "metav1") {
-		t.Error("Expected metav1 import")
-	}
+	assert.Contains(t, output, "metav1", "Expected metav1 import")
 
 	// Check main type
-	if !strings.Contains(output, "type Simple struct") {
-		t.Error("Expected Simple type")
-	}
+	assert.Contains(t, output, "type Simple struct", "Expected Simple type")
 
 	// Check Spec struct
-	if !strings.Contains(output, "type SimpleSpec struct") {
-		t.Error("Expected SimpleSpec type")
-	}
+	assert.Contains(t, output, "type SimpleSpec struct", "Expected SimpleSpec type")
 
 	// Check fields
-	if !strings.Contains(output, "Name string") {
-		t.Error("Expected Name field")
-	}
-	if !strings.Contains(output, "Count int") {
-		t.Error("Expected Count field")
-	}
+	assert.Contains(t, output, "Name string", "Expected Name field")
+	assert.Contains(t, output, "Count int", "Expected Count field")
 
 	// Check comments
-	if !strings.Contains(output, "// The name field") {
-		t.Error("Expected name field comment")
-	}
-	if !strings.Contains(output, "// The count field") {
-		t.Error("Expected count field comment")
-	}
+	assert.Contains(t, output, "// The name field", "Expected name field comment")
+	assert.Contains(t, output, "// The count field", "Expected count field comment")
 }
 
 func TestGenerate_WithSlice(t *testing.T) {
@@ -116,21 +99,15 @@ func TestGenerate_WithSlice(t *testing.T) {
 
 	g := NewGenerator(schema)
 	code, err := g.Generate()
-	if err != nil {
-		t.Fatalf("Generate() failed: %v", err)
-	}
+	require.NoError(t, err, "Generate() failed")
 
 	output := string(code)
 
 	// Check slice field
-	if !strings.Contains(output, "Items []ItemConfig") {
-		t.Error("Expected Items []ItemConfig field")
-	}
+	assert.Contains(t, output, "Items []ItemConfig", "Expected Items []ItemConfig field")
 
 	// Check nested struct
-	if !strings.Contains(output, "type ItemConfig struct") {
-		t.Error("Expected ItemConfig type")
-	}
+	assert.Contains(t, output, "type ItemConfig struct", "Expected ItemConfig type")
 }
 
 func TestGenerate_WithKubebuilderTags(t *testing.T) {
@@ -159,19 +136,13 @@ func TestGenerate_WithKubebuilderTags(t *testing.T) {
 
 	g := NewGenerator(schema)
 	code, err := g.Generate()
-	if err != nil {
-		t.Fatalf("Generate() failed: %v", err)
-	}
+	require.NoError(t, err, "Generate() failed")
 
 	output := string(code)
 
 	// Check kubebuilder tags are preserved
-	if !strings.Contains(output, "+kubebuilder:validation:Minimum=1") {
-		t.Error("Expected kubebuilder Minimum tag")
-	}
-	if !strings.Contains(output, "+kubebuilder:validation:Maximum=65535") {
-		t.Error("Expected kubebuilder Maximum tag")
-	}
+	assert.Contains(t, output, "+kubebuilder:validation:Minimum=1", "Expected kubebuilder Minimum tag")
+	assert.Contains(t, output, "+kubebuilder:validation:Maximum=65535", "Expected kubebuilder Maximum tag")
 }
 
 func TestGenerateStructDescription(t *testing.T) {
@@ -206,9 +177,7 @@ func TestGenerateStructDescription(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := g.generateStructDescription(tt.input)
-			if result != tt.expected {
-				t.Errorf("generateStructDescription(%q) = %q, want %q", tt.input, result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
@@ -244,14 +213,9 @@ func TestSplitPascalCase(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := splitPascalCase(tt.input)
-			if len(result) != len(tt.expected) {
-				t.Errorf("splitPascalCase(%q) returned %d words, want %d", tt.input, len(result), len(tt.expected))
-				return
-			}
+			require.Len(t, result, len(tt.expected), "splitPascalCase(%q) returned %d words, want %d", tt.input, len(result), len(tt.expected))
 			for i := range result {
-				if result[i] != tt.expected[i] {
-					t.Errorf("splitPascalCase(%q)[%d] = %q, want %q", tt.input, i, result[i], tt.expected[i])
-				}
+				assert.Equal(t, tt.expected[i], result[i])
 			}
 		})
 	}
@@ -278,9 +242,7 @@ func TestFixInlineComments(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := fixInlineComments(tt.input)
-			if result != tt.expected {
-				t.Errorf("fixInlineComments() mismatch\nGot:\n%s\nWant:\n%s", result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result, "fixInlineComments() mismatch")
 		})
 	}
 }
@@ -316,10 +278,7 @@ func TestGetIndent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := getIndent(tt.input)
-			if result != tt.expected {
-				t.Errorf("getIndent(%q) = %q, want %q", tt.input, result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
-

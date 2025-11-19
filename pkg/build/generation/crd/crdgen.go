@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gobuffalo/flect"
 	"sigs.k8s.io/controller-tools/pkg/crd"
 	"sigs.k8s.io/controller-tools/pkg/genall"
 	"sigs.k8s.io/controller-tools/pkg/markers"
@@ -176,30 +177,18 @@ func copyFile(src, dst string) error {
 	return nil
 }
 
-// findCRDFile finds the generated CRD file in a directory
-// Returns the path to the CRD file or an error if not found
-func findCRDFile(dir, group, kind string) (string, error) {
-	// Controller-gen generates files with naming convention: <group>_<plural>.yaml
-	// We need to find the file that matches this pattern
-	plural := strings.ToLower(kind) + "s"
+// findCRDFile finds the generated CRD file in the output directory.
+// Controller-gen generates files with naming convention: <group>_<plural>.yaml
+// Uses flect for proper English pluralization (e.g., "demo" -> "demoes")
+func findCRDFile(outputDir, group, kind string) (string, error) {
+	// Use flect to get the proper plural form
+	plural := flect.Pluralize(strings.ToLower(kind))
 	expectedName := fmt.Sprintf("%s_%s.yaml", group, plural)
-	expectedPath := filepath.Join(dir, expectedName)
+	expectedPath := filepath.Join(outputDir, expectedName)
 
-	if _, err := os.Stat(expectedPath); err == nil {
-		return expectedPath, nil
+	if _, err := os.Stat(expectedPath); err != nil {
+		return "", fmt.Errorf("no CRD file found at %s (controller-gen generates files as <group>_<plural>.yaml)", expectedPath)
 	}
 
-	// If not found, scan the directory for any .yaml files
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return "", fmt.Errorf("failed to read output directory: %w", err)
-	}
-
-	for _, entry := range entries {
-		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".yaml") {
-			return filepath.Join(dir, entry.Name()), nil
-		}
-	}
-
-	return "", fmt.Errorf("no CRD file found in %s (expected %s)", dir, expectedName)
+	return expectedPath, nil
 }

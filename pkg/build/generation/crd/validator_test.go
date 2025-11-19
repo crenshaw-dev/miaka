@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/yaml"
 )
@@ -46,13 +48,11 @@ func TestValidateCRD_Valid(t *testing.T) {
 	}
 
 	data, _ := yaml.Marshal(crd)
-	os.WriteFile(crdPath, data, 0644)
+	require.NoError(t, os.WriteFile(crdPath, data, 0644))
 
 	// Should pass validation
 	err := ValidateCRD(crdPath)
-	if err != nil {
-		t.Errorf("Expected valid CRD to pass, got error: %v", err)
-	}
+	assert.NoError(t, err, "Expected valid CRD to pass")
 }
 
 func TestValidateCRD_MutuallyExclusivePropertiesAndAdditionalProperties(t *testing.T) {
@@ -104,7 +104,7 @@ func TestValidateCRD_MutuallyExclusivePropertiesAndAdditionalProperties(t *testi
 	}
 
 	data, _ := yaml.Marshal(crd)
-	os.WriteFile(crdPath, data, 0644)
+	require.NoError(t, os.WriteFile(crdPath, data, 0644))
 
 	// Note: schema.NewStructural() does NOT catch this validation error!
 	// The Kubernetes API server would reject this, but the structural schema validator
@@ -130,13 +130,12 @@ func TestValidateCRD_MutuallyExclusivePropertiesAndAdditionalProperties(t *testi
 func TestValidateCRD_FileNotFound(t *testing.T) {
 	err := ValidateCRD("/nonexistent/path/to/crd.yaml")
 	if err == nil {
-		t.Error("Expected error for nonexistent file, but got nil")
+		assert.Fail(t, "Expected error for nonexistent file, but got nil")
 	}
 	if !os.IsNotExist(err) {
 		// Check that error message mentions file reading
-		if err.Error() == "" || err.Error()[:len("failed to read")] != "failed to read" {
-			t.Errorf("Expected 'failed to read' error, got: %v", err)
-		}
+		assert.True(t, len(err.Error()) >= len("failed to read") && err.Error()[:len("failed to read")] == "failed to read",
+			"Expected 'failed to read' error, got: %v", err)
 	}
 }
 
@@ -145,12 +144,10 @@ func TestValidateCRD_InvalidYAML(t *testing.T) {
 	crdPath := filepath.Join(tmpDir, "invalid.yaml")
 
 	// Write invalid YAML
-	os.WriteFile(crdPath, []byte("this is not: valid: yaml: content"), 0644)
+	require.NoError(t, os.WriteFile(crdPath, []byte("this is not: valid: yaml: content"), 0644))
 
 	err := ValidateCRD(crdPath)
-	if err == nil {
-		t.Error("Expected error for invalid YAML, but got nil")
-	}
+	assert.Error(t, err, "Expected error for invalid YAML")
 }
 
 func TestValidateCRD_MultipleVersions(t *testing.T) {
@@ -204,13 +201,11 @@ func TestValidateCRD_MultipleVersions(t *testing.T) {
 	}
 
 	data, _ := yaml.Marshal(crd)
-	os.WriteFile(crdPath, data, 0644)
+	require.NoError(t, os.WriteFile(crdPath, data, 0644))
 
 	// Should pass validation for all versions
 	err := ValidateCRD(crdPath)
-	if err != nil {
-		t.Errorf("Expected valid multi-version CRD to pass, got error: %v", err)
-	}
+	assert.NoError(t, err, "Expected valid multi-version CRD to pass")
 }
 
 func TestValidateCRD_WithArrays(t *testing.T) {
@@ -258,11 +253,9 @@ func TestValidateCRD_WithArrays(t *testing.T) {
 	}
 
 	data, _ := yaml.Marshal(crd)
-	os.WriteFile(crdPath, data, 0644)
+	require.NoError(t, os.WriteFile(crdPath, data, 0644))
 
 	// Should pass validation
 	err := ValidateCRD(crdPath)
-	if err != nil {
-		t.Errorf("Expected valid CRD with arrays to pass, got error: %v", err)
-	}
+	assert.NoError(t, err, "Expected valid CRD with arrays to pass")
 }
