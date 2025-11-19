@@ -2,10 +2,9 @@
 package crd
 
 import (
-	"context"
+	_ "embed"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -13,6 +12,12 @@ import (
 	"sigs.k8s.io/controller-tools/pkg/genall"
 	"sigs.k8s.io/controller-tools/pkg/markers"
 )
+
+//go:embed embedded/gomod.txt
+var embeddedGoMod string
+
+//go:embed embedded/gosum.txt
+var embeddedGoSum string
 
 // Options contains configuration for CRD generation
 type Options struct {
@@ -68,11 +73,16 @@ func (g *Generator) Generate(typesFile string, outputDir string) error {
 		return fmt.Errorf("failed to copy types file: %w", err)
 	}
 
-	// Create go.mod in temp directory
+	// Write embedded go.mod to temp directory
 	goModPath := filepath.Join(tmpDir, "go.mod")
-	goModContent := "module generated\n\ngo 1.21\n\nrequire k8s.io/apimachinery v0.31.0\n"
-	if err := os.WriteFile(goModPath, []byte(goModContent), 0644); err != nil {
+	if err := os.WriteFile(goModPath, []byte(embeddedGoMod), 0644); err != nil {
 		return fmt.Errorf("failed to create go.mod: %w", err)
+	}
+
+	// Write embedded go.sum to temp directory
+	goSumPath := filepath.Join(tmpDir, "go.sum")
+	if err := os.WriteFile(goSumPath, []byte(embeddedGoSum), 0644); err != nil {
+		return fmt.Errorf("failed to create go.sum: %w", err)
 	}
 
 	// Create doc.go with package-level markers in temp directory
@@ -83,14 +93,6 @@ package %s
 `, g.opts.Group, g.opts.Version)
 	if err := os.WriteFile(docGoPath, []byte(docGoContent), 0644); err != nil {
 		return fmt.Errorf("failed to create doc.go: %w", err)
-	}
-
-	// Run go mod tidy in temp directory to generate go.sum
-	ctx := context.Background()
-	cmd := exec.CommandContext(ctx, "go", "mod", "tidy")
-	cmd.Dir = tmpDir
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to run go mod tidy: %w\nOutput: %s", err, string(output))
 	}
 
 	// Create a subdirectory in temp for controller-gen output
