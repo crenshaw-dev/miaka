@@ -1,4 +1,6 @@
 .idea
 dist
 coverage.txt
+junit.xml
 *.out
+vendor/

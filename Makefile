@@ -20,7 +20,9 @@ build:
 
 # Run tests
 test:
-	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+	@which gotestsum > /dev/null || (echo "Installing gotestsum..." && \
+		go install gotest.tools/gotestsum@latest)
+	gotestsum --junitfile junit.xml --format testname -- -race -coverprofile=coverage.txt -covermode=atomic ./...
 
 # Run linter
 lint:
