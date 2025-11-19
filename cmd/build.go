@@ -16,6 +16,12 @@ import (
 	runtimeschema "k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+const (
+	defaultExampleValuesFile = "example.values.yaml"
+	defaultCRDPath           = "crd.yaml"
+	defaultSchemaPath        = "values.schema.json"
+)
+
 var (
 	buildTypesPath  string
 	buildCRDPath    string
@@ -61,13 +67,13 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 
 	buildCmd.Flags().StringVarP(&buildTypesPath, "types", "t", "", "Output path for types.go file (if empty, types.go is not preserved)")
-	buildCmd.Flags().StringVarP(&buildCRDPath, "crd", "c", "crd.yaml", "Output path for CRD YAML file")
-	buildCmd.Flags().StringVarP(&buildSchemaPath, "schema", "s", "values.schema.json", "Output path for JSON Schema file")
+	buildCmd.Flags().StringVarP(&buildCRDPath, "crd", "c", defaultCRDPath, "Output path for CRD YAML file")
+	buildCmd.Flags().StringVarP(&buildSchemaPath, "schema", "s", defaultSchemaPath, "Output path for JSON Schema file")
 }
 
 func runBuild(_ *cobra.Command, args []string) error {
 	// Determine input file: use provided arg, or default to example.values.yaml
-	inputFile := "example.values.yaml"
+	inputFile := defaultExampleValuesFile
 	if len(args) > 0 {
 		inputFile = args[0]
 	}
@@ -75,7 +81,7 @@ func runBuild(_ *cobra.Command, args []string) error {
 	// Check if input file exists
 	if _, err := os.Stat(inputFile); err != nil {
 		if len(args) == 0 {
-			return fmt.Errorf("example.values.yaml not found in current directory (specify a file or run 'miaka init' first)")
+			return fmt.Errorf("%s not found in current directory (specify a file or run 'miaka init' first)", defaultExampleValuesFile)
 		}
 		return fmt.Errorf("input file not found: %s", inputFile)
 	}

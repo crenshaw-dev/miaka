@@ -146,8 +146,8 @@ func runTestCase(t *testing.T, testCaseDir string) {
 func newBuildCommand() *cobra.Command {
 	// Reset flags to defaults
 	buildTypesPath = ""
-	buildCRDPath = "crd.yaml"
-	buildSchemaPath = "values.schema.json"
+	buildCRDPath = defaultCRDPath
+	buildSchemaPath = defaultSchemaPath
 
 	// Create new command
 	cmd := &cobra.Command{
@@ -159,8 +159,8 @@ func newBuildCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&buildTypesPath, "types", "t", "", "Output path for types.go file (if empty, types.go is not preserved)")
-	cmd.Flags().StringVarP(&buildCRDPath, "crd", "c", "crd.yaml", "Output path for CRD YAML file")
-	cmd.Flags().StringVarP(&buildSchemaPath, "schema", "s", "values.schema.json", "Output path for JSON Schema file")
+	cmd.Flags().StringVarP(&buildCRDPath, "crd", "c", defaultCRDPath, "Output path for CRD YAML file")
+	cmd.Flags().StringVarP(&buildSchemaPath, "schema", "s", defaultSchemaPath, "Output path for JSON Schema file")
 
 	return cmd
 }

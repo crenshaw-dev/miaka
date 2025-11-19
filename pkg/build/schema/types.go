@@ -5,10 +5,11 @@ type FieldType string
 
 // Field type constants
 const (
-	TypeInt     FieldType = "int"
-	TypeFloat64 FieldType = "float64"
-	TypeString  FieldType = "string"
-	TypeBool    FieldType = "bool"
+	TypeInt       FieldType = "int"
+	TypeFloat64   FieldType = "float64"
+	TypeString    FieldType = "string"
+	TypeBool      FieldType = "bool"
+	TypeInterface FieldType = "interface{}"
 )
 
 // Field represents a single field in a struct

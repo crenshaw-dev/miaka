@@ -53,47 +53,9 @@ func CheckKRMFields(inputFile string) (hasAPIVersion, hasKind bool) {
 // If inputFile already has apiVersion/kind, they are preserved and the provided values are ignored (can be empty).
 // When apiVersion and kind are required but not provided, returns an error.
 func ConvertToKRM(inputFile, outputFile, apiVersion, kind string) error {
-	var contentNode *yaml.Node
-	var rootNode yaml.Node
-
-	// Handle empty input file (create new empty KRM YAML)
-	if inputFile == "" {
-		if apiVersion == "" || kind == "" {
-			return fmt.Errorf("apiVersion and kind are required (provide via --api-version and --kind flags)")
-		}
-
-		// Create a new empty mapping node
-		contentNode = &yaml.Node{
-			Kind:    yaml.MappingNode,
-			Content: []*yaml.Node{},
-		}
-		rootNode = yaml.Node{
-			Kind:    yaml.DocumentNode,
-			Content: []*yaml.Node{contentNode},
-		}
-	} else {
-		// Read input file
-		data, err := os.ReadFile(inputFile)
-		if err != nil {
-			return fmt.Errorf("failed to read input file: %w", err)
-		}
-
-		// Parse YAML with full node structure to preserve comments
-		if err := yaml.Unmarshal(data, &rootNode); err != nil {
-			return fmt.Errorf("failed to parse YAML: %w", err)
-		}
-
-		// The root node is typically a DocumentNode, get the actual content node
-		if rootNode.Kind != yaml.DocumentNode || len(rootNode.Content) == 0 {
-			return fmt.Errorf("invalid YAML structure")
-		}
-
-		contentNode = rootNode.Content[0]
-
-		// Check if this is a mapping node (object)
-		if contentNode.Kind != yaml.MappingNode {
-			return fmt.Errorf("root YAML node must be an object")
-		}
+	contentNode, rootNode, err := prepareYAMLContent(inputFile, apiVersion, kind)
+	if err != nil {
+		return err
 	}
 
 	// Check if apiVersion or kind already exist in the input
@@ -168,4 +130,53 @@ func ConvertToKRM(inputFile, outputFile, apiVersion, kind string) error {
 	}
 
 	return nil
+}
+
+// prepareYAMLContent prepares YAML content node from input file or creates an empty one
+func prepareYAMLContent(inputFile, apiVersion, kind string) (*yaml.Node, yaml.Node, error) {
+	var contentNode *yaml.Node
+	var rootNode yaml.Node
+
+	// Handle empty input file (create new empty KRM YAML)
+	if inputFile == "" {
+		if apiVersion == "" || kind == "" {
+			return nil, rootNode, fmt.Errorf("apiVersion and kind are required (provide via --api-version and --kind flags)")
+		}
+
+		// Create a new empty mapping node
+		contentNode = &yaml.Node{
+			Kind:    yaml.MappingNode,
+			Content: []*yaml.Node{},
+		}
+		rootNode = yaml.Node{
+			Kind:    yaml.DocumentNode,
+			Content: []*yaml.Node{contentNode},
+		}
+		return contentNode, rootNode, nil
+	}
+
+	// Read input file
+	data, err := os.ReadFile(inputFile)
+	if err != nil {
+		return nil, rootNode, fmt.Errorf("failed to read input file: %w", err)
+	}
+
+	// Parse YAML with full node structure to preserve comments
+	if err := yaml.Unmarshal(data, &rootNode); err != nil {
+		return nil, rootNode, fmt.Errorf("failed to parse YAML: %w", err)
+	}
+
+	// The root node is typically a DocumentNode, get the actual content node
+	if rootNode.Kind != yaml.DocumentNode || len(rootNode.Content) == 0 {
+		return nil, rootNode, fmt.Errorf("invalid YAML structure")
+	}
+
+	contentNode = rootNode.Content[0]
+
+	// Check if this is a mapping node (object)
+	if contentNode.Kind != yaml.MappingNode {
+		return nil, rootNode, fmt.Errorf("root YAML node must be an object")
+	}
+
+	return contentNode, rootNode, nil
 }

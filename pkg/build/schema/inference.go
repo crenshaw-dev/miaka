@@ -25,7 +25,7 @@ func InferType(value interface{}) string {
 	case bool:
 		return "bool"
 	default:
-		return "interface{}"
+		return string(TypeInterface)
 	}
 }
 

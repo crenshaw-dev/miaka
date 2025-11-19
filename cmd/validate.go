@@ -42,8 +42,8 @@ current directory.`,
 }
 
 func init() {
-	validateCmd.Flags().StringVarP(&validateCRDPath, "crd", "c", "crd.yaml", "Path to CRD YAML file")
-	validateCmd.Flags().StringVarP(&validateSchemaPath, "schema", "s", "values.schema.json", "Path to JSON Schema file")
+	validateCmd.Flags().StringVarP(&validateCRDPath, "crd", "c", defaultCRDPath, "Path to CRD YAML file")
+	validateCmd.Flags().StringVarP(&validateSchemaPath, "schema", "s", defaultSchemaPath, "Path to JSON Schema file")
 }
 
 func runValidate(_ *cobra.Command, args []string) error {

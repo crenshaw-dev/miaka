@@ -336,29 +336,11 @@ func fixInlineComments(code string) string {
 
 		// Handle field with inline comment (e.g., "Field type `json:...`// comment")
 		// The comment actually belongs to the NEXT field, not this one
-		if strings.Contains(line, "`json:") && strings.Contains(line, "`//") {
-			parts := strings.SplitN(line, "`// ", 2)
-			if len(parts) == 2 {
-				indent := getIndent(line)
-				comment := parts[1]
-
-				// Add current field without comment
-				result = append(result, parts[0]+"`")
-
-				// Add blank line after field
-				result = append(result, "")
-
-				// Add the comment before the NEXT field (if there is one)
-				if i+1 < len(lines) {
-					nextLine := strings.TrimSpace(lines[i+1])
-					if nextLine != "}" && nextLine != "" {
-						result = append(result, indent+"// "+comment)
-					}
-				}
-
+		if handled, skip := handleFieldInlineComment(line, lines, i, &result); handled {
+			if skip {
 				i++
-				continue
 			}
+			continue
 		}
 
 		result = append(result, line)
@@ -366,6 +348,37 @@ func fixInlineComments(code string) string {
 	}
 
 	return strings.Join(result, "\n")
+}
+
+// handleFieldInlineComment handles field inline comments and returns (handled, shouldSkipNext)
+func handleFieldInlineComment(line string, lines []string, i int, result *[]string) (bool, bool) {
+	if !strings.Contains(line, "`json:") || !strings.Contains(line, "`//") {
+		return false, false
+	}
+
+	parts := strings.SplitN(line, "`// ", 2)
+	if len(parts) != 2 {
+		return false, false
+	}
+
+	indent := getIndent(line)
+	comment := parts[1]
+
+	// Add current field without comment
+	*result = append(*result, parts[0]+"`")
+
+	// Add blank line after field
+	*result = append(*result, "")
+
+	// Add the comment before the NEXT field (if there is one)
+	if i+1 < len(lines) {
+		nextLine := strings.TrimSpace(lines[i+1])
+		if nextLine != "}" && nextLine != "" {
+			*result = append(*result, indent+"// "+comment)
+		}
+	}
+
+	return true, true
 }
 
 // getIndent returns the leading whitespace/tabs from a line

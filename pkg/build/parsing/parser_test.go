@@ -9,6 +9,8 @@ import (
 	"github.com/crenshaw-dev/miaka/pkg/build/schema"
 )
 
+const testKindName = "Example"
+
 // TestNewParser tests parser initialization
 func TestNewParser(t *testing.T) {
 	p := NewParser()
@@ -49,8 +51,8 @@ name: test
 	if s.APIVersion != "example.com/v1" {
 		t.Errorf("Expected apiVersion 'example.com/v1', got '%s'", s.APIVersion)
 	}
-	if s.Kind != "Example" {
-		t.Errorf("Expected kind 'Example', got '%s'", s.Kind)
+	if s.Kind != testKindName {
+		t.Errorf("Expected kind '%s', got '%s'", testKindName, s.Kind)
 	}
 	if s.Package != "v1" {
 		t.Errorf("Expected package 'v1', got '%s'", s.Package)
@@ -276,7 +278,7 @@ containers:
 	// Verify containers field in Example (main) struct
 	var mainStruct *schema.StructDef
 	for i := range s.Structs {
-		if s.Structs[i].Name == "Example" {
+		if s.Structs[i].Name == testKindName {
 			mainStruct = &s.Structs[i]
 			break
 		}
@@ -590,8 +592,8 @@ replicas: 3
 	if s.APIVersion != "" {
 		t.Errorf("Expected empty apiVersion, got: %s", s.APIVersion)
 	}
-	if s.Kind != "Example" {
-		t.Errorf("Expected kind 'Example', got: %s", s.Kind)
+	if s.Kind != testKindName {
+		t.Errorf("Expected kind '%s', got: %s", testKindName, s.Kind)
 	}
 }
 

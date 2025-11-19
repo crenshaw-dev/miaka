@@ -18,5 +18,8 @@ linters:
     - gocognit
     - misspell
     - ineffassign
+    - goconst
+    - unparam
+    - nestif
   disable:
     - errcheck

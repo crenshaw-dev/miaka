@@ -279,7 +279,7 @@ func TestValidateCommand_NoArgs(t *testing.T) {
 	cmd.SetOut(&stdout)
 	cmd.SetErr(&stdout)
 
-	validateCRDPath = "crd.yaml"
+	validateCRDPath = defaultCRDPath
 	validateSchemaPath = "schema.json"
 	cmd.SetArgs([]string{})
 

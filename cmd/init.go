@@ -88,25 +88,9 @@ func runInit(_ *cobra.Command, args []string) error {
 		hasAPIVersion, hasKind = initpkg.CheckKRMFields(inputFile)
 	}
 
-	// Only prompt if values not provided via flags, not in file, and we're in a TTY
-	if term.IsTerminal(int(os.Stdin.Fd())) {
-		if apiVersion == "" && !hasAPIVersion {
-			prompt := &survey.Input{
-				Message: "API Version (e.g., myapp.io/v1):",
-			}
-			if err := survey.AskOne(prompt, &apiVersion, survey.WithValidator(survey.Required)); err != nil {
-				return fmt.Errorf("failed to get API version: %w", err)
-			}
-		}
-
-		if kind == "" && !hasKind {
-			prompt := &survey.Input{
-				Message: "Kind (e.g., MyApp):",
-			}
-			if err := survey.AskOne(prompt, &kind, survey.WithValidator(survey.Required)); err != nil {
-				return fmt.Errorf("failed to get kind: %w", err)
-			}
-		}
+	// Prompt for missing values if in terminal
+	if err := promptForMissingValues(&apiVersion, &kind, hasAPIVersion, hasKind); err != nil {
+		return err
 	}
 
 	if err := initpkg.ConvertToKRM(inputFile, initOutput, apiVersion, kind); err != nil {
@@ -125,6 +109,33 @@ func runInit(_ *cobra.Command, args []string) error {
 	fmt.Println("  1. Edit", initOutput, "to add example values for all fields")
 	fmt.Println("  2. Add validation rules using kubebuilder markers (e.g., +kubebuilder:validation:Minimum=1)")
 	fmt.Println("  3. Run 'miaka build' to generate the CRD and JSON Schema")
+
+	return nil
+}
+
+// promptForMissingValues prompts user for missing apiVersion and kind if in terminal
+func promptForMissingValues(apiVersion, kind *string, hasAPIVersion, hasKind bool) error {
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		return nil
+	}
+
+	if *apiVersion == "" && !hasAPIVersion {
+		prompt := &survey.Input{
+			Message: "API Version (e.g., myapp.io/v1):",
+		}
+		if err := survey.AskOne(prompt, apiVersion, survey.WithValidator(survey.Required)); err != nil {
+			return fmt.Errorf("failed to get API version: %w", err)
+		}
+	}
+
+	if *kind == "" && !hasKind {
+		prompt := &survey.Input{
+			Message: "Kind (e.g., MyApp):",
+		}
+		if err := survey.AskOne(prompt, kind, survey.WithValidator(survey.Required)); err != nil {
+			return fmt.Errorf("failed to get kind: %w", err)
+		}
+	}
 
 	return nil
 }

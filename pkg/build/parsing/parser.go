@@ -202,52 +202,15 @@ func (p *Parser) parseFieldWithPath(fieldName string, yamlPath string, valueNode
 		field.IsSlice = true
 
 		if len(valueNode.Content) == 0 {
-			// Empty list - check for type hint first
-			if typeHint != "" {
-				// Type hint provided (e.g., +miaka:type:[]string or +miaka:type:string for array elements)
-				if strings.HasPrefix(typeHint, "[]") {
-					field.Type = typeHint
-					field.ElemType = strings.TrimPrefix(typeHint, "[]")
-				} else {
-					// Assume the hint is for the element type
-					field.Type = "[]" + typeHint
-					field.ElemType = typeHint
-				}
-			} else {
-				// No type hint, can't infer type
-				field.Type = "[]interface{}"
-				field.ElemType = "interface{}"
-			}
+			// Handle empty list
+			handleEmptyList(field, typeHint)
 		} else {
-			// Examine the first element to determine type
-			firstElem := valueNode.Content[0]
-
-			// Check for struct-level comments (between list colon and first dash)
-			structComments := extractListItemComments(valueNode)
-
-			switch firstElem.Kind {
-			case yaml.ScalarNode:
-				var value interface{}
-				if err := firstElem.Decode(&value); err != nil {
-					return nil, nil, fmt.Errorf("failed to decode list element: %w", err)
-				}
-				elemType := schema.InferType(value)
-				field.ElemType = elemType
-				field.Type = "[]" + elemType
-
-			case yaml.MappingNode:
-				// List of objects - need to merge fields from all elements
-				structName := p.generateUniqueStructName(fieldName, yamlPath)
-				field.ElemType = structName
-				field.Type = "[]" + structName
-
-				// Merge all fields from all list items
-				mergedStruct, err := p.mergeListItems(valueNode, structName, structComments)
-				if err != nil {
-					return nil, nil, err
-				}
-				nestedStructs = append(nestedStructs, *mergedStruct)
+			// Handle non-empty list
+			nested, err := p.handleNonEmptyList(field, valueNode, fieldName, yamlPath)
+			if err != nil {
+				return nil, nil, err
 			}
+			nestedStructs = append(nestedStructs, nested...)
 		}
 	}
 
@@ -402,4 +365,61 @@ func extractListItemComments(sequenceNode *yaml.Node) []string {
 	}
 
 	return schema.FormatComments(comments)
+}
+
+// handleEmptyList handles type inference for empty lists
+func handleEmptyList(field *schema.Field, typeHint string) {
+	// Empty list - check for type hint first
+	if typeHint != "" {
+		// Type hint provided (e.g., +miaka:type:[]string or +miaka:type:string for array elements)
+		if strings.HasPrefix(typeHint, "[]") {
+			field.Type = typeHint
+			field.ElemType = strings.TrimPrefix(typeHint, "[]")
+		} else {
+			// Assume the hint is for the element type
+			field.Type = "[]" + typeHint
+			field.ElemType = typeHint
+		}
+	} else {
+		// No type hint, can't infer type
+		field.Type = "[]" + string(schema.TypeInterface)
+		field.ElemType = string(schema.TypeInterface)
+	}
+}
+
+// handleNonEmptyList handles type inference for non-empty lists
+func (p *Parser) handleNonEmptyList(field *schema.Field, valueNode *yaml.Node, fieldName, yamlPath string) ([]schema.StructDef, error) {
+	var nestedStructs []schema.StructDef
+
+	// Examine the first element to determine type
+	firstElem := valueNode.Content[0]
+
+	// Check for struct-level comments (between list colon and first dash)
+	structComments := extractListItemComments(valueNode)
+
+	switch firstElem.Kind {
+	case yaml.ScalarNode:
+		var value interface{}
+		if err := firstElem.Decode(&value); err != nil {
+			return nil, fmt.Errorf("failed to decode list element: %w", err)
+		}
+		elemType := schema.InferType(value)
+		field.ElemType = elemType
+		field.Type = "[]" + elemType
+
+	case yaml.MappingNode:
+		// List of objects - need to merge fields from all elements
+		structName := p.generateUniqueStructName(fieldName, yamlPath)
+		field.ElemType = structName
+		field.Type = "[]" + structName
+
+		// Merge all fields from all list items
+		mergedStruct, err := p.mergeListItems(valueNode, structName, structComments)
+		if err != nil {
+			return nil, err
+		}
+		nestedStructs = append(nestedStructs, *mergedStruct)
+	}
+
+	return nestedStructs, nil
 }

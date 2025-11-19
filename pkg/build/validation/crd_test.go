@@ -9,12 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestValidateAgainstCRD_Valid tests validation with a valid resource
-func TestValidateAgainstCRD_Valid(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	// Create a sample CRD
-	crdContent := `apiVersion: apiextensions.k8s.io/v1
+const testCRDContent = `apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: examples.example.com
@@ -44,8 +39,14 @@ spec:
           appName:
             type: string
 `
+
+// TestValidateAgainstCRD_Valid tests validation with a valid resource
+func TestValidateAgainstCRD_Valid(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a sample CRD
 	crdPath := filepath.Join(tmpDir, "crd.yaml")
-	err := os.WriteFile(crdPath, []byte(crdContent), 0644)
+	err := os.WriteFile(crdPath, []byte(testCRDContent), 0644)
 	require.NoError(t, err, "Failed to write CRD")
 
 	// Create a valid resource
@@ -70,38 +71,8 @@ func TestValidateAgainstCRD_InvalidType(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create a sample CRD
-	crdContent := `apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: examples.example.com
-spec:
-  group: example.com
-  names:
-    kind: Example
-    plural: examples
-  scope: Namespaced
-  versions:
-  - name: v1alpha1
-    served: true
-    storage: true
-    schema:
-      openAPIV3Schema:
-        type: object
-        properties:
-          apiVersion:
-            type: string
-          kind:
-            type: string
-          metadata:
-            type: object
-          replicas:
-            type: integer
-            minimum: 1
-          appName:
-            type: string
-`
 	crdPath := filepath.Join(tmpDir, "crd.yaml")
-	err := os.WriteFile(crdPath, []byte(crdContent), 0644)
+	err := os.WriteFile(crdPath, []byte(testCRDContent), 0644)
 	require.NoError(t, err, "Failed to write CRD")
 
 	// Create an invalid resource (replicas is a string instead of integer)
@@ -126,38 +97,8 @@ func TestValidateAgainstCRD_ValidationConstraint(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create a sample CRD with minimum constraint
-	crdContent := `apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: examples.example.com
-spec:
-  group: example.com
-  names:
-    kind: Example
-    plural: examples
-  scope: Namespaced
-  versions:
-  - name: v1alpha1
-    served: true
-    storage: true
-    schema:
-      openAPIV3Schema:
-        type: object
-        properties:
-          apiVersion:
-            type: string
-          kind:
-            type: string
-          metadata:
-            type: object
-          replicas:
-            type: integer
-            minimum: 1
-          appName:
-            type: string
-`
 	crdPath := filepath.Join(tmpDir, "crd.yaml")
-	err := os.WriteFile(crdPath, []byte(crdContent), 0644)
+	err := os.WriteFile(crdPath, []byte(testCRDContent), 0644)
 	require.NoError(t, err, "Failed to write CRD")
 
 	// Create an invalid resource (replicas violates minimum constraint)

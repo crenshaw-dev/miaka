@@ -83,12 +83,12 @@ func ValidateSchema(schema *Schema) error {
 			fieldPath := structDef.Name + "." + field.JSONName
 
 			switch {
-			case field.IsSlice && field.ElemType == "interface{}":
+			case field.IsSlice && field.ElemType == string(TypeInterface):
 				isInterface = true
 				isArray = true
-			case field.Type == "interface{}":
+			case field.Type == string(TypeInterface):
 				isInterface = true
-			case field.Type == "[]interface{}":
+			case field.Type == "[]"+string(TypeInterface):
 				isInterface = true
 				isArray = true
 			}
