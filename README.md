@@ -100,6 +100,17 @@ Miaka doesn't reinvent the wheel - it brings together proven Kubernetes ecosyste
 
 No magic, just battle-tested tools working together.
 
+## Beyond Helm
+
+While Miaka is designed with Helm charts in mind, nothing about it strictly requires Helm. At its core, Miaka helps you maintain a Kubernetes API based on a complete example file with validation markers. The generated CRD and JSON Schema can be used by any tool that processes YAML adhering to the API:
+
+- **KRM Functions** - Process validated resources in Kustomize pipelines
+- **Kubernetes Controllers** - Build operators that reconcile your custom resources
+
+The Kubernetes Resource Model (KRM) format and OpenAPI v3 schemas are standards - any tool in the ecosystem can work with them.
+
+Building a robust, validated API also means you can swap out the backend implementation (from Helm to a controller, or vice versa) with confidence that existing configurations will continue to work.
+
 ## Learn More
 
 ```bash
