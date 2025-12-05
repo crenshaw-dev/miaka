@@ -1,21 +1,28 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
   "description": "Demo is the Schema for the demos API",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "title": "apiVersion",
       "type": "string"
     },
     "enabled": {
+      "default": true,
       "description": "Enable feature",
+      "title": "enabled",
       "type": "boolean"
     },
     "kind": {
       "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "title": "kind",
       "type": "string"
     },
     "port": {
+      "default": 8080,
       "description": "Port number",
+      "title": "port",
       "type": "integer"
     }
   },

@@ -1,0 +1,26 @@
+# @schema
+# type: string
+# @schema
+apiVersion: demo.io/v1
+# @schema
+# type: string
+# @schema
+kind: Demo
+# @schema
+# type: integer
+# @schema
+# -- Port number
+port: 8080
+# @schema
+# type: boolean
+# @schema
+# -- Enable feature
+enabled: true
+# @schema
+# type: object
+# required: false
+# @schema
+# -- Global values
+global: {}
+
+

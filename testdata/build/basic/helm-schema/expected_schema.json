@@ -1,10 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "description": "Example is the Schema for the examples API",
   "properties": {
     "apiVersion": {
-      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "default": "example.com/v1alpha1",
       "title": "apiVersion",
       "type": "string"
     },
@@ -23,29 +22,34 @@
     "env": {
       "description": "List of environment variables",
       "items": {
-        "additionalProperties": false,
-        "description": "EnvConfig defines the environment variable configuration",
-        "properties": {
-          "name": {
-            "default": "LOG_LEVEL",
-            "description": "Variable name",
-            "title": "name",
-            "type": "string"
-          },
-          "value": {
-            "default": "info",
-            "description": "Variable value",
-            "title": "value",
-            "type": "string"
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "LOG_LEVEL",
+                "description": "Variable name",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "info",
+                "description": "Variable value",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [],
+            "type": "object"
           }
-        },
-        "type": "object"
+        ],
+        "required": []
       },
       "title": "env",
       "type": "array"
     },
     "kind": {
-      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "default": "Example",
       "title": "kind",
       "type": "string"
     },
@@ -73,9 +77,11 @@
           "type": "string"
         }
       },
+      "required": [],
       "title": "service",
       "type": "object"
     }
   },
+  "required": [],
   "type": "object"
 }

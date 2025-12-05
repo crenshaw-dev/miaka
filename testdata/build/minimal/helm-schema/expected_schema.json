@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "default": "demo.io/v1",
+      "title": "apiVersion",
+      "type": "string"
+    },
+    "enabled": {
+      "default": true,
+      "description": "Enable feature",
+      "title": "enabled",
+      "type": "boolean"
+    },
+    "kind": {
+      "default": "Demo",
+      "title": "kind",
+      "type": "string"
+    },
+    "port": {
+      "default": 8080,
+      "description": "Port number",
+      "title": "port",
+      "type": "integer"
+    }
+  },
+  "required": [],
+  "type": "object"
+}

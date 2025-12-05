@@ -1,7 +1,11 @@
+# +kubebuilder:default="demo.io/v1"
 apiVersion: demo.io/v1
+# +kubebuilder:default="Demo"
 kind: Demo
 # Port number
+# +kubebuilder:default=8080
 port: 8080
 # Enable feature
+# +kubebuilder:default=true
 enabled: true
 

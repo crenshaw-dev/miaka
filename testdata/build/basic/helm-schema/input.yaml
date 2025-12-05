@@ -1,0 +1,70 @@
+# @schema
+# type: string
+# default: "example.com/v1alpha1"
+# @schema
+apiVersion: example.com/v1alpha1
+# @schema
+# type: string
+# default: "Example"
+# @schema
+kind: Example
+# @schema
+# type: integer
+# minimum: 1
+# default: 3
+# required: false
+# @schema
+# -- Number of replicas
+replicas: 3
+# @schema
+# type: string
+# default: "myapp"
+# required: false
+# @schema
+# -- Application name
+appName: "myapp"
+# @schema
+# type: boolean
+# default: true
+# required: false
+# @schema
+# -- Enable debug mode
+debug: true
+# @schema
+# type: object
+# required: false
+# @schema
+# -- Service configuration
+service:
+  # @schema
+  # type: integer
+  # default: 8080
+  # @schema
+  # -- Service port
+  port: 8080
+  # @schema
+  # type: string
+  # default: "ClusterIP"
+  # @schema
+  # -- Service type
+  serviceType: "ClusterIP"
+# @schema
+# type: array
+# required: false
+# @schema
+# -- List of environment variables
+env:
+  # -- Environment variable configuration
+- # @schema
+  # type: string
+  # default: "LOG_LEVEL"
+  # @schema
+  # -- Variable name
+  name: "LOG_LEVEL"
+  # @schema
+  # type: string
+  # default: "info"
+  # @schema
+  # -- Variable value
+  value: "info"
+

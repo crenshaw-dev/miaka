@@ -1,7 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
-  "description": "MyApp is the Schema for the myapps API",
   "properties": {
     "affinity": {
       "additionalProperties": false,
@@ -18,67 +17,90 @@
                 "nodeSelectorTerms": {
                   "description": "Node selector terms",
                   "items": {
-                    "additionalProperties": false,
-                    "description": "NodeSelectorTermsConfig defines the node selector terms configuration",
-                    "properties": {
-                      "matchExpressions": {
-                        "description": "Match expressions for node selection",
-                        "items": {
-                          "additionalProperties": false,
-                          "description": "MatchExpressionsConfig defines the match expressions configuration",
-                          "properties": {
-                            "key": {
-                              "description": "Label key",
-                              "title": "key",
-                              "type": "string"
-                            },
-                            "operator": {
-                              "description": "Match operator",
-                              "enum": [
-                                "In",
-                                "NotIn",
-                                "Exists",
-                                "DoesNotExist",
-                                "Gt",
-                                "Lt"
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "matchExpressions": {
+                            "description": "Match expressions for node selection",
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "key": {
+                                      "default": "kubernetes.io/arch",
+                                      "description": "Label key",
+                                      "title": "key",
+                                      "type": "string"
+                                    },
+                                    "operator": {
+                                      "default": "In",
+                                      "description": "Match operator",
+                                      "enum": [
+                                        "In",
+                                        "NotIn",
+                                        "Exists",
+                                        "DoesNotExist",
+                                        "Gt",
+                                        "Lt"
+                                      ],
+                                      "required": [],
+                                      "title": "operator"
+                                    },
+                                    "values": {
+                                      "description": "Values to match",
+                                      "items": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string"
+                                          },
+                                          {
+                                            "type": "string"
+                                          }
+                                        ],
+                                        "required": []
+                                      },
+                                      "title": "values",
+                                      "type": "array"
+                                    }
+                                  },
+                                  "required": [],
+                                  "type": "object"
+                                }
                               ],
-                              "title": "operator",
-                              "type": "string"
+                              "required": []
                             },
-                            "values": {
-                              "description": "Values to match",
-                              "items": {
-                                "type": "string"
-                              },
-                              "title": "values",
-                              "type": "array"
-                            }
-                          },
-                          "type": "object"
+                            "title": "matchExpressions",
+                            "type": "array"
+                          }
                         },
-                        "title": "matchExpressions",
-                        "type": "array"
+                        "required": [],
+                        "type": "object"
                       }
-                    },
-                    "type": "object"
+                    ],
+                    "required": []
                   },
                   "title": "nodeSelectorTerms",
                   "type": "array"
                 }
               },
+              "required": [],
               "title": "requiredDuringSchedulingIgnoredDuringExecution",
               "type": "object"
             }
           },
+          "required": [],
           "title": "nodeAffinity",
           "type": "object"
         }
       },
+      "required": [],
       "title": "affinity",
       "type": "object"
     },
     "apiVersion": {
-      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "default": "example.com/v1alpha1",
       "title": "apiVersion",
       "type": "string"
     },
@@ -132,6 +154,7 @@
           "type": "integer"
         }
       },
+      "required": [],
       "title": "autoscaling",
       "type": "object"
     },
@@ -176,6 +199,7 @@
           "type": "integer"
         }
       },
+      "required": [],
       "title": "cache",
       "type": "object"
     },
@@ -224,10 +248,11 @@
             "verify-ca",
             "verify-full"
           ],
-          "title": "sslMode",
-          "type": "string"
+          "required": [],
+          "title": "sslMode"
         }
       },
+      "required": [],
       "title": "database",
       "type": "object"
     },
@@ -240,22 +265,49 @@
     "env": {
       "description": "# Environment variables",
       "items": {
-        "additionalProperties": false,
-        "description": "EnvConfig defines the env configuration",
-        "properties": {
-          "name": {
-            "description": "Variable name",
-            "minLength": 1,
-            "title": "name",
-            "type": "string"
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "LOG_LEVEL",
+                "description": "Variable name",
+                "minLength": 1,
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "info",
+                "description": "Variable value",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [],
+            "type": "object"
           },
-          "value": {
-            "description": "Variable value",
-            "title": "value",
-            "type": "string"
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "DATABASE_URL",
+                "description": "Variable name",
+                "minLength": 1,
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "postgresql://db:5432/myapp",
+                "description": "Variable value",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [],
+            "type": "object"
           }
-        },
-        "type": "object"
+        ],
+        "required": []
       },
       "title": "env",
       "type": "array"
@@ -263,37 +315,53 @@
     "envFrom": {
       "description": "# Environment variables from ConfigMaps/Secrets",
       "items": {
-        "additionalProperties": false,
-        "description": "EnvFromConfig defines the env from configuration",
-        "properties": {
-          "configMapRef": {
+        "anyOf": [
+          {
             "additionalProperties": false,
-            "description": "ConfigMap reference",
             "properties": {
-              "name": {
-                "description": "ConfigMap name",
-                "title": "name",
-                "type": "string"
+              "configMapRef": {
+                "additionalProperties": false,
+                "description": "ConfigMap reference",
+                "properties": {
+                  "name": {
+                    "default": "app-config",
+                    "description": "ConfigMap name",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [],
+                "title": "configMapRef",
+                "type": "object"
               }
             },
-            "title": "configMapRef",
+            "required": [],
             "type": "object"
           },
-          "secretRef": {
+          {
             "additionalProperties": false,
-            "description": "Secret reference",
             "properties": {
-              "name": {
-                "description": "Secret name",
-                "title": "name",
-                "type": "string"
+              "secretRef": {
+                "additionalProperties": false,
+                "description": "Secret reference",
+                "properties": {
+                  "name": {
+                    "default": "app-secrets",
+                    "description": "Secret name",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [],
+                "title": "secretRef",
+                "type": "object"
               }
             },
-            "title": "secretRef",
+            "required": [],
             "type": "object"
           }
-        },
-        "type": "object"
+        ],
+        "required": []
       },
       "title": "envFrom",
       "type": "array"
@@ -310,8 +378,8 @@
             "Never",
             "IfNotPresent"
           ],
-          "title": "pullPolicy",
-          "type": "string"
+          "required": [],
+          "title": "pullPolicy"
         },
         "repository": {
           "default": "nginx",
@@ -327,6 +395,7 @@
           "type": "string"
         }
       },
+      "required": [],
       "title": "image",
       "type": "object"
     },
@@ -335,14 +404,18 @@
       "description": "# Ingress configuration",
       "properties": {
         "annotations": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "description": "Ingress annotations",
           "properties": {
             "cert-manager.io/cluster-issuer": {
+              "default": "letsencrypt-prod",
               "title": "cert-manager.io/cluster-issuer",
               "type": "string"
             }
           },
+          "required": [
+            "cert-manager.io/cluster-issuer"
+          ],
           "title": "annotations",
           "type": "object"
         },
@@ -361,43 +434,56 @@
         "hosts": {
           "description": "Ingress hosts configuration",
           "items": {
-            "additionalProperties": false,
-            "description": "HostsConfig defines the hosts configuration",
-            "properties": {
-              "host": {
-                "description": "Hostname",
-                "title": "host",
-                "type": "string"
-              },
-              "paths": {
-                "description": "Paths for this host",
-                "items": {
-                  "additionalProperties": false,
-                  "description": "PathsConfig defines the paths configuration",
-                  "properties": {
-                    "path": {
-                      "description": "Path string",
-                      "title": "path",
-                      "type": "string"
-                    },
-                    "pathType": {
-                      "description": "Path type (Prefix, Exact, or ImplementationSpecific)",
-                      "enum": [
-                        "Prefix",
-                        "Exact",
-                        "ImplementationSpecific"
-                      ],
-                      "title": "pathType",
-                      "type": "string"
-                    }
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "host": {
+                    "default": "example.com",
+                    "description": "Hostname",
+                    "title": "host",
+                    "type": "string"
                   },
-                  "type": "object"
+                  "paths": {
+                    "description": "Paths for this host",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "path": {
+                              "default": "/",
+                              "description": "Path string",
+                              "title": "path",
+                              "type": "string"
+                            },
+                            "pathType": {
+                              "default": "Prefix",
+                              "description": "Path type (Prefix, Exact, or ImplementationSpecific)",
+                              "enum": [
+                                "Prefix",
+                                "Exact",
+                                "ImplementationSpecific"
+                              ],
+                              "required": [],
+                              "title": "pathType"
+                            }
+                          },
+                          "required": [],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "paths",
+                    "type": "array"
+                  }
                 },
-                "title": "paths",
-                "type": "array"
+                "required": [],
+                "type": "object"
               }
-            },
-            "type": "object"
+            ],
+            "required": []
           },
           "title": "hosts",
           "type": "array"
@@ -405,34 +491,46 @@
         "tls": {
           "description": "TLS configuration for ingress",
           "items": {
-            "additionalProperties": false,
-            "description": "TlsConfig defines the tls configuration",
-            "properties": {
-              "hosts": {
-                "description": "Hosts covered by this certificate",
-                "items": {
-                  "type": "string"
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "hosts": {
+                    "description": "Hosts covered by this certificate",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "hosts",
+                    "type": "array"
+                  },
+                  "secretName": {
+                    "default": "example-tls",
+                    "description": "Secret name containing TLS certificate",
+                    "title": "secretName",
+                    "type": "string"
+                  }
                 },
-                "title": "hosts",
-                "type": "array"
-              },
-              "secretName": {
-                "description": "Secret name containing TLS certificate",
-                "title": "secretName",
-                "type": "string"
+                "required": [],
+                "type": "object"
               }
-            },
-            "type": "object"
+            ],
+            "required": []
           },
           "title": "tls",
           "type": "array"
         }
       },
+      "required": [],
       "title": "ingress",
       "type": "object"
     },
     "kind": {
-      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "default": "MyApp",
       "title": "kind",
       "type": "string"
     },
@@ -466,6 +564,7 @@
               "type": "integer"
             }
           },
+          "required": [],
           "title": "httpGet",
           "type": "object"
         },
@@ -498,6 +597,7 @@
           "type": "integer"
         }
       },
+      "required": [],
       "title": "livenessProbe",
       "type": "object"
     },
@@ -528,74 +628,100 @@
               "type": "string"
             },
             "labels": {
-              "additionalProperties": false,
+              "additionalProperties": true,
               "description": "ServiceMonitor labels",
               "properties": {
                 "prometheus": {
+                  "default": "kube-prometheus",
                   "title": "prometheus",
                   "type": "string"
                 }
               },
+              "required": [
+                "prometheus"
+              ],
               "title": "labels",
               "type": "object"
             }
           },
+          "required": [],
           "title": "serviceMonitor",
           "type": "object"
         }
       },
+      "required": [],
       "title": "monitoring",
       "type": "object"
     },
     "nodeSelector": {
-      "additionalProperties": false,
+      "additionalProperties": true,
       "description": "# Node selector for pod assignment",
       "properties": {
         "kubernetes.io/arch": {
+          "default": "amd64",
           "title": "kubernetes.io/arch",
           "type": "string"
         },
         "node-role": {
+          "default": "application",
           "title": "node-role",
           "type": "string"
         }
       },
+      "required": [
+        "kubernetes.io/arch",
+        "node-role"
+      ],
       "title": "nodeSelector",
       "type": "object"
     },
     "podAnnotations": {
-      "additionalProperties": false,
+      "additionalProperties": true,
       "description": "# Pod annotations",
       "properties": {
         "prometheus.io/path": {
+          "default": "/metrics",
           "title": "prometheus.io/path",
           "type": "string"
         },
         "prometheus.io/port": {
+          "default": "8080",
           "title": "prometheus.io/port",
           "type": "string"
         },
         "prometheus.io/scrape": {
+          "default": "true",
           "title": "prometheus.io/scrape",
           "type": "string"
         }
       },
+      "required": [
+        "prometheus.io/scrape",
+        "prometheus.io/port",
+        "prometheus.io/path"
+      ],
       "title": "podAnnotations",
       "type": "object"
     },
     "podLabels": {
-      "additionalProperties": false,
+      "additionalProperties": true,
       "description": "# Pod labels",
       "properties": {
         "app": {
+          "default": "my-application",
           "title": "app",
           "type": "string"
         },
         "version": {
+          "default": "v1",
           "title": "version",
           "type": "string"
         }
       },
+      "required": [
+        "app",
+        "version"
+      ],
       "title": "podLabels",
       "type": "object"
     },
@@ -629,6 +755,7 @@
               "type": "integer"
             }
           },
+          "required": [],
           "title": "httpGet",
           "type": "object"
         },
@@ -661,6 +788,7 @@
           "type": "integer"
         }
       },
+      "required": [],
       "title": "readinessProbe",
       "type": "object"
     },
@@ -693,6 +821,7 @@
               "type": "string"
             }
           },
+          "required": [],
           "title": "limits",
           "type": "object"
         },
@@ -713,10 +842,12 @@
               "type": "string"
             }
           },
+          "required": [],
           "title": "requests",
           "type": "object"
         }
       },
+      "required": [],
       "title": "resources",
       "type": "object"
     },
@@ -730,19 +861,30 @@
           "properties": {
             "add": {
               "items": {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
               },
               "title": "add",
               "type": "array"
             },
             "drop": {
               "items": {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
               },
               "title": "drop",
               "type": "array"
             }
           },
+          "required": [],
           "title": "capabilities",
           "type": "object"
         },
@@ -774,6 +916,7 @@
           "type": "integer"
         }
       },
+      "required": [],
       "title": "securityContext",
       "type": "object"
     },
@@ -782,26 +925,34 @@
       "description": "# Service configuration",
       "properties": {
         "annotations": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "description": "Service annotations (e.g., for cloud load balancers)",
           "properties": {
             "service.beta.kubernetes.io/aws-load-balancer-type": {
+              "default": "nlb",
               "title": "service.beta.kubernetes.io/aws-load-balancer-type",
               "type": "string"
             }
           },
+          "required": [
+            "service.beta.kubernetes.io/aws-load-balancer-type"
+          ],
           "title": "annotations",
           "type": "object"
         },
         "labels": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "description": "Service labels",
           "properties": {
             "monitoring": {
+              "default": "enabled",
               "title": "monitoring",
               "type": "string"
             }
           },
+          "required": [
+            "monitoring"
+          ],
           "title": "labels",
           "type": "object"
         },
@@ -822,10 +973,11 @@
             "LoadBalancer",
             "ExternalName"
           ],
-          "title": "type",
-          "type": "string"
+          "required": [],
+          "title": "type"
         }
       },
+      "required": [],
       "title": "service",
       "type": "object"
     },
@@ -834,14 +986,18 @@
       "description": "# ServiceAccount configuration",
       "properties": {
         "annotations": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "description": "Service account annotations",
           "properties": {
             "eks.amazonaws.com/role-arn": {
+              "default": "arn:aws:iam::123456789012:role/my-app-role",
               "title": "eks.amazonaws.com/role-arn",
               "type": "string"
             }
           },
+          "required": [
+            "eks.amazonaws.com/role-arn"
+          ],
           "title": "annotations",
           "type": "object"
         },
@@ -858,47 +1014,51 @@
           "type": "string"
         }
       },
+      "required": [],
       "title": "serviceAccount",
       "type": "object"
     },
     "tolerations": {
       "description": "# Tolerations for pod assignment",
       "items": {
-        "additionalProperties": false,
-        "description": "TolerationsConfig defines the tolerations configuration",
-        "properties": {
-          "effect": {
-            "description": "Toleration effect",
-            "enum": [
-              "NoSchedule",
-              "PreferNoSchedule",
-              "NoExecute"
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "effect": {
+                "default": "NoExecute",
+                "description": "Toleration effect",
+                "title": "effect",
+                "type": "string"
+              },
+              "key": {
+                "default": "node.kubernetes.io/not-ready",
+                "description": "Toleration key",
+                "title": "key",
+                "type": "string"
+              },
+              "operator": {
+                "default": "Exists",
+                "description": "Toleration operator",
+                "title": "operator",
+                "type": "string"
+              },
+              "tolerationSeconds": {
+                "default": 300,
+                "description": "Toleration duration in seconds",
+                "minimum": 0,
+                "title": "tolerationSeconds",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "operator",
+              "effect"
             ],
-            "title": "effect",
-            "type": "string"
-          },
-          "key": {
-            "description": "Toleration key",
-            "title": "key",
-            "type": "string"
-          },
-          "operator": {
-            "description": "Toleration operator",
-            "enum": [
-              "Exists",
-              "Equal"
-            ],
-            "title": "operator",
-            "type": "string"
-          },
-          "tolerationSeconds": {
-            "description": "Toleration duration in seconds",
-            "minimum": 0,
-            "title": "tolerationSeconds",
-            "type": "integer"
+            "type": "object"
           }
-        },
-        "type": "object"
+        ],
+        "required": []
       },
       "title": "tolerations",
       "type": "array"
@@ -906,26 +1066,34 @@
     "volumeMounts": {
       "description": "# Volume mounts",
       "items": {
-        "additionalProperties": false,
-        "description": "VolumeMountsConfig defines the volume mounts configuration",
-        "properties": {
-          "mountPath": {
-            "description": "Mount path in container",
-            "title": "mountPath",
-            "type": "string"
-          },
-          "name": {
-            "description": "Mount name",
-            "title": "name",
-            "type": "string"
-          },
-          "readOnly": {
-            "description": "Mount as read-only",
-            "title": "readOnly",
-            "type": "boolean"
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "mountPath": {
+                "default": "/etc/config",
+                "description": "Mount path in container",
+                "title": "mountPath",
+                "type": "string"
+              },
+              "name": {
+                "default": "config",
+                "description": "Mount name",
+                "title": "name",
+                "type": "string"
+              },
+              "readOnly": {
+                "default": true,
+                "description": "Mount as read-only",
+                "title": "readOnly",
+                "type": "boolean"
+              }
+            },
+            "required": [],
+            "type": "object"
           }
-        },
-        "type": "object"
+        ],
+        "required": []
       },
       "title": "volumeMounts",
       "type": "array"
@@ -933,33 +1101,42 @@
     "volumes": {
       "description": "# Volumes",
       "items": {
-        "additionalProperties": false,
-        "description": "VolumesConfig defines the volumes configuration",
-        "properties": {
-          "configMap": {
+        "anyOf": [
+          {
             "additionalProperties": false,
-            "description": "ConfigMap volume source",
             "properties": {
+              "configMap": {
+                "additionalProperties": false,
+                "description": "ConfigMap volume source",
+                "properties": {
+                  "name": {
+                    "default": "app-config",
+                    "description": "ConfigMap name",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [],
+                "title": "configMap",
+                "type": "object"
+              },
               "name": {
-                "description": "ConfigMap name",
+                "default": "config",
+                "description": "Volume name",
                 "title": "name",
                 "type": "string"
               }
             },
-            "title": "configMap",
+            "required": [],
             "type": "object"
-          },
-          "name": {
-            "description": "Volume name",
-            "title": "name",
-            "type": "string"
           }
-        },
-        "type": "object"
+        ],
+        "required": []
       },
       "title": "volumes",
       "type": "array"
     }
   },
+  "required": [],
   "type": "object"
 }

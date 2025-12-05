@@ -1,22 +1,31 @@
+# +kubebuilder:default="example.com/v1alpha1"
 apiVersion: example.com/v1alpha1
+# +kubebuilder:default="Example"
 kind: Example
 # Number of replicas
 # +kubebuilder:validation:Minimum=1
+# +kubebuilder:default=3
 replicas: 3
 # Application name
+# +kubebuilder:default="myapp"
 appName: "myapp"
 # Enable debug mode
+# +kubebuilder:default=true
 debug: true
 # Service configuration
 service:
   # Service port
+  # +kubebuilder:default=8080
   port: 8080
   # Service type
+  # +kubebuilder:default="ClusterIP"
   serviceType: "ClusterIP"
 # List of environment variables
 env:
   # Environment variable configuration
 - # Variable name
+  # +kubebuilder:default="LOG_LEVEL"
   name: "LOG_LEVEL"
   # Variable value
+  # +kubebuilder:default="info"
   value: "info"

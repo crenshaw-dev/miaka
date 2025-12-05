@@ -11,22 +11,26 @@ type EventsChart struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	// -- Provide a name in place of `argo-events`
+	// Provide a name in place of `argo-events`
+	// +kubebuilder:default="argo-events"
 	NameOverride string `json:"nameOverride,omitempty"`
 
-	// -- String to fully override "argo-events.fullname" template
+	// String to fully override "argo-events.fullname" template
+	// +kubebuilder:default=""
 	FullnameOverride string `json:"fullnameOverride,omitempty"`
 
-	// -- Override the namespace
-	// @default -- `.Release.Namespace`
+	// Override the namespace
+	// +kubebuilder:default=""
 	NamespaceOverride string `json:"namespaceOverride,omitempty"`
 
-	// -- Deploy on OpenShift
+	// Deploy on OpenShift
+	// +kubebuilder:default=false
 	Openshift bool `json:"openshift,omitempty"`
 
-	// -- Create clusterroles that extend existing clusterroles to interact with argo-events crds
+	// Create clusterroles that extend existing clusterroles to interact with argo-events crds
 	// Only applies for cluster-wide installation (`controller.rbac.namespaced: false`)
 	// # Ref: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles
+	// +kubebuilder:default=false
 	CreateAggregateRoles bool `json:"createAggregateRoles,omitempty"`
 
 	// # Custom resource configuration
@@ -45,26 +49,31 @@ type EventsChart struct {
 
 // CrdsConfig defines the crds configuration
 type CrdsConfig struct {
-	// -- Install and upgrade CRDs
+	// Install and upgrade CRDs
+	// +kubebuilder:default=true
 	Install bool `json:"install,omitempty"`
 
-	// -- Keep CRDs on chart uninstall
+	// Keep CRDs on chart uninstall
+	// +kubebuilder:default=true
 	Keep bool `json:"keep,omitempty"`
 
-	// -- Annotations to be added to all CRDs
+	// Annotations to be added to all CRDs
 	// +miaka:type: map[string]string
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // ImageConfig defines the image configuration
 type ImageConfig struct {
-	// -- If defined, a repository applied to all Argo Events deployments
+	// If defined, a repository applied to all Argo Events deployments
+	// +kubebuilder:default="quay.io/argoproj/argo-events"
 	Repository string `json:"repository,omitempty"`
 
-	// -- Overrides the global Argo Events image tag whose default is the chart appVersion
+	// Overrides the global Argo Events image tag whose default is the chart appVersion
+	// +kubebuilder:default=""
 	Tag string `json:"tag,omitempty"`
 
-	// -- If defined, a imagePullPolicy applied to all Argo Events deployments
+	// If defined, a imagePullPolicy applied to all Argo Events deployments
+	// +kubebuilder:default="IfNotPresent"
 	ImagePullPolicy string `json:"imagePullPolicy,omitempty"`
 }
 
@@ -75,10 +84,17 @@ type ImagePullSecretsConfig struct {
 
 // SecurityContextConfig defines the security context configuration
 type SecurityContextConfig struct {
+	// +kubebuilder:default=true
 	RunAsNonRoot bool `json:"runAsNonRoot,omitempty"`
-	RunAsUser    int  `json:"runAsUser,omitempty"`
-	RunAsGroup   int  `json:"runAsGroup,omitempty"`
-	FsGroup      int  `json:"fsGroup,omitempty"`
+
+	// +kubebuilder:default=9731
+	RunAsUser int `json:"runAsUser,omitempty"`
+
+	// +kubebuilder:default=9731
+	RunAsGroup int `json:"runAsGroup,omitempty"`
+
+	// +kubebuilder:default=9731
+	FsGroup int `json:"fsGroup,omitempty"`
 }
 
 // HostAliasesConfig defines the host aliases configuration
@@ -91,25 +107,25 @@ type HostAliasesConfig struct {
 type GlobalConfig struct {
 	Image ImageConfig `json:"image,omitempty"`
 
-	// -- If defined, uses a Secret to pull an image from a private Docker registry or repository
+	// If defined, uses a Secret to pull an image from a private Docker registry or repository
 	ImagePullSecrets []ImagePullSecretsConfig `json:"imagePullSecrets,omitempty"`
 
-	// -- Annotations for the all deployed pods
+	// Annotations for the all deployed pods
 	// +miaka:type: map[string]string
 	PodAnnotations map[string]string `json:"podAnnotations,omitempty"`
 
-	// -- Labels for the all deployed pods
+	// Labels for the all deployed pods
 	// +miaka:type: map[string]string
 	PodLabels map[string]string `json:"podLabels,omitempty"`
 
-	// -- Additional labels to add to all resources
+	// Additional labels to add to all resources
 	// +miaka:type: map[string]string
 	AdditionalLabels map[string]string `json:"additionalLabels,omitempty"`
 
-	// -- Toggle and define securityContext. See [values.yaml]
+	// Toggle and define securityContext. See [values.yaml]
 	SecurityContext SecurityContextConfig `json:"securityContext,omitempty"`
 
-	// -- Mapping between IP and hostnames that will be injected as entries in the pod's hosts files
+	// Mapping between IP and hostnames that will be injected as entries in the pod's hosts files
 	HostAliases []HostAliasesConfig `json:"hostAliases,omitempty"`
 }
 
@@ -122,41 +138,49 @@ type VersionsConfig struct {
 
 // NatsConfig defines the nats configuration
 type NatsConfig struct {
-	// -- Supported versions of NATS event bus
-	// @default -- See [values.yaml]
+	// Supported versions of NATS event bus
 	Versions []VersionsConfig `json:"versions,omitempty"`
 }
 
 // SettingsConfig defines the settings configuration
 type SettingsConfig struct {
-	// -- Maximum size of the memory storage (e.g. 1G)
+	// Maximum size of the memory storage (e.g. 1G)
+	// +kubebuilder:default=-1
 	MaxMemoryStore int `json:"maxMemoryStore,omitempty"`
 
-	// -- Maximum size of the file storage (e.g. 20G)
+	// Maximum size of the file storage (e.g. 20G)
+	// +kubebuilder:default=-1
 	MaxFileStore int `json:"maxFileStore,omitempty"`
 }
 
 // StreamConfig defines the stream configuration
 type StreamConfig struct {
-	// -- Maximum number of messages before expiring oldest message
+	// Maximum number of messages before expiring oldest message
+	// +kubebuilder:default=1000000
 	MaxMsgs int `json:"maxMsgs,omitempty"`
 
-	// -- Maximum age of existing messages, i.e. “72h”, “4h35m”
+	// Maximum age of existing messages, i.e. "72h", "4h35m"
+	// +kubebuilder:default="72h"
 	MaxAge string `json:"maxAge,omitempty"`
 
 	// Total size of messages before expiring oldest message, 0 means unlimited.
+	// +kubebuilder:default="1GB"
 	MaxBytes string `json:"maxBytes,omitempty"`
 
-	// -- Number of replicas, defaults to 3 and requires minimal 3
+	// Number of replicas, defaults to 3 and requires minimal 3
+	// +kubebuilder:default=3
 	Replicas int `json:"replicas,omitempty"`
 
-	// -- Not documented at the moment
+	// Not documented at the moment
+	// +kubebuilder:default="300s"
 	Duplicates string `json:"duplicates,omitempty"`
 
-	// -- 0: Limits, 1: Interest, 2: WorkQueue
+	// 0: Limits, 1: Interest, 2: WorkQueue
+	// +kubebuilder:default=0
 	Retention int `json:"retention,omitempty"`
 
-	// -- 0: DiscardOld, 1: DiscardNew
+	// 0: DiscardOld, 1: DiscardNew
+	// +kubebuilder:default=0
 	Discard int `json:"discard,omitempty"`
 }
 
@@ -198,46 +222,50 @@ type RulesConfig struct {
 
 // RbacConfig defines the rbac configuration
 type RbacConfig struct {
-	// -- Create events controller RBAC
+	// Create events controller RBAC
+	// +kubebuilder:default=true
 	Enabled bool `json:"enabled,omitempty"`
 
-	// -- Restrict events controller to operate only in a single namespace instead of cluster-wide scope.
+	// Restrict events controller to operate only in a single namespace instead of cluster-wide scope.
+	// +kubebuilder:default=false
 	Namespaced bool `json:"namespaced,omitempty"`
 
-	// -- Additional namespace to be monitored by the controller
+	// Additional namespace to be monitored by the controller
+	// +kubebuilder:default=""
 	ManagedNamespace string `json:"managedNamespace,omitempty"`
 
-	// -- Additional user rules for event controller's rbac
+	// Additional user rules for event controller's rbac
 	Rules []RulesConfig `json:"rules,omitempty"`
 }
 
 // ControllerConfigImageConfig defines the controller config image configuration
 type ControllerConfigImageConfig struct {
-	// -- Repository to use for the events controller
-	// @default -- `""` (defaults to global.image.repository)
+	// Repository to use for the events controller
+	// +kubebuilder:default=""
 	Repository string `json:"repository,omitempty"`
 
-	// -- Tag to use for the events controller
-	// @default -- `""` (defaults to global.image.tag)
+	// Tag to use for the events controller
+	// +kubebuilder:default=""
 	Tag string `json:"tag,omitempty"`
 
-	// -- Image pull policy for the events controller
-	// @default -- `""` (defaults to global.image.imagePullPolicy)
+	// Image pull policy for the events controller
+	// +kubebuilder:default=""
 	ImagePullPolicy string `json:"imagePullPolicy,omitempty"`
 }
 
 // PdbConfig defines the pdb configuration
 type PdbConfig struct {
-	// -- Deploy a PodDisruptionBudget for the events controller
+	// Deploy a PodDisruptionBudget for the events controller
+	// +kubebuilder:default=false
 	Enabled bool `json:"enabled,omitempty"`
 
 	// minAvailable: 1
 	// maxUnavailable: 0
-	// -- Labels to be added to events controller pdb
+	// Labels to be added to events controller pdb
 	// +miaka:type: map[string]string
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// -- Annotations to be added to events controller pdb
+	// Annotations to be added to events controller pdb
 	// +miaka:type: map[string]string
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
@@ -266,49 +294,63 @@ type EnvFromConfig struct {
 
 // CapabilitiesConfig defines the capabilities configuration
 type CapabilitiesConfig struct {
-	Drop                   []string `json:"drop,omitempty"`
-	ReadOnlyRootFilesystem bool     `json:"readOnlyRootFilesystem,omitempty"`
-	RunAsNonRoot           bool     `json:"runAsNonRoot,omitempty"`
+	Drop []string `json:"drop,omitempty"`
 }
 
 // ContainerSecurityContextConfig defines the container security context configuration
 type ContainerSecurityContextConfig struct {
 	Capabilities CapabilitiesConfig `json:"capabilities,omitempty"`
+
+	// +kubebuilder:default=true
+	ReadOnlyRootFilesystem bool `json:"readOnlyRootFilesystem,omitempty"`
+
+	// +kubebuilder:default=true
+	RunAsNonRoot bool `json:"runAsNonRoot,omitempty"`
 }
 
 // ReadinessProbeConfig defines the readiness probe configuration
 type ReadinessProbeConfig struct {
-	// -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+	// Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+	// +kubebuilder:default=3
 	FailureThreshold int `json:"failureThreshold,omitempty"`
 
-	// -- Number of seconds after the container has started before [probe] is initiated
+	// Number of seconds after the container has started before [probe] is initiated
+	// +kubebuilder:default=10
 	InitialDelaySeconds int `json:"initialDelaySeconds,omitempty"`
 
-	// -- How often (in seconds) to perform the [probe]
+	// How often (in seconds) to perform the [probe]
+	// +kubebuilder:default=10
 	PeriodSeconds int `json:"periodSeconds,omitempty"`
 
-	// -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+	// Minimum consecutive successes for the [probe] to be considered successful after having failed
+	// +kubebuilder:default=1
 	SuccessThreshold int `json:"successThreshold,omitempty"`
 
-	// -- Number of seconds after which the [probe] times out
+	// Number of seconds after which the [probe] times out
+	// +kubebuilder:default=1
 	TimeoutSeconds int `json:"timeoutSeconds,omitempty"`
 }
 
 // LivenessProbeConfig defines the liveness probe configuration
 type LivenessProbeConfig struct {
-	// -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+	// Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+	// +kubebuilder:default=3
 	FailureThreshold int `json:"failureThreshold,omitempty"`
 
-	// -- Number of seconds after the container has started before [probe] is initiated
+	// Number of seconds after the container has started before [probe] is initiated
+	// +kubebuilder:default=10
 	InitialDelaySeconds int `json:"initialDelaySeconds,omitempty"`
 
-	// -- How often (in seconds) to perform the [probe]
+	// How often (in seconds) to perform the [probe]
+	// +kubebuilder:default=10
 	PeriodSeconds int `json:"periodSeconds,omitempty"`
 
-	// -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+	// Minimum consecutive successes for the [probe] to be considered successful after having failed
+	// +kubebuilder:default=1
 	SuccessThreshold int `json:"successThreshold,omitempty"`
 
-	// -- Number of seconds after which the [probe] times out
+	// Number of seconds after which the [probe] times out
+	// +kubebuilder:default=1
 	TimeoutSeconds int `json:"timeoutSeconds,omitempty"`
 }
 
@@ -330,6 +372,7 @@ type VolumeMountsConfig struct {
 
 // NodeSelectorConfig defines the node selector configuration
 type NodeSelectorConfig struct {
+	// +kubebuilder:default="amd64"
 	KubernetesIoArch string `json:"kubernetes.io/arch,omitempty"`
 }
 
@@ -390,13 +433,19 @@ type TopologySpreadConstraintsConfig struct {
 
 // LimitsConfig defines the limits configuration
 type LimitsConfig struct {
-	Cpu    string `json:"cpu,omitempty"`
+	// +kubebuilder:default="500m"
+	Cpu string `json:"cpu,omitempty"`
+
+	// +kubebuilder:default="512Mi"
 	Memory string `json:"memory,omitempty"`
 }
 
 // RequestsConfig defines the requests configuration
 type RequestsConfig struct {
-	Cpu    string `json:"cpu,omitempty"`
+	// +kubebuilder:default="250m"
+	Cpu string `json:"cpu,omitempty"`
+
+	// +kubebuilder:default="256Mi"
 	Memory string `json:"memory,omitempty"`
 }
 
@@ -408,32 +457,36 @@ type ResourcesConfig struct {
 
 // ServiceAccountConfig defines the service account configuration
 type ServiceAccountConfig struct {
-	// -- Create a service account for the events controller
+	// Create a service account for the events controller
+	// +kubebuilder:default=true
 	Create bool `json:"create,omitempty"`
 
-	// -- Service account name
+	// Service account name
+	// +kubebuilder:default=""
 	Name string `json:"name,omitempty"`
 
-	// -- Annotations applied to created service account
+	// Annotations applied to created service account
 	// +miaka:type: map[string]string
 	Annotations map[string]string `json:"annotations,omitempty"`
 
-	// -- Automount API credentials for the Service Account
+	// Automount API credentials for the Service Account
+	// +kubebuilder:default=true
 	AutomountServiceAccountToken bool `json:"automountServiceAccountToken,omitempty"`
 }
 
 // ServiceConfig defines the service configuration
 type ServiceConfig struct {
-	// -- Metrics service annotations
+	// Metrics service annotations
 	// +miaka:type: map[string]string
 	Annotations map[string]string `json:"annotations,omitempty"`
 
 	// +miaka:type: map[string]string
-	// -- Metrics service labels
+	// Metrics service labels
 	// +miaka:type: map[string]string
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// -- Metrics service port
+	// Metrics service port
+	// +kubebuilder:default=8082
 	ServicePort int `json:"servicePort,omitempty"`
 }
 
@@ -451,6 +504,7 @@ type MetricRelabelingsConfig struct {
 
 // MatchLabelsConfig defines the match labels configuration
 type MatchLabelsConfig struct {
+	// +kubebuilder:default="argo-events"
 	App string `json:"app,omitempty"`
 }
 
@@ -461,33 +515,37 @@ type SelectorConfig struct {
 
 // ServiceMonitorConfig defines the service monitor configuration
 type ServiceMonitorConfig struct {
-	// -- Enable a prometheus ServiceMonitor
+	// Enable a prometheus ServiceMonitor
+	// +kubebuilder:default=false
 	Enabled bool `json:"enabled,omitempty"`
 
-	// -- Prometheus ServiceMonitor interval
+	// Prometheus ServiceMonitor interval
+	// +kubebuilder:default="30s"
 	Interval string `json:"interval,omitempty"`
 
-	// -- Prometheus [RelabelConfigs] to apply to samples before scraping
+	// Prometheus [RelabelConfigs] to apply to samples before scraping
 	Relabelings []RelabelingsConfig `json:"relabelings,omitempty"`
 
-	// -- Prometheus [MetricRelabelConfigs] to apply to samples before ingestion
+	// Prometheus [MetricRelabelConfigs] to apply to samples before ingestion
 	MetricRelabelings []MetricRelabelingsConfig `json:"metricRelabelings,omitempty"`
 
-	// -- Prometheus ServiceMonitor selector
+	// Prometheus ServiceMonitor selector
 	Selector SelectorConfig `json:"selector,omitempty"`
 
 	// prometheus: kube-prometheus
-	// -- Prometheus ServiceMonitor namespace
+	// Prometheus ServiceMonitor namespace
+	// +kubebuilder:default=""
 	Namespace string `json:"namespace,omitempty"`
 
-	// -- Prometheus ServiceMonitor labels
+	// Prometheus ServiceMonitor labels
 	// +miaka:type: map[string]string
 	AdditionalLabels map[string]string `json:"additionalLabels,omitempty"`
 }
 
 // MetricsConfig defines the metrics configuration
 type MetricsConfig struct {
-	// -- Deploy metrics service
+	// Deploy metrics service
+	// +kubebuilder:default=false
 	Enabled        bool                 `json:"enabled,omitempty"`
 	Service        ServiceConfig        `json:"service,omitempty"`
 	ServiceMonitor ServiceMonitorConfig `json:"serviceMonitor,omitempty"`
@@ -495,36 +553,38 @@ type MetricsConfig struct {
 
 // ControllerConfig defines the controller configuration
 type ControllerConfig struct {
-	// -- Argo Events controller name string
+	// Argo Events controller name string
+	// +kubebuilder:default="controller-manager"
 	Name  string                      `json:"name,omitempty"`
 	Rbac  RbacConfig                  `json:"rbac,omitempty"`
 	Image ControllerConfigImageConfig `json:"image,omitempty"`
 
-	// -- The number of replicasets history to keep
+	// The number of replicasets history to keep
+	// +kubebuilder:default=5
 	RevisionHistoryLimit int `json:"revisionHistoryLimit,omitempty"`
 
-	// -- The number of events controller pods to run.
+	// The number of events controller pods to run.
+	// +kubebuilder:default=1
 	Replicas int `json:"replicas,omitempty"`
 
 	// Pod disruption budget
 	Pdb PdbConfig `json:"pdb,omitempty"`
 
-	// -- Environment variables to pass to events controller
+	// Environment variables to pass to events controller
 	Env []EnvConfig `json:"env,omitempty"`
 
-	// -- envFrom to pass to events controller
-	// @default -- `[]` (See [values.yaml])
+	// envFrom to pass to events controller
 	EnvFrom []EnvFromConfig `json:"envFrom,omitempty"`
 
-	// -- Annotations to be added to events controller pods
+	// Annotations to be added to events controller pods
 	// +miaka:type: map[string]string
 	PodAnnotations map[string]string `json:"podAnnotations,omitempty"`
 
-	// -- Labels to be added to events controller pods
+	// Labels to be added to events controller pods
 	// +miaka:type: map[string]string
 	PodLabels map[string]string `json:"podLabels,omitempty"`
 
-	// -- Events controller container-level security context
+	// Events controller container-level security context
 	ContainerSecurityContext ContainerSecurityContextConfig `json:"containerSecurityContext,omitempty"`
 
 	// # Readiness and liveness probes for default backend
@@ -532,30 +592,31 @@ type ControllerConfig struct {
 	ReadinessProbe ReadinessProbeConfig `json:"readinessProbe,omitempty"`
 	LivenessProbe  LivenessProbeConfig  `json:"livenessProbe,omitempty"`
 
-	// -- Additional volumes to the events controller pod
+	// Additional volumes to the events controller pod
 	Volumes []VolumesConfig `json:"volumes,omitempty"`
 
-	// -- Additional volumeMounts to the events controller main container
+	// Additional volumeMounts to the events controller main container
 	VolumeMounts []VolumeMountsConfig `json:"volumeMounts,omitempty"`
 
-	// -- [Node selector]
+	// [Node selector]
 	NodeSelector NodeSelectorConfig `json:"nodeSelector,omitempty"`
 
-	// -- [Tolerations] for use with node taints
+	// [Tolerations] for use with node taints
 	Tolerations []TolerationsConfig `json:"tolerations,omitempty"`
 
-	// -- Assign custom [affinity] rules to the deployment
+	// Assign custom [affinity] rules to the deployment
 	Affinity AffinityConfig `json:"affinity,omitempty"`
 
-	// -- Assign custom [TopologySpreadConstraints] rules to the events controller
+	// Assign custom [TopologySpreadConstraints] rules to the events controller
 	// # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
 	// # If labelSelector is left out, it will default to the labelSelector configuration of the deployment
 	TopologySpreadConstraints []TopologySpreadConstraintsConfig `json:"topologySpreadConstraints,omitempty"`
 
-	// -- Priority class for the events controller pods
+	// Priority class for the events controller pods
+	// +kubebuilder:default=""
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 
-	// -- Resource limits and requests for the events controller pods
+	// Resource limits and requests for the events controller pods
 	Resources      ResourcesConfig      `json:"resources,omitempty"`
 	ServiceAccount ServiceAccountConfig `json:"serviceAccount,omitempty"`
 
@@ -565,31 +626,32 @@ type ControllerConfig struct {
 
 // WebhookConfigImageConfig defines the webhook config image configuration
 type WebhookConfigImageConfig struct {
-	// -- Repository to use for the event controller
-	// @default -- `""` (defaults to global.image.repository)
+	// Repository to use for the event controller
+	// +kubebuilder:default=""
 	Repository string `json:"repository,omitempty"`
 
-	// -- Tag to use for the event controller
-	// @default -- `""` (defaults to global.image.tag)
+	// Tag to use for the event controller
+	// +kubebuilder:default=""
 	Tag string `json:"tag,omitempty"`
 
-	// -- Image pull policy for the event controller
-	// @default -- `""` (defaults to global.image.imagePullPolicy)
+	// Image pull policy for the event controller
+	// +kubebuilder:default=""
 	ImagePullPolicy string `json:"imagePullPolicy,omitempty"`
 }
 
 // WebhookConfigPdbConfig defines the webhook config pdb configuration
 type WebhookConfigPdbConfig struct {
-	// -- Deploy a PodDisruptionBudget for the admission webhook
+	// Deploy a PodDisruptionBudget for the admission webhook
+	// +kubebuilder:default=false
 	Enabled bool `json:"enabled,omitempty"`
 
 	// minAvailable: 1
 	// maxUnavailable: 0
-	// -- Labels to be added to admission webhook pdb
+	// Labels to be added to admission webhook pdb
 	// +miaka:type: map[string]string
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// -- Annotations to be added to admission webhook pdb
+	// Annotations to be added to admission webhook pdb
 	// +miaka:type: map[string]string
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
@@ -618,49 +680,63 @@ type WebhookConfigEnvFromConfig struct {
 
 // WebhookConfigContainerSecurityContextConfigCapabilitiesConfig defines the webhook config container security context config capabilities configuration
 type WebhookConfigContainerSecurityContextConfigCapabilitiesConfig struct {
-	Drop                   []string `json:"drop,omitempty"`
-	ReadOnlyRootFilesystem bool     `json:"readOnlyRootFilesystem,omitempty"`
-	RunAsNonRoot           bool     `json:"runAsNonRoot,omitempty"`
+	Drop []string `json:"drop,omitempty"`
 }
 
 // WebhookConfigContainerSecurityContextConfig defines the webhook config container security context configuration
 type WebhookConfigContainerSecurityContextConfig struct {
 	Capabilities WebhookConfigContainerSecurityContextConfigCapabilitiesConfig `json:"capabilities,omitempty"`
+
+	// +kubebuilder:default=true
+	ReadOnlyRootFilesystem bool `json:"readOnlyRootFilesystem,omitempty"`
+
+	// +kubebuilder:default=true
+	RunAsNonRoot bool `json:"runAsNonRoot,omitempty"`
 }
 
 // WebhookConfigReadinessProbeConfig defines the webhook config readiness probe configuration
 type WebhookConfigReadinessProbeConfig struct {
-	// -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+	// Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+	// +kubebuilder:default=3
 	FailureThreshold int `json:"failureThreshold,omitempty"`
 
-	// -- Number of seconds after the container has started before [probe] is initiated
+	// Number of seconds after the container has started before [probe] is initiated
+	// +kubebuilder:default=10
 	InitialDelaySeconds int `json:"initialDelaySeconds,omitempty"`
 
-	// -- How often (in seconds) to perform the [probe]
+	// How often (in seconds) to perform the [probe]
+	// +kubebuilder:default=10
 	PeriodSeconds int `json:"periodSeconds,omitempty"`
 
-	// -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+	// Minimum consecutive successes for the [probe] to be considered successful after having failed
+	// +kubebuilder:default=1
 	SuccessThreshold int `json:"successThreshold,omitempty"`
 
-	// -- Number of seconds after which the [probe] times out
+	// Number of seconds after which the [probe] times out
+	// +kubebuilder:default=1
 	TimeoutSeconds int `json:"timeoutSeconds,omitempty"`
 }
 
 // WebhookConfigLivenessProbeConfig defines the webhook config liveness probe configuration
 type WebhookConfigLivenessProbeConfig struct {
-	// -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+	// Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+	// +kubebuilder:default=3
 	FailureThreshold int `json:"failureThreshold,omitempty"`
 
-	// -- Number of seconds after the container has started before [probe] is initiated
+	// Number of seconds after the container has started before [probe] is initiated
+	// +kubebuilder:default=10
 	InitialDelaySeconds int `json:"initialDelaySeconds,omitempty"`
 
-	// -- How often (in seconds) to perform the [probe]
+	// How often (in seconds) to perform the [probe]
+	// +kubebuilder:default=10
 	PeriodSeconds int `json:"periodSeconds,omitempty"`
 
-	// -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+	// Minimum consecutive successes for the [probe] to be considered successful after having failed
+	// +kubebuilder:default=1
 	SuccessThreshold int `json:"successThreshold,omitempty"`
 
-	// -- Number of seconds after which the [probe] times out
+	// Number of seconds after which the [probe] times out
+	// +kubebuilder:default=1
 	TimeoutSeconds int `json:"timeoutSeconds,omitempty"`
 }
 
@@ -682,6 +758,7 @@ type WebhookConfigVolumesConfig struct {
 
 // WebhookConfigNodeSelectorConfig defines the webhook config node selector configuration
 type WebhookConfigNodeSelectorConfig struct {
+	// +kubebuilder:default="amd64"
 	KubernetesIoArch string `json:"kubernetes.io/arch,omitempty"`
 }
 
@@ -742,13 +819,19 @@ type WebhookConfigTopologySpreadConstraintsConfig struct {
 
 // WebhookConfigResourcesConfigLimitsConfig defines the webhook config resources config limits configuration
 type WebhookConfigResourcesConfigLimitsConfig struct {
-	Cpu    string `json:"cpu,omitempty"`
+	// +kubebuilder:default="500m"
+	Cpu string `json:"cpu,omitempty"`
+
+	// +kubebuilder:default="512Mi"
 	Memory string `json:"memory,omitempty"`
 }
 
 // WebhookConfigResourcesConfigRequestsConfig defines the webhook config resources config requests configuration
 type WebhookConfigResourcesConfigRequestsConfig struct {
-	Cpu    string `json:"cpu,omitempty"`
+	// +kubebuilder:default="250m"
+	Cpu string `json:"cpu,omitempty"`
+
+	// +kubebuilder:default="256Mi"
 	Memory string `json:"memory,omitempty"`
 }
 
@@ -760,58 +843,64 @@ type WebhookConfigResourcesConfig struct {
 
 // WebhookConfigServiceAccountConfig defines the webhook config service account configuration
 type WebhookConfigServiceAccountConfig struct {
-	// -- Create a service account for the admission webhook
+	// Create a service account for the admission webhook
+	// +kubebuilder:default=true
 	Create bool `json:"create,omitempty"`
 
-	// -- Service account name
+	// Service account name
+	// +kubebuilder:default=""
 	Name string `json:"name,omitempty"`
 
-	// -- Annotations applied to created service account
+	// Annotations applied to created service account
 	// +miaka:type: map[string]string
 	Annotations map[string]string `json:"annotations,omitempty"`
 
-	// -- Automount API credentials for the Service Account
+	// Automount API credentials for the Service Account
+	// +kubebuilder:default=true
 	AutomountServiceAccountToken bool `json:"automountServiceAccountToken,omitempty"`
 }
 
 // WebhookConfig defines the webhook configuration
 type WebhookConfig struct {
-	// -- Enable admission webhook. Applies only for cluster-wide installation
+	// Enable admission webhook. Applies only for cluster-wide installation
+	// +kubebuilder:default=false
 	Enabled bool `json:"enabled,omitempty"`
 
-	// -- Argo Events admission webhook name string
+	// Argo Events admission webhook name string
+	// +kubebuilder:default="events-webhook"
 	Name  string                   `json:"name,omitempty"`
 	Image WebhookConfigImageConfig `json:"image,omitempty"`
 
-	// -- The number of replicasets history to keep
+	// The number of replicasets history to keep
+	// +kubebuilder:default=5
 	RevisionHistoryLimit int `json:"revisionHistoryLimit,omitempty"`
 
-	// -- The number of webhook pods to run.
+	// The number of webhook pods to run.
+	// +kubebuilder:default=1
 	Replicas int `json:"replicas,omitempty"`
 
 	// Pod disruption budget
 	Pdb WebhookConfigPdbConfig `json:"pdb,omitempty"`
 
-	// -- Environment variables to pass to event controller
-	// @default -- `[]` (See [values.yaml])
+	// Environment variables to pass to event controller
 	Env []WebhookConfigEnvConfig `json:"env,omitempty"`
 
-	// -- envFrom to pass to event controller
-	// @default -- `[]` (See [values.yaml])
+	// envFrom to pass to event controller
 	EnvFrom []WebhookConfigEnvFromConfig `json:"envFrom,omitempty"`
 
-	// -- Annotations to be added to event controller pods
+	// Annotations to be added to event controller pods
 	// +miaka:type: map[string]string
 	PodAnnotations map[string]string `json:"podAnnotations,omitempty"`
 
-	// -- Labels to be added to event controller pods
+	// Labels to be added to event controller pods
 	// +miaka:type: map[string]string
 	PodLabels map[string]string `json:"podLabels,omitempty"`
 
-	// -- Port to listen on
+	// Port to listen on
+	// +kubebuilder:default=443
 	Port int `json:"port,omitempty"`
 
-	// -- Event controller container-level security context
+	// Event controller container-level security context
 	ContainerSecurityContext WebhookConfigContainerSecurityContextConfig `json:"containerSecurityContext,omitempty"`
 
 	// # Readiness and liveness probes for default backend
@@ -819,30 +908,31 @@ type WebhookConfig struct {
 	ReadinessProbe WebhookConfigReadinessProbeConfig `json:"readinessProbe,omitempty"`
 	LivenessProbe  WebhookConfigLivenessProbeConfig  `json:"livenessProbe,omitempty"`
 
-	// -- Additional volumeMounts to the event controller main container
+	// Additional volumeMounts to the event controller main container
 	VolumeMounts []WebhookConfigVolumeMountsConfig `json:"volumeMounts,omitempty"`
 
-	// -- Additional volumes to the event controller pod
+	// Additional volumes to the event controller pod
 	Volumes []WebhookConfigVolumesConfig `json:"volumes,omitempty"`
 
-	// -- [Node selector]
+	// [Node selector]
 	NodeSelector WebhookConfigNodeSelectorConfig `json:"nodeSelector,omitempty"`
 
-	// -- [Tolerations] for use with node taints
+	// [Tolerations] for use with node taints
 	Tolerations []WebhookConfigTolerationsConfig `json:"tolerations,omitempty"`
 
-	// -- Assign custom [affinity] rules to the deployment
+	// Assign custom [affinity] rules to the deployment
 	Affinity WebhookConfigAffinityConfig `json:"affinity,omitempty"`
 
-	// -- Assign custom [TopologySpreadConstraints] rules to the event controller
+	// Assign custom [TopologySpreadConstraints] rules to the events controller
 	// # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
 	// # If labelSelector is left out, it will default to the labelSelector configuration of the deployment
 	TopologySpreadConstraints []WebhookConfigTopologySpreadConstraintsConfig `json:"topologySpreadConstraints,omitempty"`
 
-	// -- Priority class for the event controller pods
+	// Priority class for the event controller pods
+	// +kubebuilder:default=""
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 
-	// -- Resource limits and requests for the event controller pods
+	// Resource limits and requests for the event controller pods
 	Resources      WebhookConfigResourcesConfig      `json:"resources,omitempty"`
 	ServiceAccount WebhookConfigServiceAccountConfig `json:"serviceAccount,omitempty"`
 }

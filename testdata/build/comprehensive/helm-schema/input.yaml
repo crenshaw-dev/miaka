@@ -1,0 +1,698 @@
+## Example Miaka Values File
+## This file demonstrates all features of Miaka for generating Kubernetes CRDs and JSON schemas
+
+# @schema
+# type: string
+# @schema
+apiVersion: example.com/v1alpha1
+# @schema
+# type: string
+# @schema
+kind: MyApp
+
+# @schema
+# type: string
+# minLength: 1
+# maxLength: 63
+# pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+# @schema
+# -- Application name
+appName: my-application
+
+# @schema
+# type: integer
+# minimum: 1
+# maximum: 100
+# @schema
+# -- Number of replicas to deploy
+replicas: 3
+
+# @schema
+# type: boolean
+# @schema
+# -- Enable debug mode for verbose logging
+debug: false
+
+## Image configuration
+# @schema
+# type: object
+# @schema
+image:
+  # @schema
+  # type: string
+  # @schema
+  # -- Container image repository
+  repository: nginx
+  # @schema
+  # enum: [Always, Never, IfNotPresent]
+  # @schema
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # @schema
+  # type: string
+  # pattern: ^[a-zA-Z0-9._-]+$
+  # @schema
+  # -- Container image tag (immutable tags are recommended)
+  tag: "1.25.0"
+
+## Service configuration
+# @schema
+# type: object
+# @schema
+service:
+  # @schema
+  # enum: [ClusterIP, NodePort, LoadBalancer, ExternalName]
+  # @schema
+  # -- Kubernetes service type
+  type: ClusterIP
+  # @schema
+  # type: integer
+  # minimum: 1
+  # maximum: 65535
+  # @schema
+  # -- Service port
+  port: 80
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  # -- Service annotations (e.g., for cloud load balancers)
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  # -- Service labels
+  labels:
+    monitoring: enabled
+
+## Ingress configuration
+# @schema
+# type: object
+# @schema
+ingress:
+  # @schema
+  # type: boolean
+  # @schema
+  # -- Enable ingress resource
+  enabled: true
+  # @schema
+  # type: string
+  # @schema
+  # -- Ingress class name (e.g., nginx, traefik)
+  className: nginx
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  # -- Ingress annotations
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  # @schema
+  # type: array
+  # @schema
+  # -- Ingress hosts configuration
+  hosts:
+  - # @schema
+    # type: string
+    # @schema
+    # -- Hostname
+    host: example.com
+    # @schema
+    # type: array
+    # @schema
+    # -- Paths for this host
+    paths:
+    - # @schema
+      # type: string
+      # @schema
+      # -- Path string
+      path: /
+      # @schema
+      # enum: [Prefix, Exact, ImplementationSpecific]
+      # @schema
+      # -- Path type (Prefix, Exact, or ImplementationSpecific)
+      pathType: Prefix
+  # @schema
+  # type: array
+  # @schema
+  # -- TLS configuration for ingress
+  tls:
+  - # @schema
+    # type: string
+    # @schema
+    # -- Secret name containing TLS certificate
+    secretName: example-tls
+    # @schema
+    # type: array
+    # @schema
+    # -- Hosts covered by this certificate
+    hosts:
+    - example.com
+
+## Resource limits and requests
+# @schema
+# type: object
+# @schema
+resources:
+  # @schema
+  # type: object
+  # @schema
+  # -- Resource limits
+  limits:
+    # @schema
+    # type: string
+    # @schema
+    # -- CPU limit
+    cpu: 500m
+    # @schema
+    # type: string
+    # @schema
+    # -- Memory limit
+    memory: 512Mi
+  # @schema
+  # type: object
+  # @schema
+  # -- Resource requests
+  requests:
+    # @schema
+    # type: string
+    # @schema
+    # -- CPU request
+    cpu: 100m
+    # @schema
+    # type: string
+    # @schema
+    # -- Memory request
+    memory: 128Mi
+
+## Environment variables
+# @schema
+# type: array
+# @schema
+env:
+- # @schema
+  # type: string
+  # minLength: 1
+  # @schema
+  # -- Variable name
+  name: LOG_LEVEL
+  # @schema
+  # type: string
+  # @schema
+  # -- Variable value
+  value: info
+- # @schema
+  # type: string
+  # minLength: 1
+  # @schema
+  # -- Variable name
+  name: DATABASE_URL
+  # @schema
+  # type: string
+  # @schema
+  # -- Variable value
+  value: postgresql://db:5432/myapp
+
+## Environment variables from ConfigMaps/Secrets
+# @schema
+# type: array
+# @schema
+envFrom:
+- # @schema
+  # type: object
+  # @schema
+  # -- ConfigMap reference
+  configMapRef:
+    # @schema
+    # type: string
+    # @schema
+    # -- ConfigMap name
+    name: app-config
+- # @schema
+  # type: object
+  # @schema
+  # -- Secret reference
+  secretRef:
+    # @schema
+    # type: string
+    # @schema
+    # -- Secret name
+    name: app-secrets
+
+## Security context
+# @schema
+# type: object
+# @schema
+securityContext:
+  # @schema
+  # type: boolean
+  # @schema
+  # -- Run as non-root user
+  runAsNonRoot: true
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- User ID to run as
+  runAsUser: 1000
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- Group ID to run as
+  runAsGroup: 1000
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- FSGroup for volume ownership
+  fsGroup: 1000
+  # @schema
+  # type: object
+  # @schema
+  # -- Drop all capabilities and add only required ones
+  capabilities:
+    # @schema
+    # type: array
+    # @schema
+    drop:
+    - ALL
+    # @schema
+    # type: array
+    # @schema
+    add:
+    - NET_BIND_SERVICE
+
+## Liveness probe configuration
+# @schema
+# type: object
+# @schema
+livenessProbe:
+  # @schema
+  # type: object
+  # @schema
+  # -- HTTP GET liveness probe
+  httpGet:
+    # @schema
+    # type: string
+    # @schema
+    # -- Path to probe
+    path: /healthz
+    # @schema
+    # type: integer
+    # minimum: 1
+    # maximum: 65535
+    # @schema
+    # -- Port to probe
+    port: 8080
+  # @schema
+  # type: integer
+  # minimum: 0
+  # @schema
+  # -- Initial delay before liveness probe
+  initialDelaySeconds: 30
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- Period between liveness probes
+  periodSeconds: 10
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- Timeout for liveness probe
+  timeoutSeconds: 5
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- Success threshold for liveness probe
+  successThreshold: 1
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- Failure threshold for liveness probe
+  failureThreshold: 3
+
+## Readiness probe configuration
+# @schema
+# type: object
+# @schema
+readinessProbe:
+  # @schema
+  # type: object
+  # @schema
+  # -- HTTP GET readiness probe
+  httpGet:
+    # @schema
+    # type: string
+    # @schema
+    # -- Path to probe
+    path: /ready
+    # @schema
+    # type: integer
+    # minimum: 1
+    # maximum: 65535
+    # @schema
+    # -- Port to probe
+    port: 8080
+  # @schema
+  # type: integer
+  # minimum: 0
+  # @schema
+  # -- Initial delay before readiness probe
+  initialDelaySeconds: 10
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- Period between readiness probes
+  periodSeconds: 5
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- Timeout for readiness probe
+  timeoutSeconds: 3
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- Success threshold for readiness probe
+  successThreshold: 1
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- Failure threshold for readiness probe
+  failureThreshold: 3
+
+## Volume mounts
+# @schema
+# type: array
+# @schema
+volumeMounts:
+- # @schema
+  # type: string
+  # @schema
+  # -- Mount name
+  name: config
+  # @schema
+  # type: string
+  # @schema
+  # -- Mount path in container
+  mountPath: /etc/config
+  # @schema
+  # type: boolean
+  # @schema
+  # -- Mount as read-only
+  readOnly: true
+
+## Volumes
+# @schema
+# type: array
+# @schema
+volumes:
+- # @schema
+  # type: string
+  # @schema
+  # -- Volume name
+  name: config
+  # @schema
+  # type: object
+  # @schema
+  # -- ConfigMap volume source
+  configMap:
+    # @schema
+    # type: string
+    # @schema
+    # -- ConfigMap name
+    name: app-config
+
+## Node selector for pod assignment
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+nodeSelector:
+  kubernetes.io/arch: amd64
+  node-role: application
+
+## Tolerations for pod assignment
+# @schema
+# type: array
+# @schema
+tolerations:
+- # @schema
+  # type: string
+  # @schema
+  # -- Toleration key
+  key: node.kubernetes.io/not-ready
+  # @schema
+  # @schema
+  # -- Toleration operator
+  operator: Exists
+  # @schema
+  # @schema
+  # -- Toleration effect
+  effect: NoExecute
+  # @schema
+  # type: integer
+  # minimum: 0
+  # @schema
+  # -- Toleration duration in seconds
+  tolerationSeconds: 300
+
+## Affinity rules for pod assignment
+# @schema
+# type: object
+# @schema
+affinity:
+  # @schema
+  # type: object
+  # @schema
+  # -- Node affinity
+  nodeAffinity:
+    # @schema
+    # type: object
+    # @schema
+    # -- Required node affinity
+    requiredDuringSchedulingIgnoredDuringExecution:
+      # @schema
+      # type: array
+      # @schema
+      # -- Node selector terms
+      nodeSelectorTerms:
+      - # @schema
+        # type: array
+        # @schema
+        # -- Match expressions for node selection
+        matchExpressions:
+        - # @schema
+          # type: string
+          # @schema
+          # -- Label key
+          key: kubernetes.io/arch
+          # @schema
+          # enum: [In, NotIn, Exists, DoesNotExist, Gt, Lt]
+          # @schema
+          # -- Match operator
+          operator: In
+          # @schema
+          # type: array
+          # @schema
+          # -- Values to match
+          values:
+          - amd64
+          - arm64
+
+## Pod annotations
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/metrics"
+
+## Pod labels
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+podLabels:
+  app: my-application
+  version: v1
+
+## ServiceAccount configuration
+# @schema
+# type: object
+# @schema
+serviceAccount:
+  # @schema
+  # type: boolean
+  # @schema
+  # -- Create a service account
+  create: true
+  # @schema
+  # type: string
+  # @schema
+  # -- Service account name (leave empty to generate)
+  name: ""
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  # -- Service account annotations
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/my-app-role
+
+## Autoscaling configuration
+# @schema
+# type: object
+# @schema
+autoscaling:
+  # @schema
+  # type: boolean
+  # @schema
+  # -- Enable horizontal pod autoscaling
+  enabled: true
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- Minimum number of replicas
+  minReplicas: 2
+  # @schema
+  # type: integer
+  # minimum: 1
+  # @schema
+  # -- Maximum number of replicas
+  maxReplicas: 10
+  # @schema
+  # type: integer
+  # minimum: 1
+  # maximum: 100
+  # @schema
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 80
+  # @schema
+  # type: integer
+  # minimum: 1
+  # maximum: 100
+  # @schema
+  # -- Target memory utilization percentage
+  targetMemoryUtilizationPercentage: 80
+
+## Monitoring configuration
+# @schema
+# type: object
+# @schema
+monitoring:
+  # @schema
+  # type: boolean
+  # @schema
+  # -- Enable Prometheus monitoring
+  enabled: true
+  # @schema
+  # type: object
+  # @schema
+  # -- ServiceMonitor configuration
+  serviceMonitor:
+    # @schema
+    # type: boolean
+    # @schema
+    # -- Enable ServiceMonitor resource
+    enabled: true
+    # @schema
+    # type: string
+    # @schema
+    # -- ServiceMonitor interval
+    interval: 30s
+    # @schema
+    # type: object
+    # additionalProperties: true
+    # @schema
+    # -- ServiceMonitor labels
+    labels:
+      prometheus: kube-prometheus
+
+## Database configuration example
+# @schema
+# type: object
+# @schema
+database:
+  # @schema
+  # type: string
+  # minLength: 1
+  # @schema
+  # -- Database host
+  host: postgres.default.svc.cluster.local
+  # @schema
+  # type: integer
+  # minimum: 1
+  # maximum: 65535
+  # @schema
+  # -- Database port
+  port: 5432
+  # @schema
+  # type: string
+  # minLength: 1
+  # @schema
+  # -- Database name
+  name: myapp
+  # @schema
+  # type: integer
+  # minimum: 1
+  # maximum: 1000
+  # @schema
+  # -- Connection pool size
+  poolSize: 20
+  # @schema
+  # enum: [disable, allow, prefer, require, verify-ca, verify-full]
+  # @schema
+  # -- SSL mode for database connection
+  sslMode: require
+
+## Cache/Redis configuration example
+# @schema
+# type: object
+# @schema
+cache:
+  # @schema
+  # type: boolean
+  # @schema
+  # -- Enable Redis cache
+  enabled: true
+  # @schema
+  # type: string
+  # minLength: 1
+  # @schema
+  # -- Redis host
+  host: redis.default.svc.cluster.local
+  # @schema
+  # type: integer
+  # minimum: 1
+  # maximum: 65535
+  # @schema
+  # -- Redis port
+  port: 6379
+  # @schema
+  # type: integer
+  # minimum: 0
+  # maximum: 15
+  # @schema
+  # -- Redis database number
+  database: 0
+  # @schema
+  # type: integer
+  # minimum: 0
+  # @schema
+  # -- Cache TTL in seconds
+  ttl: 3600
+
