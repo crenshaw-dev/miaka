@@ -1,0 +1,739 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "MyApp is the Schema for the myapps API",
+  "properties": {
+    "affinity": {
+      "description": "# Affinity rules for pod assignment",
+      "properties": {
+        "nodeAffinity": {
+          "description": "Node affinity",
+          "properties": {
+            "requiredDuringSchedulingIgnoredDuringExecution": {
+              "description": "Required node affinity",
+              "properties": {
+                "nodeSelectorTerms": {
+                  "description": "Node selector terms",
+                  "items": {
+                    "description": "NodeSelectorTermsConfig defines the node selector terms configuration",
+                    "properties": {
+                      "matchExpressions": {
+                        "description": "Match expressions for node selection",
+                        "items": {
+                          "description": "MatchExpressionsConfig defines the match expressions configuration",
+                          "properties": {
+                            "key": {
+                              "description": "Label key",
+                              "type": "string"
+                            },
+                            "operator": {
+                              "description": "Match operator",
+                              "enum": [
+                                "In",
+                                "NotIn",
+                                "Exists",
+                                "DoesNotExist",
+                                "Gt",
+                                "Lt"
+                              ],
+                              "type": "string"
+                            },
+                            "values": {
+                              "description": "Values to match",
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "appName": {
+      "description": "Application name",
+      "maxLength": 63,
+      "minLength": 1,
+      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+      "type": "string"
+    },
+    "autoscaling": {
+      "description": "# Autoscaling configuration",
+      "properties": {
+        "enabled": {
+          "description": "Enable horizontal pod autoscaling",
+          "type": "boolean"
+        },
+        "maxReplicas": {
+          "description": "Maximum number of replicas",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "minReplicas": {
+          "description": "Minimum number of replicas",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "targetCPUUtilizationPercentage": {
+          "description": "Target CPU utilization percentage",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "targetMemoryUtilizationPercentage": {
+          "description": "Target memory utilization percentage",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "cache": {
+      "description": "# Cache/Redis configuration example",
+      "properties": {
+        "database": {
+          "description": "Redis database number",
+          "maximum": 15,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "enabled": {
+          "description": "Enable Redis cache",
+          "type": "boolean"
+        },
+        "host": {
+          "description": "Redis host",
+          "minLength": 1,
+          "type": "string"
+        },
+        "port": {
+          "description": "Redis port",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "ttl": {
+          "description": "Cache TTL in seconds",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "database": {
+      "description": "# Database configuration example",
+      "properties": {
+        "host": {
+          "description": "Database host",
+          "minLength": 1,
+          "type": "string"
+        },
+        "name": {
+          "description": "Database name",
+          "minLength": 1,
+          "type": "string"
+        },
+        "poolSize": {
+          "description": "Connection pool size",
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "port": {
+          "description": "Database port",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "sslMode": {
+          "description": "SSL mode for database connection",
+          "enum": [
+            "disable",
+            "allow",
+            "prefer",
+            "require",
+            "verify-ca",
+            "verify-full"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "debug": {
+      "description": "Enable debug mode for verbose logging",
+      "type": "boolean"
+    },
+    "env": {
+      "description": "# Environment variables",
+      "items": {
+        "description": "EnvConfig defines the env configuration",
+        "properties": {
+          "name": {
+            "description": "Variable name",
+            "minLength": 1,
+            "type": "string"
+          },
+          "value": {
+            "description": "Variable value",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "envFrom": {
+      "description": "# Environment variables from ConfigMaps/Secrets",
+      "items": {
+        "description": "EnvFromConfig defines the env from configuration",
+        "properties": {
+          "configMapRef": {
+            "description": "ConfigMap reference",
+            "properties": {
+              "name": {
+                "description": "ConfigMap name",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "secretRef": {
+            "description": "Secret reference",
+            "properties": {
+              "name": {
+                "description": "Secret name",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "image": {
+      "description": "# Image configuration",
+      "properties": {
+        "pullPolicy": {
+          "description": "Image pull policy",
+          "enum": [
+            "Always",
+            "Never",
+            "IfNotPresent"
+          ],
+          "type": "string"
+        },
+        "repository": {
+          "description": "Container image repository",
+          "type": "string"
+        },
+        "tag": {
+          "description": "Container image tag (immutable tags are recommended)",
+          "pattern": "^[a-zA-Z0-9._-]+$",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ingress": {
+      "description": "# Ingress configuration",
+      "properties": {
+        "annotations": {
+          "description": "Ingress annotations",
+          "properties": {
+            "cert-manager.io/cluster-issuer": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "className": {
+          "description": "Ingress class name (e.g., nginx, traefik)",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Enable ingress resource",
+          "type": "boolean"
+        },
+        "hosts": {
+          "description": "Ingress hosts configuration",
+          "items": {
+            "description": "HostsConfig defines the hosts configuration",
+            "properties": {
+              "host": {
+                "description": "Hostname",
+                "type": "string"
+              },
+              "paths": {
+                "description": "Paths for this host",
+                "items": {
+                  "description": "PathsConfig defines the paths configuration",
+                  "properties": {
+                    "path": {
+                      "description": "Path string",
+                      "type": "string"
+                    },
+                    "pathType": {
+                      "description": "Path type (Prefix, Exact, or ImplementationSpecific)",
+                      "enum": [
+                        "Prefix",
+                        "Exact",
+                        "ImplementationSpecific"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "tls": {
+          "description": "TLS configuration for ingress",
+          "items": {
+            "description": "TlsConfig defines the tls configuration",
+            "properties": {
+              "hosts": {
+                "description": "Hosts covered by this certificate",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "secretName": {
+                "description": "Secret name containing TLS certificate",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "livenessProbe": {
+      "description": "# Liveness probe configuration",
+      "properties": {
+        "failureThreshold": {
+          "description": "Failure threshold for liveness probe",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "httpGet": {
+          "description": "HTTP GET liveness probe",
+          "properties": {
+            "path": {
+              "description": "Path to probe",
+              "type": "string"
+            },
+            "port": {
+              "description": "Port to probe",
+              "maximum": 65535,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "initialDelaySeconds": {
+          "description": "Initial delay before liveness probe",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "periodSeconds": {
+          "description": "Period between liveness probes",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "successThreshold": {
+          "description": "Success threshold for liveness probe",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "description": "Timeout for liveness probe",
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "monitoring": {
+      "description": "# Monitoring configuration",
+      "properties": {
+        "enabled": {
+          "description": "Enable Prometheus monitoring",
+          "type": "boolean"
+        },
+        "serviceMonitor": {
+          "description": "ServiceMonitor configuration",
+          "properties": {
+            "enabled": {
+              "description": "Enable ServiceMonitor resource",
+              "type": "boolean"
+            },
+            "interval": {
+              "description": "ServiceMonitor interval",
+              "type": "string"
+            },
+            "labels": {
+              "description": "ServiceMonitor labels",
+              "properties": {
+                "prometheus": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "nodeSelector": {
+      "description": "# Node selector for pod assignment",
+      "properties": {
+        "kubernetes.io/arch": {
+          "type": "string"
+        },
+        "node-role": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "podAnnotations": {
+      "description": "# Pod annotations",
+      "properties": {
+        "prometheus.io/path": {
+          "type": "string"
+        },
+        "prometheus.io/port": {
+          "type": "string"
+        },
+        "prometheus.io/scrape": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "podLabels": {
+      "description": "# Pod labels",
+      "properties": {
+        "app": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "readinessProbe": {
+      "description": "# Readiness probe configuration",
+      "properties": {
+        "failureThreshold": {
+          "description": "Failure threshold for readiness probe",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "httpGet": {
+          "description": "HTTP GET readiness probe",
+          "properties": {
+            "path": {
+              "description": "Path to probe",
+              "type": "string"
+            },
+            "port": {
+              "description": "Port to probe",
+              "maximum": 65535,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "initialDelaySeconds": {
+          "description": "Initial delay before readiness probe",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "periodSeconds": {
+          "description": "Period between readiness probes",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "successThreshold": {
+          "description": "Success threshold for readiness probe",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "description": "Timeout for readiness probe",
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "replicas": {
+      "description": "Number of replicas to deploy",
+      "maximum": 100,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "resources": {
+      "description": "# Resource limits and requests",
+      "properties": {
+        "limits": {
+          "description": "Resource limits",
+          "properties": {
+            "cpu": {
+              "description": "CPU limit",
+              "type": "string"
+            },
+            "memory": {
+              "description": "Memory limit",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "requests": {
+          "description": "Resource requests",
+          "properties": {
+            "cpu": {
+              "description": "CPU request",
+              "type": "string"
+            },
+            "memory": {
+              "description": "Memory request",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "securityContext": {
+      "description": "# Security context",
+      "properties": {
+        "capabilities": {
+          "description": "Drop all capabilities and add only required ones",
+          "properties": {
+            "add": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "drop": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "fsGroup": {
+          "description": "FSGroup for volume ownership",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "runAsGroup": {
+          "description": "Group ID to run as",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "runAsNonRoot": {
+          "description": "Run as non-root user",
+          "type": "boolean"
+        },
+        "runAsUser": {
+          "description": "User ID to run as",
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "service": {
+      "description": "# Service configuration",
+      "properties": {
+        "annotations": {
+          "description": "Service annotations (e.g., for cloud load balancers)",
+          "properties": {
+            "service.beta.kubernetes.io/aws-load-balancer-type": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "labels": {
+          "description": "Service labels",
+          "properties": {
+            "monitoring": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "port": {
+          "description": "Service port",
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "type": {
+          "description": "Kubernetes service type",
+          "enum": [
+            "ClusterIP",
+            "NodePort",
+            "LoadBalancer",
+            "ExternalName"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "serviceAccount": {
+      "description": "# ServiceAccount configuration",
+      "properties": {
+        "annotations": {
+          "description": "Service account annotations",
+          "properties": {
+            "eks.amazonaws.com/role-arn": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "create": {
+          "description": "Create a service account",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "Service account name (leave empty to generate)",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "tolerations": {
+      "description": "# Tolerations for pod assignment",
+      "items": {
+        "description": "TolerationsConfig defines the tolerations configuration",
+        "properties": {
+          "effect": {
+            "description": "Toleration effect",
+            "enum": [
+              "NoSchedule",
+              "PreferNoSchedule",
+              "NoExecute"
+            ],
+            "type": "string"
+          },
+          "key": {
+            "description": "Toleration key",
+            "type": "string"
+          },
+          "operator": {
+            "description": "Toleration operator",
+            "enum": [
+              "Exists",
+              "Equal"
+            ],
+            "type": "string"
+          },
+          "tolerationSeconds": {
+            "description": "Toleration duration in seconds",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "volumeMounts": {
+      "description": "# Volume mounts",
+      "items": {
+        "description": "VolumeMountsConfig defines the volume mounts configuration",
+        "properties": {
+          "mountPath": {
+            "description": "Mount path in container",
+            "type": "string"
+          },
+          "name": {
+            "description": "Mount name",
+            "type": "string"
+          },
+          "readOnly": {
+            "description": "Mount as read-only",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "volumes": {
+      "description": "# Volumes",
+      "items": {
+        "description": "VolumesConfig defines the volumes configuration",
+        "properties": {
+          "configMap": {
+            "description": "ConfigMap volume source",
+            "properties": {
+              "name": {
+                "description": "ConfigMap name",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "name": {
+            "description": "Volume name",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "type": "object"
+}
