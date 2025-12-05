@@ -81,6 +81,17 @@ func convertToJSONSchema(openAPISchema *apiextensionsv1.JSONSchemaProps) (map[st
 	// Remove Kubernetes-specific extensions if present
 	removeKubernetesExtensions(schema)
 
+	// Add title and additionalProperties to all objects (including root)
+	// First handle root level
+	if typeVal, ok := schema["type"].(string); ok && typeVal == "object" {
+		if _, exists := schema["additionalProperties"]; !exists {
+			schema["additionalProperties"] = false
+		}
+	}
+
+	// Then enhance nested properties
+	enhanceSchemaForHelm(schema, "")
+
 	return schema, nil
 }
 
@@ -102,6 +113,63 @@ func removeKubernetesExtensions(obj interface{}) {
 		// Recurse into arrays
 		for _, item := range v {
 			removeKubernetesExtensions(item)
+		}
+	}
+}
+
+// enhanceSchemaForHelm adds title and additionalProperties fields to match helm-schema output
+func enhanceSchemaForHelm(obj interface{}, propertyName string) {
+	switch v := obj.(type) {
+	case map[string]interface{}:
+		setAdditionalPropertiesIfNeeded(v)
+		setTitleIfNeeded(v, propertyName)
+		recurseIntoNestedSchemas(v)
+	case []interface{}:
+		for _, item := range v {
+			enhanceSchemaForHelm(item, "")
+		}
+	}
+}
+
+// setAdditionalPropertiesIfNeeded sets additionalProperties: false for objects
+func setAdditionalPropertiesIfNeeded(v map[string]interface{}) {
+	if typeVal, ok := v["type"].(string); ok && typeVal == "object" {
+		if _, exists := v["additionalProperties"]; !exists {
+			v["additionalProperties"] = false
+		}
+	}
+}
+
+// setTitleIfNeeded adds title field if property name is provided
+func setTitleIfNeeded(v map[string]interface{}, propertyName string) {
+	if propertyName != "" {
+		if _, exists := v["title"]; !exists {
+			v["title"] = propertyName
+		}
+	}
+}
+
+// recurseIntoNestedSchemas recursively processes nested schemas
+func recurseIntoNestedSchemas(v map[string]interface{}) {
+	// Recurse into properties
+	if properties, ok := v["properties"].(map[string]interface{}); ok {
+		for propName, propValue := range properties {
+			enhanceSchemaForHelm(propValue, propName)
+		}
+	}
+
+	// Recurse into items (for arrays)
+	if items, ok := v["items"]; ok {
+		enhanceSchemaForHelm(items, "")
+	}
+
+	// Recurse into other nested objects
+	for key, value := range v {
+		if key != "properties" && key != "items" {
+			switch value.(type) {
+			case map[string]interface{}, []interface{}:
+				enhanceSchemaForHelm(value, "")
+			}
 		}
 	}
 }

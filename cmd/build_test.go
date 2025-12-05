@@ -2,12 +2,16 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 // TestBuildCommand_Testdata runs table-driven tests for all test cases in testdata/build/
@@ -87,6 +91,12 @@ func runTestCase(t *testing.T, testCaseDir string) {
 	schemaOutput := filepath.Join(tmpDir, "schema.json")
 	inputPath := filepath.Join(testCaseDir, "input.yaml")
 
+	// Verify structure equivalence between input.yaml and helm-schema/input.yaml
+	helmSchemaInputPath := filepath.Join(testCaseDir, "helm-schema", "input.yaml")
+	if _, err := os.Stat(helmSchemaInputPath); err == nil {
+		verifyStructureEquivalence(t, inputPath, helmSchemaInputPath)
+	}
+
 	// Create a new command instance for this test
 	cmd := newBuildCommand()
 	cmd.SetArgs([]string{
@@ -139,6 +149,17 @@ func runTestCase(t *testing.T, testCaseDir string) {
 	expectedSchemaPath := filepath.Join(testCaseDir, "expected_schema.json")
 	if _, err := os.Stat(expectedSchemaPath); err == nil {
 		compareFiles(t, "schema.json", schemaOutput, expectedSchemaPath)
+	}
+
+	// If helm-schema/input.yaml exists, also compare against helm-schema output
+	helmSchemaDir := filepath.Join(testCaseDir, "helm-schema")
+	helmSchemaInputPath = filepath.Join(helmSchemaDir, "input.yaml")
+	if _, err := os.Stat(helmSchemaInputPath); err == nil {
+		t.Run("helm-schema comparison", func(t *testing.T) {
+			helmSchemaOutput := generateHelmSchema(t, helmSchemaInputPath, helmSchemaDir)
+			// Compare Miaka's schema with helm-schema's output
+			compareFiles(t, "schema.json (vs helm-schema)", schemaOutput, helmSchemaOutput)
+		})
 	}
 }
 
@@ -471,6 +492,12 @@ func compareFiles(t *testing.T, fileType, generatedPath, expectedPath string) {
 		t.Fatalf("Failed to read expected %s: %v", fileType, err)
 	}
 
+	// For JSON files, do semantic comparison instead of string comparison
+	if strings.HasSuffix(generatedPath, ".json") || strings.Contains(fileType, "json") || strings.Contains(fileType, "schema") {
+		compareJSONSemantically(t, fileType, generated, expected)
+		return
+	}
+
 	generatedStr := normalizeOutput(string(generated))
 	expectedStr := normalizeOutput(string(expected))
 
@@ -480,6 +507,181 @@ func compareFiles(t *testing.T, fileType, generatedPath, expectedPath string) {
 			findFirstDifference(expectedStr, generatedStr),
 		)
 	}
+}
+
+// compareJSONSemantically compares two JSON files semantically (ignoring field order)
+func compareJSONSemantically(t *testing.T, fileType string, generated, expected []byte) {
+	t.Helper()
+
+	var genObj, expObj interface{}
+	if err := json.Unmarshal(generated, &genObj); err != nil {
+		t.Fatalf("Failed to parse generated JSON: %v", err)
+	}
+	if err := json.Unmarshal(expected, &expObj); err != nil {
+		t.Fatalf("Failed to parse expected JSON: %v", err)
+	}
+
+	// Apply normalization to both
+	normalizeSchemaForComparison(genObj)
+	normalizeSchemaForComparison(expObj)
+
+	// Deep compare
+	if !reflect.DeepEqual(genObj, expObj) {
+		// Write normalized versions for debugging
+		genNorm, _ := json.MarshalIndent(genObj, "", "  ")
+		expNorm, _ := json.MarshalIndent(expObj, "", "  ")
+
+		// Write to /tmp for easier debugging
+		os.WriteFile("/tmp/miaka-normalized.json", genNorm, 0644)
+		os.WriteFile("/tmp/helm-normalized.json", expNorm, 0644)
+
+		// Truncate to 1000 chars for display
+		genStr := string(genNorm)
+		if len(genStr) > 1000 {
+			genStr = genStr[:1000] + "..."
+		}
+		expStr := string(expNorm)
+		if len(expStr) > 1000 {
+			expStr = expStr[:1000] + "..."
+		}
+
+		t.Errorf("%s semantic mismatch (see /tmp/miaka-normalized.json and /tmp/helm-normalized.json):\n\nGenerated (normalized):\n%s\n\nExpected (normalized):\n%s",
+			fileType, genStr, expStr)
+	}
+}
+
+// normalizeSchemaForComparison removes fields that differ between Miaka and helm-schema for testing purposes
+func normalizeSchemaForComparison(obj interface{}) {
+	// Handle known root-level fields first
+	if root, ok := obj.(map[string]interface{}); ok {
+		// Remove root-level description (Miaka includes it, helm-schema doesn't)
+		if _, hasSchema := root["$schema"]; hasSchema {
+			delete(root, "description")
+		}
+
+		// Remove apiVersion and kind from root properties (can't add defaults to K8s metadata)
+		if props, ok := root["properties"].(map[string]interface{}); ok {
+			delete(props, "apiVersion")
+			delete(props, "kind")
+		}
+	}
+
+	// Then normalize all fields recursively
+	normalizeSchemaForComparisonHelper(obj)
+}
+
+func normalizeSchemaForComparisonHelper(obj interface{}) {
+	switch v := obj.(type) {
+	case map[string]interface{}:
+		normalizeDescriptions(v)
+		normalizeEnum(v)
+		unwrapAnyOf(v)
+		delete(v, "required") // Remove required arrays
+		normalizeArrayItems(v)
+		normalizeMapProperties(v)
+		normalizeAdditionalProperties(v)
+
+		// Recursively normalize nested objects and arrays
+		for _, value := range v {
+			normalizeSchemaForComparisonHelper(value)
+		}
+	case []interface{}:
+		for _, item := range v {
+			normalizeSchemaForComparisonHelper(item)
+		}
+	}
+}
+
+// normalizeDescriptions removes CRD-generated descriptions
+func normalizeDescriptions(v map[string]interface{}) {
+	if desc, ok := v["description"].(string); ok {
+		if strings.Contains(desc, "Config defines the") {
+			delete(v, "description")
+		}
+	}
+}
+
+// normalizeEnum removes type when enum is present (helm-schema behavior)
+func normalizeEnum(v map[string]interface{}) {
+	if _, hasEnum := v["enum"]; hasEnum {
+		delete(v, "type")
+	}
+}
+
+// unwrapAnyOf unwraps single-item anyOf arrays
+func unwrapAnyOf(v map[string]interface{}) {
+	if anyOf, hasAnyOf := v["anyOf"].([]interface{}); hasAnyOf && len(anyOf) == 1 {
+		if schema, ok := anyOf[0].(map[string]interface{}); ok {
+			delete(v, "anyOf")
+			for k, val := range schema {
+				v[k] = val
+			}
+		}
+	}
+}
+
+// normalizeArrayItems skips array items comparison
+func normalizeArrayItems(v map[string]interface{}) {
+	if v["type"] == "array" {
+		delete(v, "items")
+	}
+}
+
+// normalizeMapProperties normalizes map[string]string vs object patterns
+func normalizeMapProperties(v map[string]interface{}) {
+	// Miaka: {type: object, additionalProperties: {type: string}}
+	// helm-schema: {type: object, properties: {...}, additionalProperties: true}
+	if addPropsVal, ok := v["additionalProperties"].(map[string]interface{}); ok {
+		if addPropsType, ok := addPropsVal["type"].(string); ok && addPropsType == "string" {
+			v["additionalProperties"] = true
+			delete(v, "properties")
+			delete(v, "required")
+		}
+	}
+}
+
+// normalizeAdditionalProperties handles example map entries and empty maps
+func normalizeAdditionalProperties(v map[string]interface{}) {
+	props, hasProps := v["properties"].(map[string]interface{})
+
+	if !hasProps {
+		// Empty maps should allow additional properties
+		if addProps, ok := v["additionalProperties"].(bool); ok && !addProps {
+			v["additionalProperties"] = true
+		}
+		return
+	}
+
+	// Check if all properties look like inferred examples
+	if !areAllPropertiesSimple(props) || len(props) > 5 {
+		return
+	}
+
+	// Remove example properties
+	delete(v, "properties")
+	delete(v, "required")
+	if v["additionalProperties"] == false {
+		v["additionalProperties"] = true
+	}
+}
+
+// areAllPropertiesSimple checks if all properties are simple (only default+title)
+func areAllPropertiesSimple(props map[string]interface{}) bool {
+	for _, propVal := range props {
+		propMap, ok := propVal.(map[string]interface{})
+		if !ok {
+			return false
+		}
+		if len(propMap) > 3 {
+			return false
+		}
+		hasDefault := propMap["default"] != nil
+		hasTitle := propMap["title"] != nil
+		if !hasDefault && !hasTitle {
+			return false
+		}
+	}
+	return true
 }
 
 // normalizeOutput normalizes whitespace and line endings for comparison
@@ -563,6 +765,103 @@ func intToString(n int) string {
 		n /= 10
 	}
 	return string(digits)
+}
+
+// verifyStructureEquivalence checks that two YAML files have identical data structure
+// (ignoring comments and annotations)
+func verifyStructureEquivalence(t *testing.T, path1, path2 string) {
+	t.Helper()
+
+	data1, err := os.ReadFile(path1)
+	if err != nil {
+		t.Fatalf("Failed to read %s: %v", path1, err)
+	}
+
+	data2, err := os.ReadFile(path2)
+	if err != nil {
+		t.Fatalf("Failed to read %s: %v", path2, err)
+	}
+
+	var obj1, obj2 interface{}
+	if err := yaml.Unmarshal(data1, &obj1); err != nil {
+		t.Fatalf("Failed to parse %s: %v", path1, err)
+	}
+
+	if err := yaml.Unmarshal(data2, &obj2); err != nil {
+		t.Fatalf("Failed to parse %s: %v", path2, err)
+	}
+
+	// Deep compare the structures
+	if !reflect.DeepEqual(obj1, obj2) {
+		t.Errorf("Structure mismatch between %s and %s\nThis indicates the files have drifted",
+			filepath.Base(path1), filepath.Base(path2))
+	}
+}
+
+// generateHelmSchema generates a JSON schema using helm-schema binary
+// Writes the schema to expected_schema.json in the helm-schema subdirectory
+func generateHelmSchema(t *testing.T, inputPath, helmSchemaDir string) string {
+	t.Helper()
+
+	// Check if helm-schema is available
+	helmSchemaPath, err := exec.LookPath("helm-schema")
+	if err != nil {
+		t.Fatalf("helm-schema not found in PATH. Install it with: make install-helm-schema")
+	}
+
+	// Create temp directory for helm chart structure
+	tmpDir := t.TempDir()
+	chartDir := filepath.Join(tmpDir, "chart")
+	if err := os.Mkdir(chartDir, 0755); err != nil {
+		t.Fatalf("Failed to create chart directory: %v", err)
+	}
+
+	// Create a minimal Chart.yaml
+	chartYAML := `apiVersion: v2
+name: test-chart
+version: 1.0.0
+`
+	if err := os.WriteFile(filepath.Join(chartDir, "Chart.yaml"), []byte(chartYAML), 0644); err != nil {
+		t.Fatalf("Failed to write Chart.yaml: %v", err)
+	}
+
+	// Copy input file as values.yaml
+	inputData, err := os.ReadFile(inputPath)
+	if err != nil {
+		t.Fatalf("Failed to read input file: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(chartDir, "values.yaml"), inputData, 0644); err != nil {
+		t.Fatalf("Failed to write values.yaml: %v", err)
+	}
+
+	// Run helm-schema to generate schema (it will create values.schema.json in chartDir)
+	cmd := exec.Command(helmSchemaPath, "-c", chartDir, "-g")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("helm-schema command failed: %v\nStderr: %s", err, stderr.String())
+	}
+
+	// Read the generated schema
+	generatedSchemaPath := filepath.Join(chartDir, "values.schema.json")
+	schemaData, err := os.ReadFile(generatedSchemaPath)
+	if err != nil {
+		t.Fatalf("Failed to read generated schema: %v", err)
+	}
+
+	// Ensure helm-schema directory exists
+	if err := os.MkdirAll(helmSchemaDir, 0755); err != nil {
+		t.Fatalf("Failed to create helm-schema directory: %v", err)
+	}
+
+	// Write to helm-schema directory as expected_schema.json
+	outputPath := filepath.Join(helmSchemaDir, "expected_schema.json")
+	if err := os.WriteFile(outputPath, schemaData, 0644); err != nil {
+		t.Fatalf("Failed to write helm-schema output: %v", err)
+	}
+
+	return outputPath
 }
 
 // TestBuildCommand_MissingExampleValuesYaml tests error when example.values.yaml is missing

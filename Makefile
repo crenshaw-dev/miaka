@@ -1,4 +1,4 @@
-.PHONY: build test lint lint-fix release
+.PHONY: build test lint lint-fix release install-helm-schema
 
 # Version information (for local builds, not used for releases)
 BUILD_VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -51,3 +51,10 @@ endif
 	git tag -a $(VERSION) -m "Release $(VERSION)"
 	git push origin $(VERSION)
 	@echo "✓ Tag $(VERSION) pushed. Check GitHub Actions for build progress."
+
+# Install helm-schema for testing
+install-helm-schema:
+	@echo "Installing helm-schema..."
+	@which helm-schema > /dev/null 2>&1 && echo "✓ helm-schema is already installed" && exit 0; \
+	go install github.com/dadav/helm-schema/cmd/helm-schema@latest && \
+	echo "✓ helm-schema installed successfully"

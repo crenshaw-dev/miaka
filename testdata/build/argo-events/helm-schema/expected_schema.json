@@ -1,0 +1,2535 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "default": "argoproj.io/v1alpha1",
+      "title": "apiVersion",
+      "type": "string"
+    },
+    "configs": {
+      "additionalProperties": false,
+      "description": "# Event bus configuration",
+      "properties": {
+        "jetstream": {
+          "additionalProperties": false,
+          "description": "# JetStream event bus",
+          "properties": {
+            "settings": {
+              "additionalProperties": false,
+              "description": "Default JetStream settings, could be overridden by EventBus JetStream spec\nRef: https://docs.nats.io/running-a-nats-service/configuration#jetstream",
+              "properties": {
+                "maxFileStore": {
+                  "default": -1,
+                  "description": "Maximum size of the file storage (e.g. 20G)",
+                  "title": "maxFileStore",
+                  "type": "integer"
+                },
+                "maxMemoryStore": {
+                  "default": -1,
+                  "description": "Maximum size of the memory storage (e.g. 1G)",
+                  "title": "maxMemoryStore",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "maxMemoryStore",
+                "maxFileStore"
+              ],
+              "title": "settings",
+              "type": "object"
+            },
+            "streamConfig": {
+              "additionalProperties": false,
+              "properties": {
+                "discard": {
+                  "default": 0,
+                  "description": "0: DiscardOld, 1: DiscardNew",
+                  "title": "discard",
+                  "type": "integer"
+                },
+                "duplicates": {
+                  "default": "300s",
+                  "description": "Not documented at the moment",
+                  "title": "duplicates",
+                  "type": "string"
+                },
+                "maxAge": {
+                  "default": "72h",
+                  "description": "Maximum age of existing messages, i.e. \"72h\", \"4h35m\"",
+                  "title": "maxAge",
+                  "type": "string"
+                },
+                "maxBytes": {
+                  "default": "1GB",
+                  "description": "Total size of messages before expiring oldest message, 0 means unlimited.",
+                  "title": "maxBytes",
+                  "type": "string"
+                },
+                "maxMsgs": {
+                  "default": 1000000,
+                  "description": "Maximum number of messages before expiring oldest message",
+                  "title": "maxMsgs",
+                  "type": "integer"
+                },
+                "replicas": {
+                  "default": 3,
+                  "description": "Number of replicas, defaults to 3 and requires minimal 3",
+                  "title": "replicas",
+                  "type": "integer"
+                },
+                "retention": {
+                  "default": 0,
+                  "description": "0: Limits, 1: Interest, 2: WorkQueue",
+                  "title": "retention",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "maxMsgs",
+                "maxAge",
+                "maxBytes",
+                "replicas",
+                "duplicates",
+                "retention",
+                "discard"
+              ],
+              "title": "streamConfig",
+              "type": "object"
+            },
+            "versions": {
+              "description": "Supported versions of JetStream eventbus",
+              "items": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "configReloaderImage": {
+                        "default": "natsio/nats-server-config-reloader:0.14.0",
+                        "title": "configReloaderImage",
+                        "type": "string"
+                      },
+                      "metricsExporterImage": {
+                        "default": "natsio/prometheus-nats-exporter:0.14.0",
+                        "title": "metricsExporterImage",
+                        "type": "string"
+                      },
+                      "natsImage": {
+                        "default": "nats:2.10.10",
+                        "title": "natsImage",
+                        "type": "string"
+                      },
+                      "startCommand": {
+                        "default": "/nats-server",
+                        "title": "startCommand",
+                        "type": "string"
+                      },
+                      "version": {
+                        "default": "latest",
+                        "title": "version",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "natsImage",
+                      "metricsExporterImage",
+                      "configReloaderImage",
+                      "startCommand"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "configReloaderImage": {
+                        "default": "natsio/nats-server-config-reloader:0.7.0",
+                        "title": "configReloaderImage",
+                        "type": "string"
+                      },
+                      "metricsExporterImage": {
+                        "default": "natsio/prometheus-nats-exporter:0.9.1",
+                        "title": "metricsExporterImage",
+                        "type": "string"
+                      },
+                      "natsImage": {
+                        "default": "nats:2.8.1",
+                        "title": "natsImage",
+                        "type": "string"
+                      },
+                      "startCommand": {
+                        "default": "/nats-server",
+                        "title": "startCommand",
+                        "type": "string"
+                      },
+                      "version": {
+                        "default": "2.8.1",
+                        "title": "version",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "natsImage",
+                      "metricsExporterImage",
+                      "configReloaderImage",
+                      "startCommand"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "configReloaderImage": {
+                        "default": "natsio/nats-server-config-reloader:0.7.0",
+                        "title": "configReloaderImage",
+                        "type": "string"
+                      },
+                      "metricsExporterImage": {
+                        "default": "natsio/prometheus-nats-exporter:0.9.1",
+                        "title": "metricsExporterImage",
+                        "type": "string"
+                      },
+                      "natsImage": {
+                        "default": "nats:2.8.1-alpine",
+                        "title": "natsImage",
+                        "type": "string"
+                      },
+                      "startCommand": {
+                        "default": "nats-server",
+                        "title": "startCommand",
+                        "type": "string"
+                      },
+                      "version": {
+                        "default": "2.8.1-alpine",
+                        "title": "version",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "natsImage",
+                      "metricsExporterImage",
+                      "configReloaderImage",
+                      "startCommand"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "configReloaderImage": {
+                        "default": "natsio/nats-server-config-reloader:0.7.0",
+                        "title": "configReloaderImage",
+                        "type": "string"
+                      },
+                      "metricsExporterImage": {
+                        "default": "natsio/prometheus-nats-exporter:0.9.1",
+                        "title": "metricsExporterImage",
+                        "type": "string"
+                      },
+                      "natsImage": {
+                        "default": "nats:2.8.2",
+                        "title": "natsImage",
+                        "type": "string"
+                      },
+                      "startCommand": {
+                        "default": "/nats-server",
+                        "title": "startCommand",
+                        "type": "string"
+                      },
+                      "version": {
+                        "default": "2.8.2",
+                        "title": "version",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "natsImage",
+                      "metricsExporterImage",
+                      "configReloaderImage",
+                      "startCommand"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "configReloaderImage": {
+                        "default": "natsio/nats-server-config-reloader:0.7.0",
+                        "title": "configReloaderImage",
+                        "type": "string"
+                      },
+                      "metricsExporterImage": {
+                        "default": "natsio/prometheus-nats-exporter:0.9.1",
+                        "title": "metricsExporterImage",
+                        "type": "string"
+                      },
+                      "natsImage": {
+                        "default": "nats:2.8.2-alpine",
+                        "title": "natsImage",
+                        "type": "string"
+                      },
+                      "startCommand": {
+                        "default": "nats-server",
+                        "title": "startCommand",
+                        "type": "string"
+                      },
+                      "version": {
+                        "default": "2.8.2-alpine",
+                        "title": "version",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "natsImage",
+                      "metricsExporterImage",
+                      "configReloaderImage",
+                      "startCommand"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "configReloaderImage": {
+                        "default": "natsio/nats-server-config-reloader:0.7.0",
+                        "title": "configReloaderImage",
+                        "type": "string"
+                      },
+                      "metricsExporterImage": {
+                        "default": "natsio/prometheus-nats-exporter:0.9.1",
+                        "title": "metricsExporterImage",
+                        "type": "string"
+                      },
+                      "natsImage": {
+                        "default": "nats:2.9.1",
+                        "title": "natsImage",
+                        "type": "string"
+                      },
+                      "startCommand": {
+                        "default": "/nats-server",
+                        "title": "startCommand",
+                        "type": "string"
+                      },
+                      "version": {
+                        "default": "2.9.1",
+                        "title": "version",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "natsImage",
+                      "metricsExporterImage",
+                      "configReloaderImage",
+                      "startCommand"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "configReloaderImage": {
+                        "default": "natsio/nats-server-config-reloader:0.7.0",
+                        "title": "configReloaderImage",
+                        "type": "string"
+                      },
+                      "metricsExporterImage": {
+                        "default": "natsio/prometheus-nats-exporter:0.9.1",
+                        "title": "metricsExporterImage",
+                        "type": "string"
+                      },
+                      "natsImage": {
+                        "default": "nats:2.9.12",
+                        "title": "natsImage",
+                        "type": "string"
+                      },
+                      "startCommand": {
+                        "default": "/nats-server",
+                        "title": "startCommand",
+                        "type": "string"
+                      },
+                      "version": {
+                        "default": "2.9.12",
+                        "title": "version",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "natsImage",
+                      "metricsExporterImage",
+                      "configReloaderImage",
+                      "startCommand"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "configReloaderImage": {
+                        "default": "natsio/nats-server-config-reloader:0.7.0",
+                        "title": "configReloaderImage",
+                        "type": "string"
+                      },
+                      "metricsExporterImage": {
+                        "default": "natsio/prometheus-nats-exporter:0.9.1",
+                        "title": "metricsExporterImage",
+                        "type": "string"
+                      },
+                      "natsImage": {
+                        "default": "nats:2.9.16",
+                        "title": "natsImage",
+                        "type": "string"
+                      },
+                      "startCommand": {
+                        "default": "/nats-server",
+                        "title": "startCommand",
+                        "type": "string"
+                      },
+                      "version": {
+                        "default": "2.9.16",
+                        "title": "version",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "natsImage",
+                      "metricsExporterImage",
+                      "configReloaderImage",
+                      "startCommand"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "configReloaderImage": {
+                        "default": "natsio/nats-server-config-reloader:0.14.0",
+                        "title": "configReloaderImage",
+                        "type": "string"
+                      },
+                      "metricsExporterImage": {
+                        "default": "natsio/prometheus-nats-exporter:0.14.0",
+                        "title": "metricsExporterImage",
+                        "type": "string"
+                      },
+                      "natsImage": {
+                        "default": "nats:2.10.10",
+                        "title": "natsImage",
+                        "type": "string"
+                      },
+                      "startCommand": {
+                        "default": "/nats-server",
+                        "title": "startCommand",
+                        "type": "string"
+                      },
+                      "version": {
+                        "default": "2.10.10",
+                        "title": "version",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "natsImage",
+                      "metricsExporterImage",
+                      "configReloaderImage",
+                      "startCommand"
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "required": []
+              },
+              "title": "versions",
+              "type": "array"
+            }
+          },
+          "required": [
+            "settings",
+            "streamConfig",
+            "versions"
+          ],
+          "title": "jetstream",
+          "type": "object"
+        },
+        "nats": {
+          "additionalProperties": false,
+          "description": "# NATS event bus",
+          "properties": {
+            "versions": {
+              "description": "Supported versions of NATS event bus",
+              "items": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "metricsExporterImage": {
+                        "default": "natsio/prometheus-nats-exporter:latest",
+                        "title": "metricsExporterImage",
+                        "type": "string"
+                      },
+                      "natsStreamingImage": {
+                        "default": "nats-streaming:latest",
+                        "title": "natsStreamingImage",
+                        "type": "string"
+                      },
+                      "version": {
+                        "default": "latest",
+                        "title": "version",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "natsStreamingImage",
+                      "metricsExporterImage"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "metricsExporterImage": {
+                        "default": "natsio/prometheus-nats-exporter:0.8.0",
+                        "title": "metricsExporterImage",
+                        "type": "string"
+                      },
+                      "natsStreamingImage": {
+                        "default": "nats-streaming:0.22.1",
+                        "title": "natsStreamingImage",
+                        "type": "string"
+                      },
+                      "version": {
+                        "default": "0.22.1",
+                        "title": "version",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "version",
+                      "natsStreamingImage",
+                      "metricsExporterImage"
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "required": []
+              },
+              "title": "versions",
+              "type": "array"
+            }
+          },
+          "required": [
+            "versions"
+          ],
+          "title": "nats",
+          "type": "object"
+        }
+      },
+      "required": [
+        "nats",
+        "jetstream"
+      ],
+      "title": "configs",
+      "type": "object"
+    },
+    "controller": {
+      "additionalProperties": false,
+      "description": "# Argo Events controller",
+      "properties": {
+        "affinity": {
+          "additionalProperties": false,
+          "description": "Assign custom [affinity] rules to the deployment",
+          "properties": {
+            "nodeAffinity": {
+              "additionalProperties": false,
+              "properties": {
+                "required": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "nodeSelectorTerm": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "matchExpressions": {
+                          "items": {
+                            "anyOf": [
+                              {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "key": {
+                                    "default": "kubernetes.io/arch",
+                                    "title": "key",
+                                    "type": "string"
+                                  },
+                                  "nodeSelectorTerm": {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "matchExpressions": {
+                                        "items": {
+                                          "anyOf": [
+                                            {
+                                              "additionalProperties": false,
+                                              "properties": {
+                                                "key": {
+                                                  "default": "kubernetes.io/arch",
+                                                  "title": "key",
+                                                  "type": "string"
+                                                },
+                                                "operator": {
+                                                  "default": "Equal",
+                                                  "title": "operator",
+                                                  "type": "string"
+                                                },
+                                                "values": {
+                                                  "items": {
+                                                    "anyOf": [
+                                                      {
+                                                        "type": "string"
+                                                      }
+                                                    ],
+                                                    "required": []
+                                                  },
+                                                  "title": "values",
+                                                  "type": "array"
+                                                }
+                                              },
+                                              "required": [
+                                                "key",
+                                                "operator",
+                                                "values"
+                                              ],
+                                              "type": "object"
+                                            }
+                                          ],
+                                          "required": []
+                                        },
+                                        "title": "matchExpressions",
+                                        "type": "array"
+                                      }
+                                    },
+                                    "required": [
+                                      "matchExpressions"
+                                    ],
+                                    "title": "nodeSelectorTerm",
+                                    "type": "object"
+                                  },
+                                  "operator": {
+                                    "default": "Equal",
+                                    "title": "operator",
+                                    "type": "string"
+                                  },
+                                  "values": {
+                                    "items": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string"
+                                        }
+                                      ],
+                                      "required": []
+                                    },
+                                    "title": "values",
+                                    "type": "array"
+                                  }
+                                },
+                                "required": [
+                                  "key",
+                                  "operator",
+                                  "values",
+                                  "nodeSelectorTerm"
+                                ],
+                                "type": "object"
+                              }
+                            ],
+                            "required": []
+                          },
+                          "title": "matchExpressions",
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "matchExpressions"
+                      ],
+                      "title": "nodeSelectorTerm",
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "nodeSelectorTerm"
+                  ],
+                  "title": "required",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "required"
+              ],
+              "title": "nodeAffinity",
+              "type": "object"
+            }
+          },
+          "required": [
+            "nodeAffinity"
+          ],
+          "title": "affinity",
+          "type": "object"
+        },
+        "containerSecurityContext": {
+          "additionalProperties": false,
+          "description": "Events controller container-level security context",
+          "properties": {
+            "capabilities": {
+              "additionalProperties": false,
+              "properties": {
+                "drop": {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "required": []
+                  },
+                  "title": "drop",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "drop"
+              ],
+              "title": "capabilities",
+              "type": "object"
+            },
+            "readOnlyRootFilesystem": {
+              "default": true,
+              "title": "readOnlyRootFilesystem",
+              "type": "boolean"
+            },
+            "runAsNonRoot": {
+              "default": true,
+              "title": "runAsNonRoot",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "capabilities"
+          ],
+          "title": "containerSecurityContext",
+          "type": "object"
+        },
+        "env": {
+          "description": "Environment variables to pass to events controller",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "DEBUG_LOG",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "value": {
+                    "default": "true",
+                    "title": "value",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "value"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "env",
+          "type": "array"
+        },
+        "envFrom": {
+          "description": "envFrom to pass to events controller",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "configMapRef": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "default": "config-map-name",
+                        "title": "name",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "title": "configMapRef",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "configMapRef"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "secretRef": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "default": "secret-name",
+                        "title": "name",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "title": "secretRef",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "secretRef"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "envFrom",
+          "type": "array"
+        },
+        "image": {
+          "additionalProperties": false,
+          "properties": {
+            "imagePullPolicy": {
+              "default": "",
+              "description": "Image pull policy for the events controller",
+              "title": "imagePullPolicy",
+              "type": "string"
+            },
+            "repository": {
+              "default": "",
+              "description": "Repository to use for the events controller",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "",
+              "description": "Tag to use for the events controller",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "tag",
+            "imagePullPolicy"
+          ],
+          "title": "image",
+          "type": "object"
+        },
+        "livenessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "failureThreshold": {
+              "default": 3,
+              "description": "Minimum consecutive failures for the [probe] to be considered failed after having succeeded",
+              "title": "failureThreshold",
+              "type": "integer"
+            },
+            "initialDelaySeconds": {
+              "default": 10,
+              "description": "Number of seconds after the container has started before [probe] is initiated",
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            },
+            "periodSeconds": {
+              "default": 10,
+              "description": "How often (in seconds) to perform the [probe]",
+              "title": "periodSeconds",
+              "type": "integer"
+            },
+            "successThreshold": {
+              "default": 1,
+              "description": "Minimum consecutive successes for the [probe] to be considered successful after having failed",
+              "title": "successThreshold",
+              "type": "integer"
+            },
+            "timeoutSeconds": {
+              "default": 1,
+              "description": "Number of seconds after which the [probe] times out",
+              "title": "timeoutSeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "failureThreshold",
+            "initialDelaySeconds",
+            "periodSeconds",
+            "successThreshold",
+            "timeoutSeconds"
+          ],
+          "title": "livenessProbe",
+          "type": "object"
+        },
+        "metrics": {
+          "additionalProperties": false,
+          "description": "# Events controller metrics configuration",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "Deploy metrics service",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "service": {
+              "additionalProperties": false,
+              "properties": {
+                "annotations": {
+                  "additionalProperties": true,
+                  "description": "Metrics service annotations",
+                  "required": [],
+                  "title": "annotations",
+                  "type": "object"
+                },
+                "labels": {
+                  "additionalProperties": true,
+                  "description": "Metrics service labels",
+                  "required": [],
+                  "title": "labels",
+                  "type": "object"
+                },
+                "servicePort": {
+                  "default": 8082,
+                  "description": "Metrics service port",
+                  "title": "servicePort",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "servicePort"
+              ],
+              "title": "service",
+              "type": "object"
+            },
+            "serviceMonitor": {
+              "additionalProperties": false,
+              "properties": {
+                "additionalLabels": {
+                  "additionalProperties": true,
+                  "description": "Prometheus ServiceMonitor labels",
+                  "required": [],
+                  "title": "additionalLabels",
+                  "type": "object"
+                },
+                "enabled": {
+                  "default": false,
+                  "description": "Enable a prometheus ServiceMonitor",
+                  "title": "enabled",
+                  "type": "boolean"
+                },
+                "interval": {
+                  "default": "30s",
+                  "description": "Prometheus ServiceMonitor interval",
+                  "title": "interval",
+                  "type": "string"
+                },
+                "metricRelabelings": {
+                  "description": "Prometheus [MetricRelabelConfigs] to apply to samples before ingestion",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "sourceLabels": {
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "required": []
+                            },
+                            "title": "sourceLabels",
+                            "type": "array"
+                          },
+                          "targetLabel": {
+                            "default": "instance",
+                            "title": "targetLabel",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "sourceLabels",
+                          "targetLabel"
+                        ],
+                        "type": "object"
+                      }
+                    ],
+                    "required": []
+                  },
+                  "title": "metricRelabelings",
+                  "type": "array"
+                },
+                "namespace": {
+                  "default": "",
+                  "description": "prometheus: kube-prometheus\nPrometheus ServiceMonitor namespace",
+                  "title": "namespace",
+                  "type": "string"
+                },
+                "relabelings": {
+                  "description": "Prometheus [RelabelConfigs] to apply to samples before scraping",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "sourceLabels": {
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "required": []
+                            },
+                            "title": "sourceLabels",
+                            "type": "array"
+                          },
+                          "targetLabel": {
+                            "default": "instance",
+                            "title": "targetLabel",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "sourceLabels",
+                          "targetLabel"
+                        ],
+                        "type": "object"
+                      }
+                    ],
+                    "required": []
+                  },
+                  "title": "relabelings",
+                  "type": "array"
+                },
+                "selector": {
+                  "additionalProperties": false,
+                  "description": "Prometheus ServiceMonitor selector",
+                  "properties": {
+                    "matchLabels": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "app": {
+                          "default": "argo-events",
+                          "title": "app",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "app"
+                      ],
+                      "title": "matchLabels",
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "matchLabels"
+                  ],
+                  "title": "selector",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "enabled",
+                "interval",
+                "relabelings",
+                "metricRelabelings",
+                "selector",
+                "namespace"
+              ],
+              "title": "serviceMonitor",
+              "type": "object"
+            }
+          },
+          "required": [
+            "enabled",
+            "service",
+            "serviceMonitor"
+          ],
+          "title": "metrics",
+          "type": "object"
+        },
+        "name": {
+          "default": "controller-manager",
+          "description": "Argo Events controller name string",
+          "title": "name",
+          "type": "string"
+        },
+        "nodeSelector": {
+          "additionalProperties": false,
+          "description": "[Node selector]",
+          "properties": {
+            "kubernetes.io/arch": {
+              "default": "amd64",
+              "title": "kubernetes.io/arch",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kubernetes.io/arch"
+          ],
+          "title": "nodeSelector",
+          "type": "object"
+        },
+        "pdb": {
+          "additionalProperties": false,
+          "description": "Pod disruption budget",
+          "properties": {
+            "annotations": {
+              "additionalProperties": true,
+              "description": "Annotations to be added to events controller pdb",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "enabled": {
+              "default": false,
+              "description": "Deploy a PodDisruptionBudget for the events controller",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "labels": {
+              "additionalProperties": true,
+              "description": "minAvailable: 1\nmaxUnavailable: 0\nLabels to be added to events controller pdb",
+              "required": [],
+              "title": "labels",
+              "type": "object"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "title": "pdb",
+          "type": "object"
+        },
+        "podAnnotations": {
+          "additionalProperties": true,
+          "description": "Annotations to be added to events controller pods",
+          "required": [],
+          "title": "podAnnotations",
+          "type": "object"
+        },
+        "podLabels": {
+          "additionalProperties": true,
+          "description": "Labels to be added to events controller pods",
+          "required": [],
+          "title": "podLabels",
+          "type": "object"
+        },
+        "priorityClassName": {
+          "default": "",
+          "description": "Priority class for the events controller pods",
+          "title": "priorityClassName",
+          "type": "string"
+        },
+        "rbac": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Create events controller RBAC",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "managedNamespace": {
+              "default": "",
+              "description": "Additional namespace to be monitored by the controller",
+              "title": "managedNamespace",
+              "type": "string"
+            },
+            "namespaced": {
+              "default": false,
+              "description": "Restrict events controller to operate only in a single namespace instead of cluster-wide scope.",
+              "title": "namespaced",
+              "type": "boolean"
+            },
+            "rules": {
+              "description": "Additional user rules for event controller's rbac",
+              "items": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "apiGroups": {
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "required": []
+                        },
+                        "title": "apiGroups",
+                        "type": "array"
+                      },
+                      "resources": {
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "required": []
+                        },
+                        "title": "resources",
+                        "type": "array"
+                      },
+                      "verbs": {
+                        "items": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "required": []
+                        },
+                        "title": "verbs",
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "apiGroups",
+                      "resources",
+                      "verbs"
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "required": []
+              },
+              "title": "rules",
+              "type": "array"
+            }
+          },
+          "required": [
+            "enabled",
+            "namespaced",
+            "managedNamespace",
+            "rules"
+          ],
+          "title": "rbac",
+          "type": "object"
+        },
+        "readinessProbe": {
+          "additionalProperties": false,
+          "description": "# Readiness and liveness probes for default backend\n# Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+          "properties": {
+            "failureThreshold": {
+              "default": 3,
+              "description": "Minimum consecutive failures for the [probe] to be considered failed after having succeeded",
+              "title": "failureThreshold",
+              "type": "integer"
+            },
+            "initialDelaySeconds": {
+              "default": 10,
+              "description": "Number of seconds after the container has started before [probe] is initiated",
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            },
+            "periodSeconds": {
+              "default": 10,
+              "description": "How often (in seconds) to perform the [probe]",
+              "title": "periodSeconds",
+              "type": "integer"
+            },
+            "successThreshold": {
+              "default": 1,
+              "description": "Minimum consecutive successes for the [probe] to be considered successful after having failed",
+              "title": "successThreshold",
+              "type": "integer"
+            },
+            "timeoutSeconds": {
+              "default": 1,
+              "description": "Number of seconds after which the [probe] times out",
+              "title": "timeoutSeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "failureThreshold",
+            "initialDelaySeconds",
+            "periodSeconds",
+            "successThreshold",
+            "timeoutSeconds"
+          ],
+          "title": "readinessProbe",
+          "type": "object"
+        },
+        "replicas": {
+          "default": 1,
+          "description": "The number of events controller pods to run.",
+          "title": "replicas",
+          "type": "integer"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "description": "Resource limits and requests for the events controller pods",
+          "properties": {
+            "limits": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "500m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "512Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "limits",
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "250m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "256Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "requests",
+              "type": "object"
+            }
+          },
+          "required": [
+            "limits",
+            "requests"
+          ],
+          "title": "resources",
+          "type": "object"
+        },
+        "revisionHistoryLimit": {
+          "default": 5,
+          "description": "The number of replicasets history to keep",
+          "title": "revisionHistoryLimit",
+          "type": "integer"
+        },
+        "serviceAccount": {
+          "additionalProperties": false,
+          "properties": {
+            "annotations": {
+              "additionalProperties": true,
+              "description": "Annotations applied to created service account",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "automountServiceAccountToken": {
+              "default": true,
+              "description": "Automount API credentials for the Service Account",
+              "title": "automountServiceAccountToken",
+              "type": "boolean"
+            },
+            "create": {
+              "default": true,
+              "description": "Create a service account for the events controller",
+              "title": "create",
+              "type": "boolean"
+            },
+            "name": {
+              "default": "",
+              "description": "Service account name",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "create",
+            "name",
+            "automountServiceAccountToken"
+          ],
+          "title": "serviceAccount",
+          "type": "object"
+        },
+        "tolerations": {
+          "description": "[Tolerations] for use with node taints",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "effect": {
+                    "default": "NoSchedule",
+                    "title": "effect",
+                    "type": "string"
+                  },
+                  "key": {
+                    "default": "kubernetes.io/arch",
+                    "title": "key",
+                    "type": "string"
+                  },
+                  "operator": {
+                    "default": "Equal",
+                    "title": "operator",
+                    "type": "string"
+                  },
+                  "value": {
+                    "default": "amd64",
+                    "title": "value",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key",
+                  "operator",
+                  "value",
+                  "effect"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "tolerations",
+          "type": "array"
+        },
+        "topologySpreadConstraints": {
+          "description": "Assign custom [TopologySpreadConstraints] rules to the events controller\n# Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/\n# If labelSelector is left out, it will default to the labelSelector configuration of the deployment",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "maxSkew": {
+                    "default": 1,
+                    "title": "maxSkew",
+                    "type": "integer"
+                  },
+                  "topologyKey": {
+                    "default": "topology.kubernetes.io/zone",
+                    "title": "topologyKey",
+                    "type": "string"
+                  },
+                  "whenUnsatisfiable": {
+                    "default": "DoNotSchedule",
+                    "title": "whenUnsatisfiable",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "maxSkew",
+                  "topologyKey",
+                  "whenUnsatisfiable"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "topologySpreadConstraints",
+          "type": "array"
+        },
+        "volumeMounts": {
+          "description": "Additional volumeMounts to the events controller main container",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "mountPath": {
+                    "default": "/var/run/argo-events",
+                    "title": "mountPath",
+                    "type": "string"
+                  },
+                  "name": {
+                    "default": "my-volume",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "mountPath"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "volumeMounts",
+          "type": "array"
+        },
+        "volumes": {
+          "description": "Additional volumes to the events controller pod",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "emptyDir": {
+                    "additionalProperties": false,
+                    "required": [],
+                    "title": "emptyDir",
+                    "type": "object"
+                  },
+                  "name": {
+                    "default": "my-volume",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "emptyDir"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "volumes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "rbac",
+        "image",
+        "revisionHistoryLimit",
+        "replicas",
+        "pdb",
+        "env",
+        "envFrom",
+        "containerSecurityContext",
+        "readinessProbe",
+        "livenessProbe",
+        "volumes",
+        "volumeMounts",
+        "nodeSelector",
+        "tolerations",
+        "affinity",
+        "topologySpreadConstraints",
+        "priorityClassName",
+        "resources",
+        "serviceAccount",
+        "metrics"
+      ],
+      "title": "controller",
+      "type": "object"
+    },
+    "crds": {
+      "additionalProperties": false,
+      "description": "# Custom resource configuration",
+      "properties": {
+        "annotations": {
+          "additionalProperties": true,
+          "description": "Annotations to be added to all CRDs",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "install": {
+          "default": true,
+          "description": "Install and upgrade CRDs",
+          "title": "install",
+          "type": "boolean"
+        },
+        "keep": {
+          "default": true,
+          "description": "Keep CRDs on chart uninstall",
+          "title": "keep",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "install",
+        "keep"
+      ],
+      "title": "crds",
+      "type": "object"
+    },
+    "createAggregateRoles": {
+      "default": false,
+      "description": "Create clusterroles that extend existing clusterroles to interact with argo-events crds\nOnly applies for cluster-wide installation (`controller.rbac.namespaced: false`)\n# Ref: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles",
+      "title": "createAggregateRoles",
+      "type": "boolean"
+    },
+    "fullnameOverride": {
+      "default": "",
+      "description": "String to fully override \"argo-events.fullname\" template",
+      "title": "fullnameOverride",
+      "type": "string"
+    },
+    "global": {
+      "additionalProperties": false,
+      "properties": {
+        "additionalLabels": {
+          "additionalProperties": true,
+          "description": "Additional labels to add to all resources",
+          "required": [],
+          "title": "additionalLabels",
+          "type": "object"
+        },
+        "hostAliases": {
+          "description": "Mapping between IP and hostnames that will be injected as entries in the pod's hosts files",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "hostnames": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "hostnames",
+                    "type": "array"
+                  },
+                  "ip": {
+                    "default": "10.20.30.40",
+                    "title": "ip",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ip",
+                  "hostnames"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "hostAliases",
+          "type": "array"
+        },
+        "image": {
+          "additionalProperties": false,
+          "properties": {
+            "imagePullPolicy": {
+              "default": "IfNotPresent",
+              "description": "If defined, a imagePullPolicy applied to all Argo Events deployments",
+              "title": "imagePullPolicy",
+              "type": "string"
+            },
+            "repository": {
+              "default": "quay.io/argoproj/argo-events",
+              "description": "If defined, a repository applied to all Argo Events deployments",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "",
+              "description": "Overrides the global Argo Events image tag whose default is the chart appVersion",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "tag",
+            "imagePullPolicy"
+          ],
+          "title": "image",
+          "type": "object"
+        },
+        "imagePullSecrets": {
+          "description": "If defined, uses a Secret to pull an image from a private Docker registry or repository",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "my-secret",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "imagePullSecrets",
+          "type": "array"
+        },
+        "podAnnotations": {
+          "additionalProperties": true,
+          "description": "Annotations for the all deployed pods",
+          "required": [],
+          "title": "podAnnotations",
+          "type": "object"
+        },
+        "podLabels": {
+          "additionalProperties": true,
+          "description": "Labels for the all deployed pods",
+          "required": [],
+          "title": "podLabels",
+          "type": "object"
+        },
+        "securityContext": {
+          "additionalProperties": false,
+          "description": "Toggle and define securityContext. See [values.yaml]",
+          "properties": {
+            "fsGroup": {
+              "default": 9731,
+              "title": "fsGroup",
+              "type": "integer"
+            },
+            "runAsGroup": {
+              "default": 9731,
+              "title": "runAsGroup",
+              "type": "integer"
+            },
+            "runAsNonRoot": {
+              "default": true,
+              "title": "runAsNonRoot",
+              "type": "boolean"
+            },
+            "runAsUser": {
+              "default": 9731,
+              "title": "runAsUser",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "runAsNonRoot",
+            "runAsUser",
+            "runAsGroup",
+            "fsGroup"
+          ],
+          "title": "securityContext",
+          "type": "object"
+        }
+      },
+      "required": [
+        "image",
+        "imagePullSecrets",
+        "securityContext",
+        "hostAliases"
+      ],
+      "title": "global",
+      "type": "object"
+    },
+    "kind": {
+      "default": "EventsChart",
+      "title": "kind",
+      "type": "string"
+    },
+    "nameOverride": {
+      "default": "argo-events",
+      "description": "Provide a name in place of `argo-events`",
+      "title": "nameOverride",
+      "type": "string"
+    },
+    "namespaceOverride": {
+      "default": "",
+      "description": "Override the namespace",
+      "title": "namespaceOverride",
+      "type": "string"
+    },
+    "openshift": {
+      "default": false,
+      "description": "Deploy on OpenShift",
+      "title": "openshift",
+      "type": "boolean"
+    },
+    "webhook": {
+      "additionalProperties": false,
+      "description": "# Argo Events admission webhook",
+      "properties": {
+        "affinity": {
+          "additionalProperties": false,
+          "description": "Assign custom [affinity] rules to the deployment",
+          "properties": {
+            "nodeAffinity": {
+              "additionalProperties": false,
+              "properties": {
+                "required": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "nodeSelectorTerm": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "matchExpressions": {
+                          "items": {
+                            "anyOf": [
+                              {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "key": {
+                                    "default": "kubernetes.io/arch",
+                                    "title": "key",
+                                    "type": "string"
+                                  },
+                                  "nodeSelectorTerm": {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "matchExpressions": {
+                                        "items": {
+                                          "anyOf": [
+                                            {
+                                              "additionalProperties": false,
+                                              "properties": {
+                                                "key": {
+                                                  "default": "kubernetes.io/arch",
+                                                  "title": "key",
+                                                  "type": "string"
+                                                },
+                                                "operator": {
+                                                  "default": "Equal",
+                                                  "title": "operator",
+                                                  "type": "string"
+                                                },
+                                                "values": {
+                                                  "items": {
+                                                    "anyOf": [
+                                                      {
+                                                        "type": "string"
+                                                      }
+                                                    ],
+                                                    "required": []
+                                                  },
+                                                  "title": "values",
+                                                  "type": "array"
+                                                }
+                                              },
+                                              "required": [
+                                                "key",
+                                                "operator",
+                                                "values"
+                                              ],
+                                              "type": "object"
+                                            }
+                                          ],
+                                          "required": []
+                                        },
+                                        "title": "matchExpressions",
+                                        "type": "array"
+                                      }
+                                    },
+                                    "required": [
+                                      "matchExpressions"
+                                    ],
+                                    "title": "nodeSelectorTerm",
+                                    "type": "object"
+                                  },
+                                  "operator": {
+                                    "default": "Equal",
+                                    "title": "operator",
+                                    "type": "string"
+                                  },
+                                  "values": {
+                                    "items": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string"
+                                        }
+                                      ],
+                                      "required": []
+                                    },
+                                    "title": "values",
+                                    "type": "array"
+                                  }
+                                },
+                                "required": [
+                                  "key",
+                                  "operator",
+                                  "values",
+                                  "nodeSelectorTerm"
+                                ],
+                                "type": "object"
+                              }
+                            ],
+                            "required": []
+                          },
+                          "title": "matchExpressions",
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "matchExpressions"
+                      ],
+                      "title": "nodeSelectorTerm",
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "nodeSelectorTerm"
+                  ],
+                  "title": "required",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "required"
+              ],
+              "title": "nodeAffinity",
+              "type": "object"
+            }
+          },
+          "required": [
+            "nodeAffinity"
+          ],
+          "title": "affinity",
+          "type": "object"
+        },
+        "containerSecurityContext": {
+          "additionalProperties": false,
+          "description": "Event controller container-level security context",
+          "properties": {
+            "capabilities": {
+              "additionalProperties": false,
+              "properties": {
+                "drop": {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "required": []
+                  },
+                  "title": "drop",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "drop"
+              ],
+              "title": "capabilities",
+              "type": "object"
+            },
+            "readOnlyRootFilesystem": {
+              "default": true,
+              "title": "readOnlyRootFilesystem",
+              "type": "boolean"
+            },
+            "runAsNonRoot": {
+              "default": true,
+              "title": "runAsNonRoot",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "capabilities"
+          ],
+          "title": "containerSecurityContext",
+          "type": "object"
+        },
+        "enabled": {
+          "default": false,
+          "description": "Enable admission webhook. Applies only for cluster-wide installation",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "env": {
+          "description": "Environment variables to pass to event controller",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "DEBUG_LOG",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "value": {
+                    "default": "true",
+                    "title": "value",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "value"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "env",
+          "type": "array"
+        },
+        "envFrom": {
+          "description": "envFrom to pass to event controller",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "configMapRef": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "default": "config-map-name",
+                        "title": "name",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "title": "configMapRef",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "configMapRef"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "secretRef": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "default": "secret-name",
+                        "title": "name",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "title": "secretRef",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "secretRef"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "envFrom",
+          "type": "array"
+        },
+        "image": {
+          "additionalProperties": false,
+          "properties": {
+            "imagePullPolicy": {
+              "default": "",
+              "description": "Image pull policy for the event controller",
+              "title": "imagePullPolicy",
+              "type": "string"
+            },
+            "repository": {
+              "default": "",
+              "description": "Repository to use for the event controller",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "",
+              "description": "Tag to use for the event controller",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "tag",
+            "imagePullPolicy"
+          ],
+          "title": "image",
+          "type": "object"
+        },
+        "livenessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "failureThreshold": {
+              "default": 3,
+              "description": "Minimum consecutive failures for the [probe] to be considered failed after having succeeded",
+              "title": "failureThreshold",
+              "type": "integer"
+            },
+            "initialDelaySeconds": {
+              "default": 10,
+              "description": "Number of seconds after the container has started before [probe] is initiated",
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            },
+            "periodSeconds": {
+              "default": 10,
+              "description": "How often (in seconds) to perform the [probe]",
+              "title": "periodSeconds",
+              "type": "integer"
+            },
+            "successThreshold": {
+              "default": 1,
+              "description": "Minimum consecutive successes for the [probe] to be considered successful after having failed",
+              "title": "successThreshold",
+              "type": "integer"
+            },
+            "timeoutSeconds": {
+              "default": 1,
+              "description": "Number of seconds after which the [probe] times out",
+              "title": "timeoutSeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "failureThreshold",
+            "initialDelaySeconds",
+            "periodSeconds",
+            "successThreshold",
+            "timeoutSeconds"
+          ],
+          "title": "livenessProbe",
+          "type": "object"
+        },
+        "name": {
+          "default": "events-webhook",
+          "description": "Argo Events admission webhook name string",
+          "title": "name",
+          "type": "string"
+        },
+        "nodeSelector": {
+          "additionalProperties": false,
+          "description": "[Node selector]",
+          "properties": {
+            "kubernetes.io/arch": {
+              "default": "amd64",
+              "title": "kubernetes.io/arch",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kubernetes.io/arch"
+          ],
+          "title": "nodeSelector",
+          "type": "object"
+        },
+        "pdb": {
+          "additionalProperties": false,
+          "description": "Pod disruption budget",
+          "properties": {
+            "annotations": {
+              "additionalProperties": true,
+              "description": "Annotations to be added to admission webhook pdb",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "enabled": {
+              "default": false,
+              "description": "Deploy a PodDisruptionBudget for the admission webhook",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "labels": {
+              "additionalProperties": true,
+              "description": "minAvailable: 1\nmaxUnavailable: 0\nLabels to be added to admission webhook pdb",
+              "required": [],
+              "title": "labels",
+              "type": "object"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "title": "pdb",
+          "type": "object"
+        },
+        "podAnnotations": {
+          "additionalProperties": true,
+          "description": "Annotations to be added to event controller pods",
+          "required": [],
+          "title": "podAnnotations",
+          "type": "object"
+        },
+        "podLabels": {
+          "additionalProperties": true,
+          "description": "Labels to be added to event controller pods",
+          "required": [],
+          "title": "podLabels",
+          "type": "object"
+        },
+        "port": {
+          "default": 443,
+          "description": "Port to listen on",
+          "title": "port",
+          "type": "integer"
+        },
+        "priorityClassName": {
+          "default": "",
+          "description": "Priority class for the event controller pods",
+          "title": "priorityClassName",
+          "type": "string"
+        },
+        "readinessProbe": {
+          "additionalProperties": false,
+          "description": "# Readiness and liveness probes for default backend\n# Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+          "properties": {
+            "failureThreshold": {
+              "default": 3,
+              "description": "Minimum consecutive failures for the [probe] to be considered failed after having succeeded",
+              "title": "failureThreshold",
+              "type": "integer"
+            },
+            "initialDelaySeconds": {
+              "default": 10,
+              "description": "Number of seconds after the container has started before [probe] is initiated",
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            },
+            "periodSeconds": {
+              "default": 10,
+              "description": "How often (in seconds) to perform the [probe]",
+              "title": "periodSeconds",
+              "type": "integer"
+            },
+            "successThreshold": {
+              "default": 1,
+              "description": "Minimum consecutive successes for the [probe] to be considered successful after having failed",
+              "title": "successThreshold",
+              "type": "integer"
+            },
+            "timeoutSeconds": {
+              "default": 1,
+              "description": "Number of seconds after which the [probe] times out",
+              "title": "timeoutSeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "failureThreshold",
+            "initialDelaySeconds",
+            "periodSeconds",
+            "successThreshold",
+            "timeoutSeconds"
+          ],
+          "title": "readinessProbe",
+          "type": "object"
+        },
+        "replicas": {
+          "default": 1,
+          "description": "The number of webhook pods to run.",
+          "title": "replicas",
+          "type": "integer"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "description": "Resource limits and requests for the event controller pods",
+          "properties": {
+            "limits": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "500m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "512Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "limits",
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "250m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "256Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "requests",
+              "type": "object"
+            }
+          },
+          "required": [
+            "limits",
+            "requests"
+          ],
+          "title": "resources",
+          "type": "object"
+        },
+        "revisionHistoryLimit": {
+          "default": 5,
+          "description": "The number of replicasets history to keep",
+          "title": "revisionHistoryLimit",
+          "type": "integer"
+        },
+        "serviceAccount": {
+          "additionalProperties": false,
+          "properties": {
+            "annotations": {
+              "additionalProperties": true,
+              "description": "Annotations applied to created service account",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "automountServiceAccountToken": {
+              "default": true,
+              "description": "Automount API credentials for the Service Account",
+              "title": "automountServiceAccountToken",
+              "type": "boolean"
+            },
+            "create": {
+              "default": true,
+              "description": "Create a service account for the admission webhook",
+              "title": "create",
+              "type": "boolean"
+            },
+            "name": {
+              "default": "",
+              "description": "Service account name",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "create",
+            "name",
+            "automountServiceAccountToken"
+          ],
+          "title": "serviceAccount",
+          "type": "object"
+        },
+        "tolerations": {
+          "description": "[Tolerations] for use with node taints",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "effect": {
+                    "default": "NoSchedule",
+                    "title": "effect",
+                    "type": "string"
+                  },
+                  "key": {
+                    "default": "kubernetes.io/arch",
+                    "title": "key",
+                    "type": "string"
+                  },
+                  "operator": {
+                    "default": "Equal",
+                    "title": "operator",
+                    "type": "string"
+                  },
+                  "value": {
+                    "default": "amd64",
+                    "title": "value",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key",
+                  "operator",
+                  "value",
+                  "effect"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "tolerations",
+          "type": "array"
+        },
+        "topologySpreadConstraints": {
+          "description": "Assign custom [TopologySpreadConstraints] rules to the events controller\n# Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/\n# If labelSelector is left out, it will default to the labelSelector configuration of the deployment",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "maxSkew": {
+                    "default": 1,
+                    "title": "maxSkew",
+                    "type": "integer"
+                  },
+                  "topologyKey": {
+                    "default": "topology.kubernetes.io/zone",
+                    "title": "topologyKey",
+                    "type": "string"
+                  },
+                  "whenUnsatisfiable": {
+                    "default": "DoNotSchedule",
+                    "title": "whenUnsatisfiable",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "maxSkew",
+                  "topologyKey",
+                  "whenUnsatisfiable"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "topologySpreadConstraints",
+          "type": "array"
+        },
+        "volumeMounts": {
+          "description": "Additional volumeMounts to the event controller main container",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "mountPath": {
+                    "default": "/var/run/argo-events",
+                    "title": "mountPath",
+                    "type": "string"
+                  },
+                  "name": {
+                    "default": "my-volume",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "mountPath"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "volumeMounts",
+          "type": "array"
+        },
+        "volumes": {
+          "description": "Additional volumes to the event controller pod",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "emptyDir": {
+                    "additionalProperties": false,
+                    "required": [],
+                    "title": "emptyDir",
+                    "type": "object"
+                  },
+                  "name": {
+                    "default": "my-volume",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "emptyDir"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "volumes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "enabled",
+        "name",
+        "image",
+        "revisionHistoryLimit",
+        "replicas",
+        "pdb",
+        "env",
+        "envFrom",
+        "port",
+        "containerSecurityContext",
+        "readinessProbe",
+        "livenessProbe",
+        "volumeMounts",
+        "volumes",
+        "nodeSelector",
+        "tolerations",
+        "affinity",
+        "topologySpreadConstraints",
+        "priorityClassName",
+        "resources",
+        "serviceAccount"
+      ],
+      "title": "webhook",
+      "type": "object"
+    }
+  },
+  "required": [
+    "crds",
+    "global",
+    "configs",
+    "controller",
+    "webhook"
+  ],
+  "type": "object"
+}

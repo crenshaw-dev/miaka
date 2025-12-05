@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.0.0-20251117230942-fc96413ba8a8+dirty
+    controller-gen.kubebuilder.io/version: v0.2.1-0.20251205203238-8d568300f998+dirty
   name: demoes.demo.io
 spec:
   group: demo.io
@@ -26,6 +26,7 @@ spec:
               More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           enabled:
+            default: true
             description: Enable feature
             type: boolean
           kind:
@@ -37,6 +38,7 @@ spec:
               More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           port:
+            default: 8080
             description: Port number
             type: integer
         type: object

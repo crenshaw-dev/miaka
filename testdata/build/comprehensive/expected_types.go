@@ -15,14 +15,17 @@ type MyApp struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=63
 	// +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+	// +kubebuilder:default="my-application"
 	AppName string `json:"appName,omitempty"`
 
 	// Number of replicas to deploy
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=100
+	// +kubebuilder:default=3
 	Replicas int `json:"replicas,omitempty"`
 
 	// Enable debug mode for verbose logging
+	// +kubebuilder:default=false
 	Debug bool `json:"debug,omitempty"`
 
 	// # Image configuration
@@ -95,14 +98,17 @@ type MyApp struct {
 // ImageConfig defines the image configuration
 type ImageConfig struct {
 	// Container image repository
+	// +kubebuilder:default="nginx"
 	Repository string `json:"repository,omitempty"`
 
 	// Image pull policy
 	// +kubebuilder:validation:Enum=Always;Never;IfNotPresent
+	// +kubebuilder:default="IfNotPresent"
 	PullPolicy string `json:"pullPolicy,omitempty"`
 
 	// Container image tag (immutable tags are recommended)
 	// +kubebuilder:validation:Pattern=^[a-zA-Z0-9._-]+$
+	// +kubebuilder:default="1.25.0"
 	Tag string `json:"tag,omitempty"`
 }
 
@@ -120,11 +126,13 @@ type LabelsConfig struct {
 type ServiceConfig struct {
 	// Kubernetes service type
 	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer;ExternalName
+	// +kubebuilder:default="ClusterIP"
 	Type string `json:"type,omitempty"`
 
 	// Service port
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
+	// +kubebuilder:default=80
 	Port int `json:"port,omitempty"`
 
 	// Service annotations (e.g., for cloud load balancers)
@@ -172,9 +180,11 @@ type TlsConfig struct {
 // IngressConfig defines the ingress configuration
 type IngressConfig struct {
 	// Enable ingress resource
+	// +kubebuilder:default=true
 	Enabled bool `json:"enabled,omitempty"`
 
 	// Ingress class name (e.g., nginx, traefik)
+	// +kubebuilder:default="nginx"
 	ClassName string `json:"className,omitempty"`
 
 	// Ingress annotations
@@ -191,18 +201,22 @@ type IngressConfig struct {
 // LimitsConfig defines the limits configuration
 type LimitsConfig struct {
 	// CPU limit
+	// +kubebuilder:default="500m"
 	Cpu string `json:"cpu,omitempty"`
 
 	// Memory limit
+	// +kubebuilder:default="512Mi"
 	Memory string `json:"memory,omitempty"`
 }
 
 // RequestsConfig defines the requests configuration
 type RequestsConfig struct {
 	// CPU request
+	// +kubebuilder:default="100m"
 	Cpu string `json:"cpu,omitempty"`
 
 	// Memory request
+	// +kubebuilder:default="128Mi"
 	Memory string `json:"memory,omitempty"`
 }
 
@@ -255,18 +269,22 @@ type CapabilitiesConfig struct {
 // SecurityContextConfig defines the security context configuration
 type SecurityContextConfig struct {
 	// Run as non-root user
+	// +kubebuilder:default=true
 	RunAsNonRoot bool `json:"runAsNonRoot,omitempty"`
 
 	// User ID to run as
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=1000
 	RunAsUser int `json:"runAsUser,omitempty"`
 
 	// Group ID to run as
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=1000
 	RunAsGroup int `json:"runAsGroup,omitempty"`
 
 	// FSGroup for volume ownership
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=1000
 	FsGroup int `json:"fsGroup,omitempty"`
 
 	// Drop all capabilities and add only required ones
@@ -276,11 +294,13 @@ type SecurityContextConfig struct {
 // HttpGetConfig defines the http get configuration
 type HttpGetConfig struct {
 	// Path to probe
+	// +kubebuilder:default="/healthz"
 	Path string `json:"path,omitempty"`
 
 	// Port to probe
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
+	// +kubebuilder:default=8080
 	Port int `json:"port,omitempty"`
 }
 
@@ -291,33 +311,40 @@ type LivenessProbeConfig struct {
 
 	// Initial delay before liveness probe
 	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:default=30
 	InitialDelaySeconds int `json:"initialDelaySeconds,omitempty"`
 
 	// Period between liveness probes
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=10
 	PeriodSeconds int `json:"periodSeconds,omitempty"`
 
 	// Timeout for liveness probe
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=5
 	TimeoutSeconds int `json:"timeoutSeconds,omitempty"`
 
 	// Success threshold for liveness probe
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=1
 	SuccessThreshold int `json:"successThreshold,omitempty"`
 
 	// Failure threshold for liveness probe
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=3
 	FailureThreshold int `json:"failureThreshold,omitempty"`
 }
 
 // ReadinessProbeConfigHttpGetConfig defines the readiness probe config http get configuration
 type ReadinessProbeConfigHttpGetConfig struct {
 	// Path to probe
+	// +kubebuilder:default="/ready"
 	Path string `json:"path,omitempty"`
 
 	// Port to probe
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
+	// +kubebuilder:default=8080
 	Port int `json:"port,omitempty"`
 }
 
@@ -328,22 +355,27 @@ type ReadinessProbeConfig struct {
 
 	// Initial delay before readiness probe
 	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:default=10
 	InitialDelaySeconds int `json:"initialDelaySeconds,omitempty"`
 
 	// Period between readiness probes
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=5
 	PeriodSeconds int `json:"periodSeconds,omitempty"`
 
 	// Timeout for readiness probe
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=3
 	TimeoutSeconds int `json:"timeoutSeconds,omitempty"`
 
 	// Success threshold for readiness probe
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=1
 	SuccessThreshold int `json:"successThreshold,omitempty"`
 
 	// Failure threshold for readiness probe
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=3
 	FailureThreshold int `json:"failureThreshold,omitempty"`
 }
 
@@ -456,9 +488,11 @@ type ServiceAccountConfigAnnotationsConfig struct {
 // ServiceAccountConfig defines the service account configuration
 type ServiceAccountConfig struct {
 	// Create a service account
+	// +kubebuilder:default=true
 	Create bool `json:"create,omitempty"`
 
 	// Service account name (leave empty to generate)
+	// +kubebuilder:default=""
 	Name string `json:"name,omitempty"`
 
 	// Service account annotations
@@ -469,24 +503,29 @@ type ServiceAccountConfig struct {
 // AutoscalingConfig defines the autoscaling configuration
 type AutoscalingConfig struct {
 	// Enable horizontal pod autoscaling
+	// +kubebuilder:default=true
 	Enabled bool `json:"enabled,omitempty"`
 
 	// Minimum number of replicas
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=2
 	MinReplicas int `json:"minReplicas,omitempty"`
 
 	// Maximum number of replicas
 	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:default=10
 	MaxReplicas int `json:"maxReplicas,omitempty"`
 
 	// Target CPU utilization percentage
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=100
+	// +kubebuilder:default=80
 	TargetCPUUtilizationPercentage int `json:"targetCPUUtilizationPercentage,omitempty"`
 
 	// Target memory utilization percentage
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=100
+	// +kubebuilder:default=80
 	TargetMemoryUtilizationPercentage int `json:"targetMemoryUtilizationPercentage,omitempty"`
 }
 
@@ -498,9 +537,11 @@ type ServiceMonitorConfigLabelsConfig struct {
 // ServiceMonitorConfig defines the service monitor configuration
 type ServiceMonitorConfig struct {
 	// Enable ServiceMonitor resource
+	// +kubebuilder:default=true
 	Enabled bool `json:"enabled,omitempty"`
 
 	// ServiceMonitor interval
+	// +kubebuilder:default="30s"
 	Interval string `json:"interval,omitempty"`
 
 	// ServiceMonitor labels
@@ -511,6 +552,7 @@ type ServiceMonitorConfig struct {
 // MonitoringConfig defines the monitoring configuration
 type MonitoringConfig struct {
 	// Enable Prometheus monitoring
+	// +kubebuilder:default=true
 	Enabled bool `json:"enabled,omitempty"`
 
 	// ServiceMonitor configuration
@@ -521,47 +563,57 @@ type MonitoringConfig struct {
 type DatabaseConfig struct {
 	// Database host
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:default="postgres.default.svc.cluster.local"
 	Host string `json:"host,omitempty"`
 
 	// Database port
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
+	// +kubebuilder:default=5432
 	Port int `json:"port,omitempty"`
 
 	// Database name
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:default="myapp"
 	Name string `json:"name,omitempty"`
 
 	// Connection pool size
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=1000
+	// +kubebuilder:default=20
 	PoolSize int `json:"poolSize,omitempty"`
 
 	// SSL mode for database connection
 	// +kubebuilder:validation:Enum=disable;allow;prefer;require;verify-ca;verify-full
+	// +kubebuilder:default="require"
 	SslMode string `json:"sslMode,omitempty"`
 }
 
 // CacheConfig defines the cache configuration
 type CacheConfig struct {
 	// Enable Redis cache
+	// +kubebuilder:default=true
 	Enabled bool `json:"enabled,omitempty"`
 
 	// Redis host
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:default="redis.default.svc.cluster.local"
 	Host string `json:"host,omitempty"`
 
 	// Redis port
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
+	// +kubebuilder:default=6379
 	Port int `json:"port,omitempty"`
 
 	// Redis database number
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=15
+	// +kubebuilder:default=0
 	Database int `json:"database,omitempty"`
 
 	// Cache TTL in seconds
 	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:default=3600
 	Ttl int `json:"ttl,omitempty"`
 }

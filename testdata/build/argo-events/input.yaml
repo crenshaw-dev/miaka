@@ -4,58 +4,71 @@
 
 apiVersion: argoproj.io/v1alpha1
 kind: EventsChart
-# -- Provide a name in place of `argo-events`
+# Provide a name in place of `argo-events`
+# +kubebuilder:default="argo-events"
 nameOverride: argo-events
-# -- String to fully override "argo-events.fullname" template
+# String to fully override "argo-events.fullname" template
+# +kubebuilder:default=""
 fullnameOverride: ""
-# -- Override the namespace
-# @default -- `.Release.Namespace`
+# Override the namespace
+# +kubebuilder:default=""
 namespaceOverride: ""
-# -- Deploy on OpenShift
+# Deploy on OpenShift
+# +kubebuilder:default=false
 openshift: false
-# -- Create clusterroles that extend existing clusterroles to interact with argo-events crds
+# Create clusterroles that extend existing clusterroles to interact with argo-events crds
 # Only applies for cluster-wide installation (`controller.rbac.namespaced: false`)
 ## Ref: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles
+# +kubebuilder:default=false
 createAggregateRoles: false
 ## Custom resource configuration
 crds:
-    # -- Install and upgrade CRDs
+    # Install and upgrade CRDs
+    # +kubebuilder:default=true
     install: true
-    # -- Keep CRDs on chart uninstall
+    # Keep CRDs on chart uninstall
+    # +kubebuilder:default=true
     keep: true
-    # -- Annotations to be added to all CRDs
+    # Annotations to be added to all CRDs
     # +miaka:type: map[string]string
     annotations: {}
 global:
     image:
-        # -- If defined, a repository applied to all Argo Events deployments
+        # If defined, a repository applied to all Argo Events deployments
+        # +kubebuilder:default="quay.io/argoproj/argo-events"
         repository: quay.io/argoproj/argo-events
-        # -- Overrides the global Argo Events image tag whose default is the chart appVersion
+        # Overrides the global Argo Events image tag whose default is the chart appVersion
+        # +kubebuilder:default=""
         tag: ""
-        # -- If defined, a imagePullPolicy applied to all Argo Events deployments
+        # If defined, a imagePullPolicy applied to all Argo Events deployments
+        # +kubebuilder:default="IfNotPresent"
         imagePullPolicy: IfNotPresent
-    # -- If defined, uses a Secret to pull an image from a private Docker registry or repository
+    # If defined, uses a Secret to pull an image from a private Docker registry or repository
     imagePullSecrets:
     - name: my-secret
-    # -- Annotations for the all deployed pods
+    # Annotations for the all deployed pods
     # +miaka:type: map[string]string
     podAnnotations: {}
-    # -- Labels for the all deployed pods
+    # Labels for the all deployed pods
     # +miaka:type: map[string]string
     podLabels: {}
-    # -- Additional labels to add to all resources
+    # Additional labels to add to all resources
     # +miaka:type: map[string]string
     additionalLabels: {}
     # app: argo-events
 
-    # -- Toggle and define securityContext. See [values.yaml]
+    # Toggle and define securityContext. See [values.yaml]
     securityContext:
+      # +kubebuilder:default=true
       runAsNonRoot: true
+      # +kubebuilder:default=9731
       runAsUser: 9731
+      # +kubebuilder:default=9731
       runAsGroup: 9731
+      # +kubebuilder:default=9731
       fsGroup: 9731
 
-    # -- Mapping between IP and hostnames that will be injected as entries in the pod's hosts files
+    # Mapping between IP and hostnames that will be injected as entries in the pod's hosts files
     hostAliases:
     - ip: 10.20.30.40
       hostnames:
@@ -64,8 +77,7 @@ global:
 configs:
     ## NATS event bus
     nats:
-        # -- Supported versions of NATS event bus
-        # @default -- See [values.yaml]
+        # Supported versions of NATS event bus
         versions:
             - version: latest
               natsStreamingImage: nats-streaming:latest
@@ -78,24 +90,33 @@ configs:
         # Default JetStream settings, could be overridden by EventBus JetStream spec
         # Ref: https://docs.nats.io/running-a-nats-service/configuration#jetstream
         settings:
-            # -- Maximum size of the memory storage (e.g. 1G)
+            # Maximum size of the memory storage (e.g. 1G)
+            # +kubebuilder:default=-1
             maxMemoryStore: -1
-            # -- Maximum size of the file storage (e.g. 20G)
+            # Maximum size of the file storage (e.g. 20G)
+            # +kubebuilder:default=-1
             maxFileStore: -1
         streamConfig:
-            # -- Maximum number of messages before expiring oldest message
+            # Maximum number of messages before expiring oldest message
+            # +kubebuilder:default=1000000
             maxMsgs: 1000000
-            # -- Maximum age of existing messages, i.e. “72h”, “4h35m”
+            # Maximum age of existing messages, i.e. "72h", "4h35m"
+            # +kubebuilder:default="72h"
             maxAge: 72h
             # Total size of messages before expiring oldest message, 0 means unlimited.
+            # +kubebuilder:default="1GB"
             maxBytes: 1GB
-            # -- Number of replicas, defaults to 3 and requires minimal 3
+            # Number of replicas, defaults to 3 and requires minimal 3
+            # +kubebuilder:default=3
             replicas: 3
-            # -- Not documented at the moment
+            # Not documented at the moment
+            # +kubebuilder:default="300s"
             duplicates: 300s
-            # -- 0: Limits, 1: Interest, 2: WorkQueue
+            # 0: Limits, 1: Interest, 2: WorkQueue
+            # +kubebuilder:default=0
             retention: 0
-            # -- 0: DiscardOld, 1: DiscardNew
+            # 0: DiscardOld, 1: DiscardNew
+            # +kubebuilder:default=0
             discard: 0
         # Supported versions of JetStream eventbus
         versions:
@@ -147,115 +168,134 @@ configs:
 
 ## Argo Events controller
 controller:
-    # -- Argo Events controller name string
+    # Argo Events controller name string
+    # +kubebuilder:default="controller-manager"
     name: controller-manager
     rbac:
-        # -- Create events controller RBAC
+        # Create events controller RBAC
+        # +kubebuilder:default=true
         enabled: true
-        # -- Restrict events controller to operate only in a single namespace instead of cluster-wide scope.
+        # Restrict events controller to operate only in a single namespace instead of cluster-wide scope.
+        # +kubebuilder:default=false
         namespaced: false
-        # -- Additional namespace to be monitored by the controller
+        # Additional namespace to be monitored by the controller
+        # +kubebuilder:default=""
         managedNamespace: ""
-        # -- Additional user rules for event controller's rbac
+        # Additional user rules for event controller's rbac
         rules:
         - apiGroups: [""]
           resources: ["events"]
           verbs: ["create", "update", "patch"]
     image:
-        # -- Repository to use for the events controller
-        # @default -- `""` (defaults to global.image.repository)
+        # Repository to use for the events controller
+        # +kubebuilder:default=""
         repository: ""
-        # -- Tag to use for the events controller
-        # @default -- `""` (defaults to global.image.tag)
+        # Tag to use for the events controller
+        # +kubebuilder:default=""
         tag: ""
-        # -- Image pull policy for the events controller
-        # @default -- `""` (defaults to global.image.imagePullPolicy)
+        # Image pull policy for the events controller
+        # +kubebuilder:default=""
         imagePullPolicy: ""
-    # -- The number of replicasets history to keep
+    # The number of replicasets history to keep
+    # +kubebuilder:default=5
     revisionHistoryLimit: 5
-    # -- The number of events controller pods to run.
+    # The number of events controller pods to run.
+    # +kubebuilder:default=1
     replicas: 1
     # Pod disruption budget
     pdb:
-        # -- Deploy a PodDisruptionBudget for the events controller
+        # Deploy a PodDisruptionBudget for the events controller
+        # +kubebuilder:default=false
         enabled: false
         # minAvailable: 1
         # maxUnavailable: 0
-        # -- Labels to be added to events controller pdb
+        # Labels to be added to events controller pdb
         # +miaka:type: map[string]string
         labels: {}
-        # -- Annotations to be added to events controller pdb
+        # Annotations to be added to events controller pdb
         # +miaka:type: map[string]string
         annotations: {}
-    # -- Environment variables to pass to events controller
+    # Environment variables to pass to events controller
     env:
     - name: DEBUG_LOG
       value: "true"
 
-    # -- envFrom to pass to events controller
-    # @default -- `[]` (See [values.yaml])
+    # envFrom to pass to events controller
     envFrom:
     - configMapRef:
         name: config-map-name
     - secretRef:
         name: secret-name
 
-    # -- Annotations to be added to events controller pods
+    # Annotations to be added to events controller pods
     # +miaka:type: map[string]string
     podAnnotations: {}
-    # -- Labels to be added to events controller pods
+    # Labels to be added to events controller pods
     # +miaka:type: map[string]string
     podLabels: {}
-    # -- Events controller container-level security context
+    # Events controller container-level security context
     containerSecurityContext:
       capabilities:
         drop:
             - all
-        readOnlyRootFilesystem: true
-        runAsNonRoot: true
+      # +kubebuilder:default=true
+      readOnlyRootFilesystem: true
+      # +kubebuilder:default=true
+      runAsNonRoot: true
 
     ## Readiness and liveness probes for default backend
     ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
     readinessProbe:
-        # -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+        # Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+        # +kubebuilder:default=3
         failureThreshold: 3
-        # -- Number of seconds after the container has started before [probe] is initiated
+        # Number of seconds after the container has started before [probe] is initiated
+        # +kubebuilder:default=10
         initialDelaySeconds: 10
-        # -- How often (in seconds) to perform the [probe]
+        # How often (in seconds) to perform the [probe]
+        # +kubebuilder:default=10
         periodSeconds: 10
-        # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+        # Minimum consecutive successes for the [probe] to be considered successful after having failed
+        # +kubebuilder:default=1
         successThreshold: 1
-        # -- Number of seconds after which the [probe] times out
+        # Number of seconds after which the [probe] times out
+        # +kubebuilder:default=1
         timeoutSeconds: 1
     livenessProbe:
-        # -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+        # Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+        # +kubebuilder:default=3
         failureThreshold: 3
-        # -- Number of seconds after the container has started before [probe] is initiated
+        # Number of seconds after the container has started before [probe] is initiated
+        # +kubebuilder:default=10
         initialDelaySeconds: 10
-        # -- How often (in seconds) to perform the [probe]
+        # How often (in seconds) to perform the [probe]
+        # +kubebuilder:default=10
         periodSeconds: 10
-        # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+        # Minimum consecutive successes for the [probe] to be considered successful after having failed
+        # +kubebuilder:default=1
         successThreshold: 1
-        # -- Number of seconds after which the [probe] times out
+        # Number of seconds after which the [probe] times out
+        # +kubebuilder:default=1
         timeoutSeconds: 1
-    # -- Additional volumes to the events controller pod
+    # Additional volumes to the events controller pod
     volumes:
     - name: my-volume
       emptyDir: {}
-    # -- Additional volumeMounts to the events controller main container
+    # Additional volumeMounts to the events controller main container
     volumeMounts:
     - name: my-volume
       mountPath: /var/run/argo-events
-    # -- [Node selector]
+    # [Node selector]
     nodeSelector:
+      # +kubebuilder:default="amd64"
       kubernetes.io/arch: amd64
-    # -- [Tolerations] for use with node taints
+    # [Tolerations] for use with node taints
     tolerations:
     - key: kubernetes.io/arch
       operator: Equal
       value: amd64
       effect: NoSchedule
-    # -- Assign custom [affinity] rules to the deployment
+    # Assign custom [affinity] rules to the deployment
     affinity:
       nodeAffinity:
         required:
@@ -271,7 +311,7 @@ controller:
                   operator: Equal
                   values:
                   - amd64
-    # -- Assign custom [TopologySpreadConstraints] rules to the events controller
+    # Assign custom [TopologySpreadConstraints] rules to the events controller
     ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
     ## If labelSelector is left out, it will default to the labelSelector configuration of the deployment
     topologySpreadConstraints:
@@ -279,168 +319,199 @@ controller:
       topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: DoNotSchedule
 
-    # -- Priority class for the events controller pods
+    # Priority class for the events controller pods
+    # +kubebuilder:default=""
     priorityClassName: ""
-    # -- Resource limits and requests for the events controller pods
+    # Resource limits and requests for the events controller pods
     resources:
       limits:
+        # +kubebuilder:default="500m"
         cpu: 500m
+        # +kubebuilder:default="512Mi"
         memory: 512Mi
       requests:
+        # +kubebuilder:default="250m"
         cpu: 250m
+        # +kubebuilder:default="256Mi"
         memory: 256Mi
 
     serviceAccount:
-        # -- Create a service account for the events controller
+        # Create a service account for the events controller
+        # +kubebuilder:default=true
         create: true
-        # -- Service account name
+        # Service account name
+        # +kubebuilder:default=""
         name: ""
-        # -- Annotations applied to created service account
+        # Annotations applied to created service account
         # +miaka:type: map[string]string
         annotations: {}
-        # -- Automount API credentials for the Service Account
+        # Automount API credentials for the Service Account
+        # +kubebuilder:default=true
         automountServiceAccountToken: true
     ## Events controller metrics configuration
     metrics:
-        # -- Deploy metrics service
+        # Deploy metrics service
+        # +kubebuilder:default=false
         enabled: false
         service:
-            # -- Metrics service annotations
+            # Metrics service annotations
             # +miaka:type: map[string]string
             annotations: {}
             # +miaka:type: map[string]string
-            # -- Metrics service labels
+            # Metrics service labels
             # +miaka:type: map[string]string
             labels: {}
-            # -- Metrics service port
+            # Metrics service port
+            # +kubebuilder:default=8082
             servicePort: 8082
         serviceMonitor:
-            # -- Enable a prometheus ServiceMonitor
+            # Enable a prometheus ServiceMonitor
+            # +kubebuilder:default=false
             enabled: false
-            # -- Prometheus ServiceMonitor interval
+            # Prometheus ServiceMonitor interval
+            # +kubebuilder:default="30s"
             interval: 30s
-            # -- Prometheus [RelabelConfigs] to apply to samples before scraping
+            # Prometheus [RelabelConfigs] to apply to samples before scraping
             relabelings:
             - sourceLabels: [__meta_kubernetes_pod_node_name]
               targetLabel: instance
-            # -- Prometheus [MetricRelabelConfigs] to apply to samples before ingestion
+            # Prometheus [MetricRelabelConfigs] to apply to samples before ingestion
             metricRelabelings:
             - sourceLabels: [__meta_kubernetes_pod_node_name]
               targetLabel: instance
-            # -- Prometheus ServiceMonitor selector
+            # Prometheus ServiceMonitor selector
             selector:
               matchLabels:
+                # +kubebuilder:default="argo-events"
                 app: argo-events
             # prometheus: kube-prometheus
-            # -- Prometheus ServiceMonitor namespace
+            # Prometheus ServiceMonitor namespace
+            # +kubebuilder:default=""
             namespace: "" # "monitoring"
-            # -- Prometheus ServiceMonitor labels
+            # Prometheus ServiceMonitor labels
             # +miaka:type: map[string]string
             additionalLabels: {}
 ## Argo Events admission webhook
 webhook:
-    # -- Enable admission webhook. Applies only for cluster-wide installation
+    # Enable admission webhook. Applies only for cluster-wide installation
+    # +kubebuilder:default=false
     enabled: false
-    # -- Argo Events admission webhook name string
+    # Argo Events admission webhook name string
+    # +kubebuilder:default="events-webhook"
     name: events-webhook
     image:
-        # -- Repository to use for the event controller
-        # @default -- `""` (defaults to global.image.repository)
+        # Repository to use for the event controller
+        # +kubebuilder:default=""
         repository: ""
-        # -- Tag to use for the event controller
-        # @default -- `""` (defaults to global.image.tag)
+        # Tag to use for the event controller
+        # +kubebuilder:default=""
         tag: ""
-        # -- Image pull policy for the event controller
-        # @default -- `""` (defaults to global.image.imagePullPolicy)
+        # Image pull policy for the event controller
+        # +kubebuilder:default=""
         imagePullPolicy: ""
-    # -- The number of replicasets history to keep
+    # The number of replicasets history to keep
+    # +kubebuilder:default=5
     revisionHistoryLimit: 5
-    # -- The number of webhook pods to run.
+    # The number of webhook pods to run.
+    # +kubebuilder:default=1
     replicas: 1
     # Pod disruption budget
     pdb:
-        # -- Deploy a PodDisruptionBudget for the admission webhook
+        # Deploy a PodDisruptionBudget for the admission webhook
+        # +kubebuilder:default=false
         enabled: false
         # minAvailable: 1
         # maxUnavailable: 0
-        # -- Labels to be added to admission webhook pdb
+        # Labels to be added to admission webhook pdb
         # +miaka:type: map[string]string
         labels: {}
-        # -- Annotations to be added to admission webhook pdb
+        # Annotations to be added to admission webhook pdb
         # +miaka:type: map[string]string
         annotations: {}
-    # -- Environment variables to pass to event controller
-    # @default -- `[]` (See [values.yaml])
+    # Environment variables to pass to event controller
     env:
     - name: DEBUG_LOG
       value: "true"
 
-    # -- envFrom to pass to event controller
-    # @default -- `[]` (See [values.yaml])
+    # envFrom to pass to event controller
     envFrom:
     - configMapRef:
         name: config-map-name
     - secretRef:
         name: secret-name
 
-    # -- Annotations to be added to event controller pods
+    # Annotations to be added to event controller pods
     # +miaka:type: map[string]string
     podAnnotations: {}
-    # -- Labels to be added to event controller pods
+    # Labels to be added to event controller pods
     # +miaka:type: map[string]string
     podLabels: {}
-    # -- Port to listen on
+    # Port to listen on
+    # +kubebuilder:default=443
     port: 443
-    # -- Event controller container-level security context
+    # Event controller container-level security context
     containerSecurityContext:
       capabilities:
         drop:
             - all
-        readOnlyRootFilesystem: true
-        runAsNonRoot: true
+      # +kubebuilder:default=true
+      readOnlyRootFilesystem: true
+      # +kubebuilder:default=true
+      runAsNonRoot: true
 
     ## Readiness and liveness probes for default backend
     ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
     readinessProbe:
-        # -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+        # Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+        # +kubebuilder:default=3
         failureThreshold: 3
-        # -- Number of seconds after the container has started before [probe] is initiated
+        # Number of seconds after the container has started before [probe] is initiated
+        # +kubebuilder:default=10
         initialDelaySeconds: 10
-        # -- How often (in seconds) to perform the [probe]
+        # How often (in seconds) to perform the [probe]
+        # +kubebuilder:default=10
         periodSeconds: 10
-        # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+        # Minimum consecutive successes for the [probe] to be considered successful after having failed
+        # +kubebuilder:default=1
         successThreshold: 1
-        # -- Number of seconds after which the [probe] times out
+        # Number of seconds after which the [probe] times out
+        # +kubebuilder:default=1
         timeoutSeconds: 1
     livenessProbe:
-        # -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+        # Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+        # +kubebuilder:default=3
         failureThreshold: 3
-        # -- Number of seconds after the container has started before [probe] is initiated
+        # Number of seconds after the container has started before [probe] is initiated
+        # +kubebuilder:default=10
         initialDelaySeconds: 10
-        # -- How often (in seconds) to perform the [probe]
+        # How often (in seconds) to perform the [probe]
+        # +kubebuilder:default=10
         periodSeconds: 10
-        # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+        # Minimum consecutive successes for the [probe] to be considered successful after having failed
+        # +kubebuilder:default=1
         successThreshold: 1
-        # -- Number of seconds after which the [probe] times out
+        # Number of seconds after which the [probe] times out
+        # +kubebuilder:default=1
         timeoutSeconds: 1
-    # -- Additional volumeMounts to the event controller main container
+    # Additional volumeMounts to the event controller main container
     volumeMounts:
     - name: my-volume
       mountPath: /var/run/argo-events
-    # -- Additional volumes to the event controller pod
+    # Additional volumes to the event controller pod
     volumes:
     - name: my-volume
       emptyDir: {}
-    # -- [Node selector]
+    # [Node selector]
     nodeSelector:
+      # +kubebuilder:default="amd64"
       kubernetes.io/arch: amd64
-    # -- [Tolerations] for use with node taints
+    # [Tolerations] for use with node taints
     tolerations:
     - key: kubernetes.io/arch
       operator: Equal
       value: amd64
       effect: NoSchedule
-    # -- Assign custom [affinity] rules to the deployment
+    # Assign custom [affinity] rules to the deployment
     affinity: 
       nodeAffinity:
         required:
@@ -456,7 +527,7 @@ webhook:
                   operator: Equal
                   values:
                   - amd64
-    # -- Assign custom [TopologySpreadConstraints] rules to the event controller
+    # Assign custom [TopologySpreadConstraints] rules to the events controller
     ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
     ## If labelSelector is left out, it will default to the labelSelector configuration of the deployment
     topologySpreadConstraints:
@@ -464,24 +535,32 @@ webhook:
       topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: DoNotSchedule
 
-    # -- Priority class for the event controller pods
+    # Priority class for the event controller pods
+    # +kubebuilder:default=""
     priorityClassName: ""
-    # -- Resource limits and requests for the event controller pods
+    # Resource limits and requests for the event controller pods
     resources:
       limits:
+        # +kubebuilder:default="500m"
         cpu: 500m
+        # +kubebuilder:default="512Mi"
         memory: 512Mi
       requests:
+        # +kubebuilder:default="250m"
         cpu: 250m
+        # +kubebuilder:default="256Mi"
         memory: 256Mi
 
     serviceAccount:
-        # -- Create a service account for the admission webhook
+        # Create a service account for the admission webhook
+        # +kubebuilder:default=true
         create: true
-        # -- Service account name
+        # Service account name
+        # +kubebuilder:default=""
         name: ""
-        # -- Annotations applied to created service account
+        # Annotations applied to created service account
         # +miaka:type: map[string]string
         annotations: {}
-        # -- Automount API credentials for the Service Account
+        # Automount API credentials for the Service Account
+        # +kubebuilder:default=true
         automountServiceAccountToken: true

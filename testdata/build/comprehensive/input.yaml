@@ -1,42 +1,52 @@
 ## Example Miaka Values File
 ## This file demonstrates all features of Miaka for generating Kubernetes CRDs and JSON schemas
 
+# +kubebuilder:default="example.com/v1alpha1"
 apiVersion: example.com/v1alpha1
+# +kubebuilder:default="MyApp"
 kind: MyApp
 
 # Application name
 # +kubebuilder:validation:MinLength=1
 # +kubebuilder:validation:MaxLength=63
 # +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+# +kubebuilder:default="my-application"
 appName: my-application
 
 # Number of replicas to deploy
 # +kubebuilder:validation:Minimum=1
 # +kubebuilder:validation:Maximum=100
+# +kubebuilder:default=3
 replicas: 3
 
 # Enable debug mode for verbose logging
+# +kubebuilder:default=false
 debug: false
 
 ## Image configuration
 image:
   # Container image repository
+  # +kubebuilder:default="nginx"
   repository: nginx
   # Image pull policy
   # +kubebuilder:validation:Enum=Always;Never;IfNotPresent
+  # +kubebuilder:default="IfNotPresent"
   pullPolicy: IfNotPresent
   # Container image tag (immutable tags are recommended)
   # +kubebuilder:validation:Pattern=^[a-zA-Z0-9._-]+$
+  # +kubebuilder:default="1.25.0"
   tag: "1.25.0"
 
 ## Service configuration
 service:
   # Kubernetes service type
   # +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer;ExternalName
+  # +kubebuilder:default="ClusterIP"
   type: ClusterIP
   # Service port
   # +kubebuilder:validation:Minimum=1
   # +kubebuilder:validation:Maximum=65535
+  # +kubebuilder:default=80
   port: 80
   # Service annotations (e.g., for cloud load balancers)
   # +miaka:type: map[string]string
@@ -50,8 +60,10 @@ service:
 ## Ingress configuration
 ingress:
   # Enable ingress resource
+  # +kubebuilder:default=true
   enabled: true
   # Ingress class name (e.g., nginx, traefik)
+  # +kubebuilder:default="nginx"
   className: nginx
   # Ingress annotations
   # +miaka:type: map[string]string
@@ -81,14 +93,18 @@ resources:
   # Resource limits
   limits:
     # CPU limit
+    # +kubebuilder:default="500m"
     cpu: 500m
     # Memory limit
+    # +kubebuilder:default="512Mi"
     memory: 512Mi
   # Resource requests
   requests:
     # CPU request
+    # +kubebuilder:default="100m"
     cpu: 100m
     # Memory request
+    # +kubebuilder:default="128Mi"
     memory: 128Mi
 
 ## Environment variables
@@ -118,15 +134,19 @@ envFrom:
 ## Security context
 securityContext:
   # Run as non-root user
+  # +kubebuilder:default=true
   runAsNonRoot: true
   # User ID to run as
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=1000
   runAsUser: 1000
   # Group ID to run as
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=1000
   runAsGroup: 1000
   # FSGroup for volume ownership
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=1000
   fsGroup: 1000
   # Drop all capabilities and add only required ones
   capabilities:
@@ -140,25 +160,32 @@ livenessProbe:
   # HTTP GET liveness probe
   httpGet:
     # Path to probe
+    # +kubebuilder:default="/healthz"
     path: /healthz
     # Port to probe
     # +kubebuilder:validation:Minimum=1
     # +kubebuilder:validation:Maximum=65535
+    # +kubebuilder:default=8080
     port: 8080
   # Initial delay before liveness probe
   # +kubebuilder:validation:Minimum=0
+  # +kubebuilder:default=30
   initialDelaySeconds: 30
   # Period between liveness probes
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=10
   periodSeconds: 10
   # Timeout for liveness probe
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=5
   timeoutSeconds: 5
   # Success threshold for liveness probe
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=1
   successThreshold: 1
   # Failure threshold for liveness probe
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=3
   failureThreshold: 3
 
 ## Readiness probe configuration
@@ -166,25 +193,32 @@ readinessProbe:
   # HTTP GET readiness probe
   httpGet:
     # Path to probe
+    # +kubebuilder:default="/ready"
     path: /ready
     # Port to probe
     # +kubebuilder:validation:Minimum=1
     # +kubebuilder:validation:Maximum=65535
+    # +kubebuilder:default=8080
     port: 8080
   # Initial delay before readiness probe
   # +kubebuilder:validation:Minimum=0
+  # +kubebuilder:default=10
   initialDelaySeconds: 10
   # Period between readiness probes
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=5
   periodSeconds: 5
   # Timeout for readiness probe
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=3
   timeoutSeconds: 3
   # Success threshold for readiness probe
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=1
   successThreshold: 1
   # Failure threshold for readiness probe
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=3
   failureThreshold: 3
 
 ## Volume mounts
@@ -261,8 +295,10 @@ podLabels:
 ## ServiceAccount configuration
 serviceAccount:
   # Create a service account
+  # +kubebuilder:default=true
   create: true
   # Service account name (leave empty to generate)
+  # +kubebuilder:default=""
   name: ""
   # Service account annotations
   # +miaka:type: map[string]string
@@ -272,31 +308,39 @@ serviceAccount:
 ## Autoscaling configuration
 autoscaling:
   # Enable horizontal pod autoscaling
+  # +kubebuilder:default=true
   enabled: true
   # Minimum number of replicas
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=2
   minReplicas: 2
   # Maximum number of replicas
   # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:default=10
   maxReplicas: 10
   # Target CPU utilization percentage
   # +kubebuilder:validation:Minimum=1
   # +kubebuilder:validation:Maximum=100
+  # +kubebuilder:default=80
   targetCPUUtilizationPercentage: 80
   # Target memory utilization percentage
   # +kubebuilder:validation:Minimum=1
   # +kubebuilder:validation:Maximum=100
+  # +kubebuilder:default=80
   targetMemoryUtilizationPercentage: 80
 
 ## Monitoring configuration
 monitoring:
   # Enable Prometheus monitoring
+  # +kubebuilder:default=true
   enabled: true
   # ServiceMonitor configuration
   serviceMonitor:
     # Enable ServiceMonitor resource
+    # +kubebuilder:default=true
     enabled: true
     # ServiceMonitor interval
+    # +kubebuilder:default="30s"
     interval: 30s
     # ServiceMonitor labels
     # +miaka:type: map[string]string
@@ -307,38 +351,47 @@ monitoring:
 database:
   # Database host
   # +kubebuilder:validation:MinLength=1
+  # +kubebuilder:default="postgres.default.svc.cluster.local"
   host: postgres.default.svc.cluster.local
   # Database port
   # +kubebuilder:validation:Minimum=1
   # +kubebuilder:validation:Maximum=65535
+  # +kubebuilder:default=5432
   port: 5432
   # Database name
   # +kubebuilder:validation:MinLength=1
+  # +kubebuilder:default="myapp"
   name: myapp
   # Connection pool size
   # +kubebuilder:validation:Minimum=1
   # +kubebuilder:validation:Maximum=1000
+  # +kubebuilder:default=20
   poolSize: 20
   # SSL mode for database connection
   # +kubebuilder:validation:Enum=disable;allow;prefer;require;verify-ca;verify-full
+  # +kubebuilder:default="require"
   sslMode: require
 
 ## Cache/Redis configuration example
 cache:
   # Enable Redis cache
+  # +kubebuilder:default=true
   enabled: true
   # Redis host
   # +kubebuilder:validation:MinLength=1
+  # +kubebuilder:default="redis.default.svc.cluster.local"
   host: redis.default.svc.cluster.local
   # Redis port
   # +kubebuilder:validation:Minimum=1
   # +kubebuilder:validation:Maximum=65535
+  # +kubebuilder:default=6379
   port: 6379
   # Redis database number
   # +kubebuilder:validation:Minimum=0
   # +kubebuilder:validation:Maximum=15
+  # +kubebuilder:default=0
   database: 0
   # Cache TTL in seconds
   # +kubebuilder:validation:Minimum=0
+  # +kubebuilder:default=3600
   ttl: 3600
-

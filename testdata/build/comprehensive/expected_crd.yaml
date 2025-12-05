@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.2.1-0.20251205183320-7fbb50fee4e2+dirty
+    controller-gen.kubebuilder.io/version: v0.2.1-0.20251205203238-8d568300f998+dirty
   name: myapps.example.com
 spec:
   group: example.com
@@ -72,6 +72,7 @@ spec:
               More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           appName:
+            default: my-application
             description: Application name
             maxLength: 63
             minLength: 1
@@ -81,22 +82,27 @@ spec:
             description: '# Autoscaling configuration'
             properties:
               enabled:
+                default: true
                 description: Enable horizontal pod autoscaling
                 type: boolean
               maxReplicas:
+                default: 10
                 description: Maximum number of replicas
                 minimum: 1
                 type: integer
               minReplicas:
+                default: 2
                 description: Minimum number of replicas
                 minimum: 1
                 type: integer
               targetCPUUtilizationPercentage:
+                default: 80
                 description: Target CPU utilization percentage
                 maximum: 100
                 minimum: 1
                 type: integer
               targetMemoryUtilizationPercentage:
+                default: 80
                 description: Target memory utilization percentage
                 maximum: 100
                 minimum: 1
@@ -106,23 +112,28 @@ spec:
             description: '# Cache/Redis configuration example'
             properties:
               database:
+                default: 0
                 description: Redis database number
                 maximum: 15
                 minimum: 0
                 type: integer
               enabled:
+                default: true
                 description: Enable Redis cache
                 type: boolean
               host:
+                default: redis.default.svc.cluster.local
                 description: Redis host
                 minLength: 1
                 type: string
               port:
+                default: 6379
                 description: Redis port
                 maximum: 65535
                 minimum: 1
                 type: integer
               ttl:
+                default: 3600
                 description: Cache TTL in seconds
                 minimum: 0
                 type: integer
@@ -131,24 +142,29 @@ spec:
             description: '# Database configuration example'
             properties:
               host:
+                default: postgres.default.svc.cluster.local
                 description: Database host
                 minLength: 1
                 type: string
               name:
+                default: myapp
                 description: Database name
                 minLength: 1
                 type: string
               poolSize:
+                default: 20
                 description: Connection pool size
                 maximum: 1000
                 minimum: 1
                 type: integer
               port:
+                default: 5432
                 description: Database port
                 maximum: 65535
                 minimum: 1
                 type: integer
               sslMode:
+                default: require
                 description: SSL mode for database connection
                 enum:
                 - disable
@@ -160,6 +176,7 @@ spec:
                 type: string
             type: object
           debug:
+            default: false
             description: Enable debug mode for verbose logging
             type: boolean
           env:
@@ -201,6 +218,7 @@ spec:
             description: '# Image configuration'
             properties:
               pullPolicy:
+                default: IfNotPresent
                 description: Image pull policy
                 enum:
                 - Always
@@ -208,9 +226,11 @@ spec:
                 - IfNotPresent
                 type: string
               repository:
+                default: nginx
                 description: Container image repository
                 type: string
               tag:
+                default: 1.25.0
                 description: Container image tag (immutable tags are recommended)
                 pattern: ^[a-zA-Z0-9._-]+$
                 type: string
@@ -225,9 +245,11 @@ spec:
                     type: string
                 type: object
               className:
+                default: nginx
                 description: Ingress class name (e.g., nginx, traefik)
                 type: string
               enabled:
+                default: true
                 description: Enable ingress resource
                 type: boolean
               hosts:
@@ -285,6 +307,7 @@ spec:
             description: '# Liveness probe configuration'
             properties:
               failureThreshold:
+                default: 3
                 description: Failure threshold for liveness probe
                 minimum: 1
                 type: integer
@@ -292,27 +315,33 @@ spec:
                 description: HTTP GET liveness probe
                 properties:
                   path:
+                    default: /healthz
                     description: Path to probe
                     type: string
                   port:
+                    default: 8080
                     description: Port to probe
                     maximum: 65535
                     minimum: 1
                     type: integer
                 type: object
               initialDelaySeconds:
+                default: 30
                 description: Initial delay before liveness probe
                 minimum: 0
                 type: integer
               periodSeconds:
+                default: 10
                 description: Period between liveness probes
                 minimum: 1
                 type: integer
               successThreshold:
+                default: 1
                 description: Success threshold for liveness probe
                 minimum: 1
                 type: integer
               timeoutSeconds:
+                default: 5
                 description: Timeout for liveness probe
                 minimum: 1
                 type: integer
@@ -321,15 +350,18 @@ spec:
             description: '# Monitoring configuration'
             properties:
               enabled:
+                default: true
                 description: Enable Prometheus monitoring
                 type: boolean
               serviceMonitor:
                 description: ServiceMonitor configuration
                 properties:
                   enabled:
+                    default: true
                     description: Enable ServiceMonitor resource
                     type: boolean
                   interval:
+                    default: 30s
                     description: ServiceMonitor interval
                     type: string
                   labels:
@@ -370,6 +402,7 @@ spec:
             description: '# Readiness probe configuration'
             properties:
               failureThreshold:
+                default: 3
                 description: Failure threshold for readiness probe
                 minimum: 1
                 type: integer
@@ -377,32 +410,39 @@ spec:
                 description: HTTP GET readiness probe
                 properties:
                   path:
+                    default: /ready
                     description: Path to probe
                     type: string
                   port:
+                    default: 8080
                     description: Port to probe
                     maximum: 65535
                     minimum: 1
                     type: integer
                 type: object
               initialDelaySeconds:
+                default: 10
                 description: Initial delay before readiness probe
                 minimum: 0
                 type: integer
               periodSeconds:
+                default: 5
                 description: Period between readiness probes
                 minimum: 1
                 type: integer
               successThreshold:
+                default: 1
                 description: Success threshold for readiness probe
                 minimum: 1
                 type: integer
               timeoutSeconds:
+                default: 3
                 description: Timeout for readiness probe
                 minimum: 1
                 type: integer
             type: object
           replicas:
+            default: 3
             description: Number of replicas to deploy
             maximum: 100
             minimum: 1
@@ -414,9 +454,11 @@ spec:
                 description: Resource limits
                 properties:
                   cpu:
+                    default: 500m
                     description: CPU limit
                     type: string
                   memory:
+                    default: 512Mi
                     description: Memory limit
                     type: string
                 type: object
@@ -424,9 +466,11 @@ spec:
                 description: Resource requests
                 properties:
                   cpu:
+                    default: 100m
                     description: CPU request
                     type: string
                   memory:
+                    default: 128Mi
                     description: Memory request
                     type: string
                 type: object
@@ -447,17 +491,21 @@ spec:
                     type: array
                 type: object
               fsGroup:
+                default: 1000
                 description: FSGroup for volume ownership
                 minimum: 1
                 type: integer
               runAsGroup:
+                default: 1000
                 description: Group ID to run as
                 minimum: 1
                 type: integer
               runAsNonRoot:
+                default: true
                 description: Run as non-root user
                 type: boolean
               runAsUser:
+                default: 1000
                 description: User ID to run as
                 minimum: 1
                 type: integer
@@ -478,11 +526,13 @@ spec:
                     type: string
                 type: object
               port:
+                default: 80
                 description: Service port
                 maximum: 65535
                 minimum: 1
                 type: integer
               type:
+                default: ClusterIP
                 description: Kubernetes service type
                 enum:
                 - ClusterIP
@@ -501,9 +551,11 @@ spec:
                     type: string
                 type: object
               create:
+                default: true
                 description: Create a service account
                 type: boolean
               name:
+                default: ""
                 description: Service account name (leave empty to generate)
                 type: string
             type: object

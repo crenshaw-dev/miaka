@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.0.0-20251117230942-fc96413ba8a8+dirty
+    controller-gen.kubebuilder.io/version: v0.2.1-0.20251205203238-8d568300f998+dirty
   name: examples.example.com
 spec:
   group: example.com
@@ -26,9 +26,11 @@ spec:
               More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           appName:
+            default: myapp
             description: Application name
             type: string
           debug:
+            default: true
             description: Enable debug mode
             type: boolean
           env:
@@ -37,9 +39,11 @@ spec:
               description: EnvConfig defines the environment variable configuration
               properties:
                 name:
+                  default: LOG_LEVEL
                   description: Variable name
                   type: string
                 value:
+                  default: info
                   description: Variable value
                   type: string
               type: object
@@ -53,6 +57,7 @@ spec:
               More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           replicas:
+            default: 3
             description: Number of replicas
             minimum: 1
             type: integer
@@ -60,9 +65,11 @@ spec:
             description: Service configuration
             properties:
               port:
+                default: 8080
                 description: Service port
                 type: integer
               serviceType:
+                default: ClusterIP
                 description: Service type
                 type: string
             type: object
