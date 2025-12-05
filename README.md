@@ -13,6 +13,59 @@
 * 🛡️ **Breaking Change Detection** - Prevent API breakage with automatic compatibility checking
 * ✨ **KRM Compliance** - Make your values files follow the Kubernetes Resource Model standard
 
+## Example
+
+Here's what a Miaka example.values.yaml file looks like with validation markers and documentation:
+
+```yaml
+apiVersion: example.com/v1alpha1
+kind: MyApp
+
+# Application name
+# +kubebuilder:validation:MinLength=1
+# +kubebuilder:validation:MaxLength=63
+# +kubebuilder:validation:Pattern=^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+appName: my-application
+
+# Number of replicas to deploy
+# +kubebuilder:validation:Minimum=1
+# +kubebuilder:validation:Maximum=100
+replicas: 3
+
+## Service configuration
+service:
+  # Kubernetes service type
+  # +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer;ExternalName
+  type: ClusterIP
+  # Service port
+  # +kubebuilder:validation:Minimum=1
+  # +kubebuilder:validation:Maximum=65535
+  port: 80
+  # Service annotations (e.g., for cloud load balancers)
+  # +miaka:type: map[string]string
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+
+## Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+## Environment variables
+env:
+- # Variable name
+  # +kubebuilder:validation:MinLength=1
+  name: LOG_LEVEL
+  # Variable value
+  value: info
+```
+
+See [`testdata/build/comprehensive/input.yaml`](./testdata/build/comprehensive/input.yaml) for a comprehensive example with all supported features.
+
 ## Installation
 
 ```bash
@@ -74,21 +127,6 @@ Miaka uses crd.yaml to detect breaking changes, so make sure to keep that file!
 - 🔍 **Type inference**: Automatically infers correct types from your example values
 - ✅ **Dual validation**: Validates against both CRD (Kubernetes) and JSON Schema (Helm)
 - 🔄 **Legacy chart friendly**: Works with existing charts - no need to change the structure
-
-## Example
-
-Add field documentation with comments:
-
-```yaml
-apiVersion: myapp.io/v1
-kind: MyApp
-# Number of replicas
-# +kubebuilder:validation:Minimum=1
-# +kubebuilder:validation:Maximum=10
-replicas: 3
-```
-
-Miaka generates schemas with these descriptions and validations automatically.
 
 ## How It Works
 
