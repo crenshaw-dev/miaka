@@ -121,49 +121,55 @@ func removeKubernetesExtensions(obj interface{}) {
 func enhanceSchemaForHelm(obj interface{}, propertyName string) {
 	switch v := obj.(type) {
 	case map[string]interface{}:
-		// If this is an object type, set additionalProperties
-		if typeVal, ok := v["type"].(string); ok && typeVal == "object" {
-			// Only set additionalProperties if not already set
-			if _, exists := v["additionalProperties"]; !exists {
-				// Check if this is a map[string]string type (has additionalProperties with type)
-				// In that case, keep additionalProperties as-is (don't force to false)
-				// Otherwise set to false
-				v["additionalProperties"] = false
-			}
-		}
-
-		// Add title if we have a property name and no title exists
-		if propertyName != "" {
-			if _, exists := v["title"]; !exists {
-				v["title"] = propertyName
-			}
-		}
-
-		// Recurse into properties
-		if properties, ok := v["properties"].(map[string]interface{}); ok {
-			for propName, propValue := range properties {
-				enhanceSchemaForHelm(propValue, propName)
-			}
-		}
-
-		// Recurse into items (for arrays)
-		if items, ok := v["items"]; ok {
-			enhanceSchemaForHelm(items, "")
-		}
-
-		// Recurse into other nested objects
-		for key, value := range v {
-			if key != "properties" && key != "items" {
-				switch value.(type) {
-				case map[string]interface{}, []interface{}:
-					enhanceSchemaForHelm(value, "")
-				}
-			}
-		}
+		setAdditionalPropertiesIfNeeded(v)
+		setTitleIfNeeded(v, propertyName)
+		recurseIntoNestedSchemas(v)
 	case []interface{}:
-		// Recurse into arrays
 		for _, item := range v {
 			enhanceSchemaForHelm(item, "")
+		}
+	}
+}
+
+// setAdditionalPropertiesIfNeeded sets additionalProperties: false for objects
+func setAdditionalPropertiesIfNeeded(v map[string]interface{}) {
+	if typeVal, ok := v["type"].(string); ok && typeVal == "object" {
+		if _, exists := v["additionalProperties"]; !exists {
+			v["additionalProperties"] = false
+		}
+	}
+}
+
+// setTitleIfNeeded adds title field if property name is provided
+func setTitleIfNeeded(v map[string]interface{}, propertyName string) {
+	if propertyName != "" {
+		if _, exists := v["title"]; !exists {
+			v["title"] = propertyName
+		}
+	}
+}
+
+// recurseIntoNestedSchemas recursively processes nested schemas
+func recurseIntoNestedSchemas(v map[string]interface{}) {
+	// Recurse into properties
+	if properties, ok := v["properties"].(map[string]interface{}); ok {
+		for propName, propValue := range properties {
+			enhanceSchemaForHelm(propValue, propName)
+		}
+	}
+
+	// Recurse into items (for arrays)
+	if items, ok := v["items"]; ok {
+		enhanceSchemaForHelm(items, "")
+	}
+
+	// Recurse into other nested objects
+	for key, value := range v {
+		if key != "properties" && key != "items" {
+			switch value.(type) {
+			case map[string]interface{}, []interface{}:
+				enhanceSchemaForHelm(value, "")
+			}
 		}
 	}
 }
