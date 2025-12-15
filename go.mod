@@ -11,7 +11,7 @@ require (
 	golang.org/x/term v0.37.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apiextensions-apiserver v0.34.2
-	k8s.io/apimachinery v0.34.2
+	k8s.io/apimachinery v0.34.3
 	sigs.k8s.io/controller-tools v0.19.0
 	sigs.k8s.io/crdify v0.5.0
 	sigs.k8s.io/yaml v1.6.0
